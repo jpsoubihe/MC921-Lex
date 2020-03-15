@@ -74,12 +74,17 @@ class UCLexer():
         # constants
         'INT_CONST', 'FLOAT_CONST',
 
-        'EQUALS',
+        'EQUALS', 'EQ',
 
         # braces
-        'RPAREN', 'LPAREN',
+        'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE',
 
         'SEMI',
+
+        'ICONST',
+
+        'TIMES',
+
 
     )
 
@@ -106,8 +111,14 @@ class UCLexer():
         msg = "Illegal character %s" % repr(t.value[0])
         self._error(msg, t)
 
+    def t_EQ(self,t):
+        r'=='
+        t.type = self.keyword_map.get(t.value, "EQ")
+        return t
+
+    #ToDo: correct ambiguity with EQ
     def t_EQUALS(self, t):
-        r'='
+        r'^\=$'
         # print(t)
         t.type = self.keyword_map.get(t.value, "EQUALS")
         return t
@@ -117,16 +128,35 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "SEMI")
         return t
 
+    def t_ICONST(self,t):
+        r'[1-9][0-9]*'
+        t.type = self.keyword_map.get(t.value, "ICONST")
+        return t
 
-    # def t_RPAREN(self, t):
-    #
-    #     t.type = self.keyword_map.get(t.value, "RPAREN")
-    #     return t
+    def t_TIMES(self, t):
+        r'\*'
+        t.type = self.keyword_map.get(t.value, "TIMES")
+        return t
 
-    # def t_LPAREN(self, t):
-    #     r'('
-    #     t.type = self.keyword_map.get(t.value, "LPAREN")
-    #     return t
+    def t_LPAREN(self, t):
+        r'\('
+        t.type = self.keyword_map.get(t.value, "LPAREN")
+        return t
+
+    def t_RPAREN(self, t):
+        r'\)'
+        t.type = self.keyword_map.get(t.value, "RPAREN")
+        return t
+
+    def t_LBRACE(self,t):
+        r'\{'
+        t.type = self.keyword_map.get(t.value, "LBRACE")
+        return t
+
+    def t_RBRACE(self,t):
+        r'\}$'
+        t.type = self.keyword_map.get(t.value, "RBRACE")
+        return t
 
 
 
