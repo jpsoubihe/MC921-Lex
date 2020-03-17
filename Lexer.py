@@ -6,6 +6,7 @@ class UCLexer():
         input text with input(), and call token() to get new
         tokens.
     """
+
     def __init__(self, error_func):
         """ Create a new Lexer.
             An error function. Will be called with an error
@@ -74,18 +75,15 @@ class UCLexer():
         # constants
         'INT_CONST', 'FLOAT_CONST',
 
-        'EQUALS', 'EQ',
+
+        # operations
+        'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS', 'LT', 'HT', 'LE', 'HE',
 
         # braces
-        'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE',
+        'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE', 'RBRACKET', 'LBRACKET',
 
-        'SEMI',
-
-        'ICONST',
-
-        'TIMES',
-
-
+        # punctuation
+        'SEMI', 'COMMA',
     )
 
     #
@@ -111,27 +109,70 @@ class UCLexer():
         msg = "Illegal character %s" % repr(t.value[0])
         self._error(msg, t)
 
-    def t_EQ(self,t):
-        r'=='
+    def t_EQ(self, t):
+        r'\=\='
         t.type = self.keyword_map.get(t.value, "EQ")
         return t
 
-    #ToDo: correct ambiguity with EQ
     def t_EQUALS(self, t):
-        r'^\=$'
-        # print(t)
+        r'='
         t.type = self.keyword_map.get(t.value, "EQUALS")
         return t
 
-    def t_SEMI(self,t):
+    def t_PLUSPLUS(self, t):
+        r'\+\+'
+        t.type = self.keyword_map.get(t.value, "PLUSPLUS")
+        return t
+
+    def t_PLUS(self, t):
+        r'\+'
+        t.type = self.keyword_map.get(t.value, "PLUS")
+        return t
+
+    def t_MINUS(self, t):
+        r'\-'
+        t.type = self.keyword_map.get(t.value, "MINUS")
+        return t
+
+    def t_LE(self, t):
+        r'\<\='
+        t.type = self.keyword_map.get(t.value, "LE")
+        return t
+
+    def t_LT(self, t):
+        r'\<'
+        t.type = self.keyword_map.get(t.value, "LT")
+        return t
+
+    def t_HE(self, t):
+        r'\>\='
+        t.type = self.keyword_map.get(t.value, "HE")
+        return t
+
+    def t_HT(self, t):
+        r'\>'
+        t.type = self.keyword_map.get(t.value, "HT")
+        return t
+
+    def t_SEMI(self, t):
         r';'
         t.type = self.keyword_map.get(t.value, "SEMI")
         return t
 
-    def t_ICONST(self,t):
-        r'[1-9][0-9]*'
-        t.type = self.keyword_map.get(t.value, "ICONST")
+    def t_FLOAT_CONST(self, t):
+        r'[0-9]\.[0-9]*'
+        t.type = self.keyword_map.get(t.value, "FLOAT_CONST")
         return t
+
+    def t_INT_CONST(self, t):
+        r'[0-9][0-9]*'
+        t.type = self.keyword_map.get(t.value, "INT_CONST")
+        return t
+
+    # def t_ICONST(self, t):
+    #     r'[1-9][0-9]*'
+    #     t.type = self.keyword_map.get(t.value, "INT_CONST")
+    #     return t
 
     def t_TIMES(self, t):
         r'\*'
@@ -148,17 +189,35 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "RPAREN")
         return t
 
-    def t_LBRACE(self,t):
+    def t_LBRACE(self, t):
         r'\{'
         t.type = self.keyword_map.get(t.value, "LBRACE")
         return t
 
-    def t_RBRACE(self,t):
-        r'\}$'
+    def t_RBRACE(self, t):
+        r'\}'
         t.type = self.keyword_map.get(t.value, "RBRACE")
         return t
 
+    def t_LBRACKET(self, t):
+        r'\['
+        t.type = self.keyword_map.get(t.value, "LBRACKET")
+        return t
 
+    def t_RBRACKET(self, t):
+        r'\]'
+        t.type = self.keyword_map.get(t.value, "RBRACKET")
+        return t
+
+    def t_COMMA(self,t):
+        r'\,'
+        t.type = self.keyword_map.get(t.value, "COMMA")
+        return t
+
+    def t_ADDRESS(self,t):
+        r'\&'
+        t.type = self.keyword_map.get(t.value, "ADDRESS")
+        return t
 
     # Scanner (used only for test)
     def scan(self, data):
@@ -169,12 +228,14 @@ class UCLexer():
                 break
             print(tok)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     import sys
+
 
     def print_error(msg, x, y):
         print("Lexical error: %s at %d:%d" % (msg, x, y))
+
 
     m = UCLexer(print_error)
     m.build()  # Build the lexer
