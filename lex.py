@@ -305,7 +305,7 @@ def p_MODASSIGN(p):
 def p_PLUSASSIGN(p):
     ''' expr : PLUSASSIGN
     '''
-
+#ter
 
 def p_MINUSASSIGN(p):
     ''' expr : MINUSASSIGN
