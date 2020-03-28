@@ -1,0 +1,1288 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> statements
+Rule 1     statements -> statements statement
+Rule 2     statements -> statement
+Rule 3     statement -> ID EQUALS expr
+Rule 4     statement -> PRINT LPAREN expr RPAREN
+Rule 5     expr -> expr PLUS expr
+Rule 6     expr -> expr TIMES expr
+Rule 7     expr -> INT_CONST
+Rule 8     expr -> ID
+Rule 9     expr -> ADDRESS
+Rule 10    expr -> ASSERT
+Rule 11    expr -> BREAK
+Rule 12    expr -> CHAR
+Rule 13    expr -> COMMA
+Rule 14    expr -> DIFF
+Rule 15    expr -> DIVIDE
+Rule 16    expr -> ELSE
+Rule 17    expr -> EQUALS
+Rule 18    expr -> EQ
+Rule 19    expr -> FLOAT
+Rule 20    expr -> FLOAT_CONST
+Rule 21    expr -> FOR
+Rule 22    expr -> HE
+Rule 23    expr -> HT
+Rule 24    expr -> IF
+Rule 25    expr -> INT
+Rule 26    expr -> LBRACE
+Rule 27    expr -> LBRACKET
+Rule 28    expr -> LE
+Rule 29    expr -> LT
+Rule 30    expr -> MINUS
+Rule 31    expr -> MOD
+Rule 32    expr -> PLUSPLUS
+Rule 33    expr -> RBRACE
+Rule 34    expr -> RBRACKET
+Rule 35    expr -> READ
+Rule 36    expr -> RETURN
+Rule 37    expr -> SEMI
+Rule 38    expr -> STRING
+Rule 39    expr -> VOID
+Rule 40    expr -> WHILE
+Rule 41    expr -> MINUSMINUS
+Rule 42    expr -> AND
+Rule 43    expr -> OR
+Rule 44    expr -> DIVIDEASSIGN
+Rule 45    expr -> TIMESASSIGN
+Rule 46    expr -> MODASSIGN
+Rule 47    expr -> PLUSASSIGN
+Rule 48    expr -> MINUSASSIGN
+Rule 49    expr -> UNARYDIFF
+Rule 50    expr -> UNARYAND
+Rule 51    expr -> LPAREN expr RPAREN
+
+Terminals, with rules where they appear
+
+ADDRESS              : 9
+AND                  : 42
+ASSERT               : 10
+BREAK                : 11
+CHAR                 : 12
+COMMA                : 13
+DIFF                 : 14
+DIVIDE               : 15
+DIVIDEASSIGN         : 44
+ELSE                 : 16
+EQ                   : 18
+EQUALS               : 3 17
+FLOAT                : 19
+FLOAT_CONST          : 20
+FOR                  : 21
+HE                   : 22
+HT                   : 23
+ID                   : 3 8
+IF                   : 24
+INT                  : 25
+INT_CONST            : 7
+LBRACE               : 26
+LBRACKET             : 27
+LE                   : 28
+LPAREN               : 4 51
+LT                   : 29
+MINUS                : 30
+MINUSASSIGN          : 48
+MINUSMINUS           : 41
+MOD                  : 31
+MODASSIGN            : 46
+OR                   : 43
+PLUS                 : 5
+PLUSASSIGN           : 47
+PLUSPLUS             : 32
+PRINT                : 4
+RBRACE               : 33
+RBRACKET             : 34
+READ                 : 35
+RETURN               : 36
+RPAREN               : 4 51
+SEMI                 : 37
+STRING               : 38
+TIMES                : 6
+TIMESASSIGN          : 45
+UNARYAND             : 50
+UNARYDIFF            : 49
+VOID                 : 39
+WHILE                : 40
+error                : 
+
+Nonterminals, with rules where they appear
+
+expr                 : 3 4 5 5 6 6 51
+statement            : 1 2
+statements           : 1 0
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . statements
+    (1) statements -> . statements statement
+    (2) statements -> . statement
+    (3) statement -> . ID EQUALS expr
+    (4) statement -> . PRINT LPAREN expr RPAREN
+
+    ID              shift and go to state 3
+    PRINT           shift and go to state 4
+
+    statements                     shift and go to state 1
+    statement                      shift and go to state 2
+
+state 1
+
+    (0) S' -> statements .
+    (1) statements -> statements . statement
+    (3) statement -> . ID EQUALS expr
+    (4) statement -> . PRINT LPAREN expr RPAREN
+
+    ID              shift and go to state 3
+    PRINT           shift and go to state 4
+
+    statement                      shift and go to state 5
+
+state 2
+
+    (2) statements -> statement .
+
+    ID              reduce using rule 2 (statements -> statement .)
+    PRINT           reduce using rule 2 (statements -> statement .)
+    $end            reduce using rule 2 (statements -> statement .)
+
+
+state 3
+
+    (3) statement -> ID . EQUALS expr
+
+    EQUALS          shift and go to state 6
+
+
+state 4
+
+    (4) statement -> PRINT . LPAREN expr RPAREN
+
+    LPAREN          shift and go to state 7
+
+
+state 5
+
+    (1) statements -> statements statement .
+
+    ID              reduce using rule 1 (statements -> statements statement .)
+    PRINT           reduce using rule 1 (statements -> statements statement .)
+    $end            reduce using rule 1 (statements -> statements statement .)
+
+
+state 6
+
+    (3) statement -> ID EQUALS . expr
+    (5) expr -> . expr PLUS expr
+    (6) expr -> . expr TIMES expr
+    (7) expr -> . INT_CONST
+    (8) expr -> . ID
+    (9) expr -> . ADDRESS
+    (10) expr -> . ASSERT
+    (11) expr -> . BREAK
+    (12) expr -> . CHAR
+    (13) expr -> . COMMA
+    (14) expr -> . DIFF
+    (15) expr -> . DIVIDE
+    (16) expr -> . ELSE
+    (17) expr -> . EQUALS
+    (18) expr -> . EQ
+    (19) expr -> . FLOAT
+    (20) expr -> . FLOAT_CONST
+    (21) expr -> . FOR
+    (22) expr -> . HE
+    (23) expr -> . HT
+    (24) expr -> . IF
+    (25) expr -> . INT
+    (26) expr -> . LBRACE
+    (27) expr -> . LBRACKET
+    (28) expr -> . LE
+    (29) expr -> . LT
+    (30) expr -> . MINUS
+    (31) expr -> . MOD
+    (32) expr -> . PLUSPLUS
+    (33) expr -> . RBRACE
+    (34) expr -> . RBRACKET
+    (35) expr -> . READ
+    (36) expr -> . RETURN
+    (37) expr -> . SEMI
+    (38) expr -> . STRING
+    (39) expr -> . VOID
+    (40) expr -> . WHILE
+    (41) expr -> . MINUSMINUS
+    (42) expr -> . AND
+    (43) expr -> . OR
+    (44) expr -> . DIVIDEASSIGN
+    (45) expr -> . TIMESASSIGN
+    (46) expr -> . MODASSIGN
+    (47) expr -> . PLUSASSIGN
+    (48) expr -> . MINUSASSIGN
+    (49) expr -> . UNARYDIFF
+    (50) expr -> . UNARYAND
+    (51) expr -> . LPAREN expr RPAREN
+
+    INT_CONST       shift and go to state 11
+    ID              shift and go to state 8
+    ADDRESS         shift and go to state 12
+    ASSERT          shift and go to state 13
+    BREAK           shift and go to state 14
+    CHAR            shift and go to state 15
+    COMMA           shift and go to state 16
+    DIFF            shift and go to state 17
+    DIVIDE          shift and go to state 18
+    ELSE            shift and go to state 19
+    EQUALS          shift and go to state 9
+    EQ              shift and go to state 20
+    FLOAT           shift and go to state 21
+    FLOAT_CONST     shift and go to state 22
+    FOR             shift and go to state 23
+    HE              shift and go to state 24
+    HT              shift and go to state 25
+    IF              shift and go to state 26
+    INT             shift and go to state 27
+    LBRACE          shift and go to state 28
+    LBRACKET        shift and go to state 29
+    LE              shift and go to state 30
+    LT              shift and go to state 31
+    MINUS           shift and go to state 32
+    MOD             shift and go to state 33
+    PLUSPLUS        shift and go to state 34
+    RBRACE          shift and go to state 35
+    RBRACKET        shift and go to state 36
+    READ            shift and go to state 37
+    RETURN          shift and go to state 38
+    SEMI            shift and go to state 39
+    STRING          shift and go to state 40
+    VOID            shift and go to state 41
+    WHILE           shift and go to state 42
+    MINUSMINUS      shift and go to state 43
+    AND             shift and go to state 44
+    OR              shift and go to state 45
+    DIVIDEASSIGN    shift and go to state 46
+    TIMESASSIGN     shift and go to state 47
+    MODASSIGN       shift and go to state 48
+    PLUSASSIGN      shift and go to state 49
+    MINUSASSIGN     shift and go to state 50
+    UNARYDIFF       shift and go to state 51
+    UNARYAND        shift and go to state 52
+    LPAREN          shift and go to state 53
+
+    expr                           shift and go to state 10
+
+state 7
+
+    (4) statement -> PRINT LPAREN . expr RPAREN
+    (5) expr -> . expr PLUS expr
+    (6) expr -> . expr TIMES expr
+    (7) expr -> . INT_CONST
+    (8) expr -> . ID
+    (9) expr -> . ADDRESS
+    (10) expr -> . ASSERT
+    (11) expr -> . BREAK
+    (12) expr -> . CHAR
+    (13) expr -> . COMMA
+    (14) expr -> . DIFF
+    (15) expr -> . DIVIDE
+    (16) expr -> . ELSE
+    (17) expr -> . EQUALS
+    (18) expr -> . EQ
+    (19) expr -> . FLOAT
+    (20) expr -> . FLOAT_CONST
+    (21) expr -> . FOR
+    (22) expr -> . HE
+    (23) expr -> . HT
+    (24) expr -> . IF
+    (25) expr -> . INT
+    (26) expr -> . LBRACE
+    (27) expr -> . LBRACKET
+    (28) expr -> . LE
+    (29) expr -> . LT
+    (30) expr -> . MINUS
+    (31) expr -> . MOD
+    (32) expr -> . PLUSPLUS
+    (33) expr -> . RBRACE
+    (34) expr -> . RBRACKET
+    (35) expr -> . READ
+    (36) expr -> . RETURN
+    (37) expr -> . SEMI
+    (38) expr -> . STRING
+    (39) expr -> . VOID
+    (40) expr -> . WHILE
+    (41) expr -> . MINUSMINUS
+    (42) expr -> . AND
+    (43) expr -> . OR
+    (44) expr -> . DIVIDEASSIGN
+    (45) expr -> . TIMESASSIGN
+    (46) expr -> . MODASSIGN
+    (47) expr -> . PLUSASSIGN
+    (48) expr -> . MINUSASSIGN
+    (49) expr -> . UNARYDIFF
+    (50) expr -> . UNARYAND
+    (51) expr -> . LPAREN expr RPAREN
+
+    INT_CONST       shift and go to state 11
+    ID              shift and go to state 8
+    ADDRESS         shift and go to state 12
+    ASSERT          shift and go to state 13
+    BREAK           shift and go to state 14
+    CHAR            shift and go to state 15
+    COMMA           shift and go to state 16
+    DIFF            shift and go to state 17
+    DIVIDE          shift and go to state 18
+    ELSE            shift and go to state 19
+    EQUALS          shift and go to state 9
+    EQ              shift and go to state 20
+    FLOAT           shift and go to state 21
+    FLOAT_CONST     shift and go to state 22
+    FOR             shift and go to state 23
+    HE              shift and go to state 24
+    HT              shift and go to state 25
+    IF              shift and go to state 26
+    INT             shift and go to state 27
+    LBRACE          shift and go to state 28
+    LBRACKET        shift and go to state 29
+    LE              shift and go to state 30
+    LT              shift and go to state 31
+    MINUS           shift and go to state 32
+    MOD             shift and go to state 33
+    PLUSPLUS        shift and go to state 34
+    RBRACE          shift and go to state 35
+    RBRACKET        shift and go to state 36
+    READ            shift and go to state 37
+    RETURN          shift and go to state 38
+    SEMI            shift and go to state 39
+    STRING          shift and go to state 40
+    VOID            shift and go to state 41
+    WHILE           shift and go to state 42
+    MINUSMINUS      shift and go to state 43
+    AND             shift and go to state 44
+    OR              shift and go to state 45
+    DIVIDEASSIGN    shift and go to state 46
+    TIMESASSIGN     shift and go to state 47
+    MODASSIGN       shift and go to state 48
+    PLUSASSIGN      shift and go to state 49
+    MINUSASSIGN     shift and go to state 50
+    UNARYDIFF       shift and go to state 51
+    UNARYAND        shift and go to state 52
+    LPAREN          shift and go to state 53
+
+    expr                           shift and go to state 54
+
+state 8
+
+    (8) expr -> ID .
+
+    PLUS            reduce using rule 8 (expr -> ID .)
+    TIMES           reduce using rule 8 (expr -> ID .)
+    ID              reduce using rule 8 (expr -> ID .)
+    PRINT           reduce using rule 8 (expr -> ID .)
+    $end            reduce using rule 8 (expr -> ID .)
+    RPAREN          reduce using rule 8 (expr -> ID .)
+
+
+state 9
+
+    (17) expr -> EQUALS .
+
+    PLUS            reduce using rule 17 (expr -> EQUALS .)
+    TIMES           reduce using rule 17 (expr -> EQUALS .)
+    ID              reduce using rule 17 (expr -> EQUALS .)
+    PRINT           reduce using rule 17 (expr -> EQUALS .)
+    $end            reduce using rule 17 (expr -> EQUALS .)
+    RPAREN          reduce using rule 17 (expr -> EQUALS .)
+
+
+state 10
+
+    (3) statement -> ID EQUALS expr .
+    (5) expr -> expr . PLUS expr
+    (6) expr -> expr . TIMES expr
+
+    ID              reduce using rule 3 (statement -> ID EQUALS expr .)
+    PRINT           reduce using rule 3 (statement -> ID EQUALS expr .)
+    $end            reduce using rule 3 (statement -> ID EQUALS expr .)
+    PLUS            shift and go to state 55
+    TIMES           shift and go to state 56
+
+
+state 11
+
+    (7) expr -> INT_CONST .
+
+    PLUS            reduce using rule 7 (expr -> INT_CONST .)
+    TIMES           reduce using rule 7 (expr -> INT_CONST .)
+    ID              reduce using rule 7 (expr -> INT_CONST .)
+    PRINT           reduce using rule 7 (expr -> INT_CONST .)
+    $end            reduce using rule 7 (expr -> INT_CONST .)
+    RPAREN          reduce using rule 7 (expr -> INT_CONST .)
+
+
+state 12
+
+    (9) expr -> ADDRESS .
+
+    PLUS            reduce using rule 9 (expr -> ADDRESS .)
+    TIMES           reduce using rule 9 (expr -> ADDRESS .)
+    ID              reduce using rule 9 (expr -> ADDRESS .)
+    PRINT           reduce using rule 9 (expr -> ADDRESS .)
+    $end            reduce using rule 9 (expr -> ADDRESS .)
+    RPAREN          reduce using rule 9 (expr -> ADDRESS .)
+
+
+state 13
+
+    (10) expr -> ASSERT .
+
+    PLUS            reduce using rule 10 (expr -> ASSERT .)
+    TIMES           reduce using rule 10 (expr -> ASSERT .)
+    ID              reduce using rule 10 (expr -> ASSERT .)
+    PRINT           reduce using rule 10 (expr -> ASSERT .)
+    $end            reduce using rule 10 (expr -> ASSERT .)
+    RPAREN          reduce using rule 10 (expr -> ASSERT .)
+
+
+state 14
+
+    (11) expr -> BREAK .
+
+    PLUS            reduce using rule 11 (expr -> BREAK .)
+    TIMES           reduce using rule 11 (expr -> BREAK .)
+    ID              reduce using rule 11 (expr -> BREAK .)
+    PRINT           reduce using rule 11 (expr -> BREAK .)
+    $end            reduce using rule 11 (expr -> BREAK .)
+    RPAREN          reduce using rule 11 (expr -> BREAK .)
+
+
+state 15
+
+    (12) expr -> CHAR .
+
+    PLUS            reduce using rule 12 (expr -> CHAR .)
+    TIMES           reduce using rule 12 (expr -> CHAR .)
+    ID              reduce using rule 12 (expr -> CHAR .)
+    PRINT           reduce using rule 12 (expr -> CHAR .)
+    $end            reduce using rule 12 (expr -> CHAR .)
+    RPAREN          reduce using rule 12 (expr -> CHAR .)
+
+
+state 16
+
+    (13) expr -> COMMA .
+
+    PLUS            reduce using rule 13 (expr -> COMMA .)
+    TIMES           reduce using rule 13 (expr -> COMMA .)
+    ID              reduce using rule 13 (expr -> COMMA .)
+    PRINT           reduce using rule 13 (expr -> COMMA .)
+    $end            reduce using rule 13 (expr -> COMMA .)
+    RPAREN          reduce using rule 13 (expr -> COMMA .)
+
+
+state 17
+
+    (14) expr -> DIFF .
+
+    PLUS            reduce using rule 14 (expr -> DIFF .)
+    TIMES           reduce using rule 14 (expr -> DIFF .)
+    ID              reduce using rule 14 (expr -> DIFF .)
+    PRINT           reduce using rule 14 (expr -> DIFF .)
+    $end            reduce using rule 14 (expr -> DIFF .)
+    RPAREN          reduce using rule 14 (expr -> DIFF .)
+
+
+state 18
+
+    (15) expr -> DIVIDE .
+
+    PLUS            reduce using rule 15 (expr -> DIVIDE .)
+    TIMES           reduce using rule 15 (expr -> DIVIDE .)
+    ID              reduce using rule 15 (expr -> DIVIDE .)
+    PRINT           reduce using rule 15 (expr -> DIVIDE .)
+    $end            reduce using rule 15 (expr -> DIVIDE .)
+    RPAREN          reduce using rule 15 (expr -> DIVIDE .)
+
+
+state 19
+
+    (16) expr -> ELSE .
+
+    PLUS            reduce using rule 16 (expr -> ELSE .)
+    TIMES           reduce using rule 16 (expr -> ELSE .)
+    ID              reduce using rule 16 (expr -> ELSE .)
+    PRINT           reduce using rule 16 (expr -> ELSE .)
+    $end            reduce using rule 16 (expr -> ELSE .)
+    RPAREN          reduce using rule 16 (expr -> ELSE .)
+
+
+state 20
+
+    (18) expr -> EQ .
+
+    PLUS            reduce using rule 18 (expr -> EQ .)
+    TIMES           reduce using rule 18 (expr -> EQ .)
+    ID              reduce using rule 18 (expr -> EQ .)
+    PRINT           reduce using rule 18 (expr -> EQ .)
+    $end            reduce using rule 18 (expr -> EQ .)
+    RPAREN          reduce using rule 18 (expr -> EQ .)
+
+
+state 21
+
+    (19) expr -> FLOAT .
+
+    PLUS            reduce using rule 19 (expr -> FLOAT .)
+    TIMES           reduce using rule 19 (expr -> FLOAT .)
+    ID              reduce using rule 19 (expr -> FLOAT .)
+    PRINT           reduce using rule 19 (expr -> FLOAT .)
+    $end            reduce using rule 19 (expr -> FLOAT .)
+    RPAREN          reduce using rule 19 (expr -> FLOAT .)
+
+
+state 22
+
+    (20) expr -> FLOAT_CONST .
+
+    PLUS            reduce using rule 20 (expr -> FLOAT_CONST .)
+    TIMES           reduce using rule 20 (expr -> FLOAT_CONST .)
+    ID              reduce using rule 20 (expr -> FLOAT_CONST .)
+    PRINT           reduce using rule 20 (expr -> FLOAT_CONST .)
+    $end            reduce using rule 20 (expr -> FLOAT_CONST .)
+    RPAREN          reduce using rule 20 (expr -> FLOAT_CONST .)
+
+
+state 23
+
+    (21) expr -> FOR .
+
+    PLUS            reduce using rule 21 (expr -> FOR .)
+    TIMES           reduce using rule 21 (expr -> FOR .)
+    ID              reduce using rule 21 (expr -> FOR .)
+    PRINT           reduce using rule 21 (expr -> FOR .)
+    $end            reduce using rule 21 (expr -> FOR .)
+    RPAREN          reduce using rule 21 (expr -> FOR .)
+
+
+state 24
+
+    (22) expr -> HE .
+
+    PLUS            reduce using rule 22 (expr -> HE .)
+    TIMES           reduce using rule 22 (expr -> HE .)
+    ID              reduce using rule 22 (expr -> HE .)
+    PRINT           reduce using rule 22 (expr -> HE .)
+    $end            reduce using rule 22 (expr -> HE .)
+    RPAREN          reduce using rule 22 (expr -> HE .)
+
+
+state 25
+
+    (23) expr -> HT .
+
+    PLUS            reduce using rule 23 (expr -> HT .)
+    TIMES           reduce using rule 23 (expr -> HT .)
+    ID              reduce using rule 23 (expr -> HT .)
+    PRINT           reduce using rule 23 (expr -> HT .)
+    $end            reduce using rule 23 (expr -> HT .)
+    RPAREN          reduce using rule 23 (expr -> HT .)
+
+
+state 26
+
+    (24) expr -> IF .
+
+    PLUS            reduce using rule 24 (expr -> IF .)
+    TIMES           reduce using rule 24 (expr -> IF .)
+    ID              reduce using rule 24 (expr -> IF .)
+    PRINT           reduce using rule 24 (expr -> IF .)
+    $end            reduce using rule 24 (expr -> IF .)
+    RPAREN          reduce using rule 24 (expr -> IF .)
+
+
+state 27
+
+    (25) expr -> INT .
+
+    PLUS            reduce using rule 25 (expr -> INT .)
+    TIMES           reduce using rule 25 (expr -> INT .)
+    ID              reduce using rule 25 (expr -> INT .)
+    PRINT           reduce using rule 25 (expr -> INT .)
+    $end            reduce using rule 25 (expr -> INT .)
+    RPAREN          reduce using rule 25 (expr -> INT .)
+
+
+state 28
+
+    (26) expr -> LBRACE .
+
+    PLUS            reduce using rule 26 (expr -> LBRACE .)
+    TIMES           reduce using rule 26 (expr -> LBRACE .)
+    ID              reduce using rule 26 (expr -> LBRACE .)
+    PRINT           reduce using rule 26 (expr -> LBRACE .)
+    $end            reduce using rule 26 (expr -> LBRACE .)
+    RPAREN          reduce using rule 26 (expr -> LBRACE .)
+
+
+state 29
+
+    (27) expr -> LBRACKET .
+
+    PLUS            reduce using rule 27 (expr -> LBRACKET .)
+    TIMES           reduce using rule 27 (expr -> LBRACKET .)
+    ID              reduce using rule 27 (expr -> LBRACKET .)
+    PRINT           reduce using rule 27 (expr -> LBRACKET .)
+    $end            reduce using rule 27 (expr -> LBRACKET .)
+    RPAREN          reduce using rule 27 (expr -> LBRACKET .)
+
+
+state 30
+
+    (28) expr -> LE .
+
+    PLUS            reduce using rule 28 (expr -> LE .)
+    TIMES           reduce using rule 28 (expr -> LE .)
+    ID              reduce using rule 28 (expr -> LE .)
+    PRINT           reduce using rule 28 (expr -> LE .)
+    $end            reduce using rule 28 (expr -> LE .)
+    RPAREN          reduce using rule 28 (expr -> LE .)
+
+
+state 31
+
+    (29) expr -> LT .
+
+    PLUS            reduce using rule 29 (expr -> LT .)
+    TIMES           reduce using rule 29 (expr -> LT .)
+    ID              reduce using rule 29 (expr -> LT .)
+    PRINT           reduce using rule 29 (expr -> LT .)
+    $end            reduce using rule 29 (expr -> LT .)
+    RPAREN          reduce using rule 29 (expr -> LT .)
+
+
+state 32
+
+    (30) expr -> MINUS .
+
+    PLUS            reduce using rule 30 (expr -> MINUS .)
+    TIMES           reduce using rule 30 (expr -> MINUS .)
+    ID              reduce using rule 30 (expr -> MINUS .)
+    PRINT           reduce using rule 30 (expr -> MINUS .)
+    $end            reduce using rule 30 (expr -> MINUS .)
+    RPAREN          reduce using rule 30 (expr -> MINUS .)
+
+
+state 33
+
+    (31) expr -> MOD .
+
+    PLUS            reduce using rule 31 (expr -> MOD .)
+    TIMES           reduce using rule 31 (expr -> MOD .)
+    ID              reduce using rule 31 (expr -> MOD .)
+    PRINT           reduce using rule 31 (expr -> MOD .)
+    $end            reduce using rule 31 (expr -> MOD .)
+    RPAREN          reduce using rule 31 (expr -> MOD .)
+
+
+state 34
+
+    (32) expr -> PLUSPLUS .
+
+    PLUS            reduce using rule 32 (expr -> PLUSPLUS .)
+    TIMES           reduce using rule 32 (expr -> PLUSPLUS .)
+    ID              reduce using rule 32 (expr -> PLUSPLUS .)
+    PRINT           reduce using rule 32 (expr -> PLUSPLUS .)
+    $end            reduce using rule 32 (expr -> PLUSPLUS .)
+    RPAREN          reduce using rule 32 (expr -> PLUSPLUS .)
+
+
+state 35
+
+    (33) expr -> RBRACE .
+
+    PLUS            reduce using rule 33 (expr -> RBRACE .)
+    TIMES           reduce using rule 33 (expr -> RBRACE .)
+    ID              reduce using rule 33 (expr -> RBRACE .)
+    PRINT           reduce using rule 33 (expr -> RBRACE .)
+    $end            reduce using rule 33 (expr -> RBRACE .)
+    RPAREN          reduce using rule 33 (expr -> RBRACE .)
+
+
+state 36
+
+    (34) expr -> RBRACKET .
+
+    PLUS            reduce using rule 34 (expr -> RBRACKET .)
+    TIMES           reduce using rule 34 (expr -> RBRACKET .)
+    ID              reduce using rule 34 (expr -> RBRACKET .)
+    PRINT           reduce using rule 34 (expr -> RBRACKET .)
+    $end            reduce using rule 34 (expr -> RBRACKET .)
+    RPAREN          reduce using rule 34 (expr -> RBRACKET .)
+
+
+state 37
+
+    (35) expr -> READ .
+
+    PLUS            reduce using rule 35 (expr -> READ .)
+    TIMES           reduce using rule 35 (expr -> READ .)
+    ID              reduce using rule 35 (expr -> READ .)
+    PRINT           reduce using rule 35 (expr -> READ .)
+    $end            reduce using rule 35 (expr -> READ .)
+    RPAREN          reduce using rule 35 (expr -> READ .)
+
+
+state 38
+
+    (36) expr -> RETURN .
+
+    PLUS            reduce using rule 36 (expr -> RETURN .)
+    TIMES           reduce using rule 36 (expr -> RETURN .)
+    ID              reduce using rule 36 (expr -> RETURN .)
+    PRINT           reduce using rule 36 (expr -> RETURN .)
+    $end            reduce using rule 36 (expr -> RETURN .)
+    RPAREN          reduce using rule 36 (expr -> RETURN .)
+
+
+state 39
+
+    (37) expr -> SEMI .
+
+    PLUS            reduce using rule 37 (expr -> SEMI .)
+    TIMES           reduce using rule 37 (expr -> SEMI .)
+    ID              reduce using rule 37 (expr -> SEMI .)
+    PRINT           reduce using rule 37 (expr -> SEMI .)
+    $end            reduce using rule 37 (expr -> SEMI .)
+    RPAREN          reduce using rule 37 (expr -> SEMI .)
+
+
+state 40
+
+    (38) expr -> STRING .
+
+    PLUS            reduce using rule 38 (expr -> STRING .)
+    TIMES           reduce using rule 38 (expr -> STRING .)
+    ID              reduce using rule 38 (expr -> STRING .)
+    PRINT           reduce using rule 38 (expr -> STRING .)
+    $end            reduce using rule 38 (expr -> STRING .)
+    RPAREN          reduce using rule 38 (expr -> STRING .)
+
+
+state 41
+
+    (39) expr -> VOID .
+
+    PLUS            reduce using rule 39 (expr -> VOID .)
+    TIMES           reduce using rule 39 (expr -> VOID .)
+    ID              reduce using rule 39 (expr -> VOID .)
+    PRINT           reduce using rule 39 (expr -> VOID .)
+    $end            reduce using rule 39 (expr -> VOID .)
+    RPAREN          reduce using rule 39 (expr -> VOID .)
+
+
+state 42
+
+    (40) expr -> WHILE .
+
+    PLUS            reduce using rule 40 (expr -> WHILE .)
+    TIMES           reduce using rule 40 (expr -> WHILE .)
+    ID              reduce using rule 40 (expr -> WHILE .)
+    PRINT           reduce using rule 40 (expr -> WHILE .)
+    $end            reduce using rule 40 (expr -> WHILE .)
+    RPAREN          reduce using rule 40 (expr -> WHILE .)
+
+
+state 43
+
+    (41) expr -> MINUSMINUS .
+
+    PLUS            reduce using rule 41 (expr -> MINUSMINUS .)
+    TIMES           reduce using rule 41 (expr -> MINUSMINUS .)
+    ID              reduce using rule 41 (expr -> MINUSMINUS .)
+    PRINT           reduce using rule 41 (expr -> MINUSMINUS .)
+    $end            reduce using rule 41 (expr -> MINUSMINUS .)
+    RPAREN          reduce using rule 41 (expr -> MINUSMINUS .)
+
+
+state 44
+
+    (42) expr -> AND .
+
+    PLUS            reduce using rule 42 (expr -> AND .)
+    TIMES           reduce using rule 42 (expr -> AND .)
+    ID              reduce using rule 42 (expr -> AND .)
+    PRINT           reduce using rule 42 (expr -> AND .)
+    $end            reduce using rule 42 (expr -> AND .)
+    RPAREN          reduce using rule 42 (expr -> AND .)
+
+
+state 45
+
+    (43) expr -> OR .
+
+    PLUS            reduce using rule 43 (expr -> OR .)
+    TIMES           reduce using rule 43 (expr -> OR .)
+    ID              reduce using rule 43 (expr -> OR .)
+    PRINT           reduce using rule 43 (expr -> OR .)
+    $end            reduce using rule 43 (expr -> OR .)
+    RPAREN          reduce using rule 43 (expr -> OR .)
+
+
+state 46
+
+    (44) expr -> DIVIDEASSIGN .
+
+    PLUS            reduce using rule 44 (expr -> DIVIDEASSIGN .)
+    TIMES           reduce using rule 44 (expr -> DIVIDEASSIGN .)
+    ID              reduce using rule 44 (expr -> DIVIDEASSIGN .)
+    PRINT           reduce using rule 44 (expr -> DIVIDEASSIGN .)
+    $end            reduce using rule 44 (expr -> DIVIDEASSIGN .)
+    RPAREN          reduce using rule 44 (expr -> DIVIDEASSIGN .)
+
+
+state 47
+
+    (45) expr -> TIMESASSIGN .
+
+    PLUS            reduce using rule 45 (expr -> TIMESASSIGN .)
+    TIMES           reduce using rule 45 (expr -> TIMESASSIGN .)
+    ID              reduce using rule 45 (expr -> TIMESASSIGN .)
+    PRINT           reduce using rule 45 (expr -> TIMESASSIGN .)
+    $end            reduce using rule 45 (expr -> TIMESASSIGN .)
+    RPAREN          reduce using rule 45 (expr -> TIMESASSIGN .)
+
+
+state 48
+
+    (46) expr -> MODASSIGN .
+
+    PLUS            reduce using rule 46 (expr -> MODASSIGN .)
+    TIMES           reduce using rule 46 (expr -> MODASSIGN .)
+    ID              reduce using rule 46 (expr -> MODASSIGN .)
+    PRINT           reduce using rule 46 (expr -> MODASSIGN .)
+    $end            reduce using rule 46 (expr -> MODASSIGN .)
+    RPAREN          reduce using rule 46 (expr -> MODASSIGN .)
+
+
+state 49
+
+    (47) expr -> PLUSASSIGN .
+
+    PLUS            reduce using rule 47 (expr -> PLUSASSIGN .)
+    TIMES           reduce using rule 47 (expr -> PLUSASSIGN .)
+    ID              reduce using rule 47 (expr -> PLUSASSIGN .)
+    PRINT           reduce using rule 47 (expr -> PLUSASSIGN .)
+    $end            reduce using rule 47 (expr -> PLUSASSIGN .)
+    RPAREN          reduce using rule 47 (expr -> PLUSASSIGN .)
+
+
+state 50
+
+    (48) expr -> MINUSASSIGN .
+
+    PLUS            reduce using rule 48 (expr -> MINUSASSIGN .)
+    TIMES           reduce using rule 48 (expr -> MINUSASSIGN .)
+    ID              reduce using rule 48 (expr -> MINUSASSIGN .)
+    PRINT           reduce using rule 48 (expr -> MINUSASSIGN .)
+    $end            reduce using rule 48 (expr -> MINUSASSIGN .)
+    RPAREN          reduce using rule 48 (expr -> MINUSASSIGN .)
+
+
+state 51
+
+    (49) expr -> UNARYDIFF .
+
+    PLUS            reduce using rule 49 (expr -> UNARYDIFF .)
+    TIMES           reduce using rule 49 (expr -> UNARYDIFF .)
+    ID              reduce using rule 49 (expr -> UNARYDIFF .)
+    PRINT           reduce using rule 49 (expr -> UNARYDIFF .)
+    $end            reduce using rule 49 (expr -> UNARYDIFF .)
+    RPAREN          reduce using rule 49 (expr -> UNARYDIFF .)
+
+
+state 52
+
+    (50) expr -> UNARYAND .
+
+    PLUS            reduce using rule 50 (expr -> UNARYAND .)
+    TIMES           reduce using rule 50 (expr -> UNARYAND .)
+    ID              reduce using rule 50 (expr -> UNARYAND .)
+    PRINT           reduce using rule 50 (expr -> UNARYAND .)
+    $end            reduce using rule 50 (expr -> UNARYAND .)
+    RPAREN          reduce using rule 50 (expr -> UNARYAND .)
+
+
+state 53
+
+    (51) expr -> LPAREN . expr RPAREN
+    (5) expr -> . expr PLUS expr
+    (6) expr -> . expr TIMES expr
+    (7) expr -> . INT_CONST
+    (8) expr -> . ID
+    (9) expr -> . ADDRESS
+    (10) expr -> . ASSERT
+    (11) expr -> . BREAK
+    (12) expr -> . CHAR
+    (13) expr -> . COMMA
+    (14) expr -> . DIFF
+    (15) expr -> . DIVIDE
+    (16) expr -> . ELSE
+    (17) expr -> . EQUALS
+    (18) expr -> . EQ
+    (19) expr -> . FLOAT
+    (20) expr -> . FLOAT_CONST
+    (21) expr -> . FOR
+    (22) expr -> . HE
+    (23) expr -> . HT
+    (24) expr -> . IF
+    (25) expr -> . INT
+    (26) expr -> . LBRACE
+    (27) expr -> . LBRACKET
+    (28) expr -> . LE
+    (29) expr -> . LT
+    (30) expr -> . MINUS
+    (31) expr -> . MOD
+    (32) expr -> . PLUSPLUS
+    (33) expr -> . RBRACE
+    (34) expr -> . RBRACKET
+    (35) expr -> . READ
+    (36) expr -> . RETURN
+    (37) expr -> . SEMI
+    (38) expr -> . STRING
+    (39) expr -> . VOID
+    (40) expr -> . WHILE
+    (41) expr -> . MINUSMINUS
+    (42) expr -> . AND
+    (43) expr -> . OR
+    (44) expr -> . DIVIDEASSIGN
+    (45) expr -> . TIMESASSIGN
+    (46) expr -> . MODASSIGN
+    (47) expr -> . PLUSASSIGN
+    (48) expr -> . MINUSASSIGN
+    (49) expr -> . UNARYDIFF
+    (50) expr -> . UNARYAND
+    (51) expr -> . LPAREN expr RPAREN
+
+    INT_CONST       shift and go to state 11
+    ID              shift and go to state 8
+    ADDRESS         shift and go to state 12
+    ASSERT          shift and go to state 13
+    BREAK           shift and go to state 14
+    CHAR            shift and go to state 15
+    COMMA           shift and go to state 16
+    DIFF            shift and go to state 17
+    DIVIDE          shift and go to state 18
+    ELSE            shift and go to state 19
+    EQUALS          shift and go to state 9
+    EQ              shift and go to state 20
+    FLOAT           shift and go to state 21
+    FLOAT_CONST     shift and go to state 22
+    FOR             shift and go to state 23
+    HE              shift and go to state 24
+    HT              shift and go to state 25
+    IF              shift and go to state 26
+    INT             shift and go to state 27
+    LBRACE          shift and go to state 28
+    LBRACKET        shift and go to state 29
+    LE              shift and go to state 30
+    LT              shift and go to state 31
+    MINUS           shift and go to state 32
+    MOD             shift and go to state 33
+    PLUSPLUS        shift and go to state 34
+    RBRACE          shift and go to state 35
+    RBRACKET        shift and go to state 36
+    READ            shift and go to state 37
+    RETURN          shift and go to state 38
+    SEMI            shift and go to state 39
+    STRING          shift and go to state 40
+    VOID            shift and go to state 41
+    WHILE           shift and go to state 42
+    MINUSMINUS      shift and go to state 43
+    AND             shift and go to state 44
+    OR              shift and go to state 45
+    DIVIDEASSIGN    shift and go to state 46
+    TIMESASSIGN     shift and go to state 47
+    MODASSIGN       shift and go to state 48
+    PLUSASSIGN      shift and go to state 49
+    MINUSASSIGN     shift and go to state 50
+    UNARYDIFF       shift and go to state 51
+    UNARYAND        shift and go to state 52
+    LPAREN          shift and go to state 53
+
+    expr                           shift and go to state 57
+
+state 54
+
+    (4) statement -> PRINT LPAREN expr . RPAREN
+    (5) expr -> expr . PLUS expr
+    (6) expr -> expr . TIMES expr
+
+    RPAREN          shift and go to state 58
+    PLUS            shift and go to state 55
+    TIMES           shift and go to state 56
+
+
+state 55
+
+    (5) expr -> expr PLUS . expr
+    (5) expr -> . expr PLUS expr
+    (6) expr -> . expr TIMES expr
+    (7) expr -> . INT_CONST
+    (8) expr -> . ID
+    (9) expr -> . ADDRESS
+    (10) expr -> . ASSERT
+    (11) expr -> . BREAK
+    (12) expr -> . CHAR
+    (13) expr -> . COMMA
+    (14) expr -> . DIFF
+    (15) expr -> . DIVIDE
+    (16) expr -> . ELSE
+    (17) expr -> . EQUALS
+    (18) expr -> . EQ
+    (19) expr -> . FLOAT
+    (20) expr -> . FLOAT_CONST
+    (21) expr -> . FOR
+    (22) expr -> . HE
+    (23) expr -> . HT
+    (24) expr -> . IF
+    (25) expr -> . INT
+    (26) expr -> . LBRACE
+    (27) expr -> . LBRACKET
+    (28) expr -> . LE
+    (29) expr -> . LT
+    (30) expr -> . MINUS
+    (31) expr -> . MOD
+    (32) expr -> . PLUSPLUS
+    (33) expr -> . RBRACE
+    (34) expr -> . RBRACKET
+    (35) expr -> . READ
+    (36) expr -> . RETURN
+    (37) expr -> . SEMI
+    (38) expr -> . STRING
+    (39) expr -> . VOID
+    (40) expr -> . WHILE
+    (41) expr -> . MINUSMINUS
+    (42) expr -> . AND
+    (43) expr -> . OR
+    (44) expr -> . DIVIDEASSIGN
+    (45) expr -> . TIMESASSIGN
+    (46) expr -> . MODASSIGN
+    (47) expr -> . PLUSASSIGN
+    (48) expr -> . MINUSASSIGN
+    (49) expr -> . UNARYDIFF
+    (50) expr -> . UNARYAND
+    (51) expr -> . LPAREN expr RPAREN
+
+    INT_CONST       shift and go to state 11
+    ID              shift and go to state 8
+    ADDRESS         shift and go to state 12
+    ASSERT          shift and go to state 13
+    BREAK           shift and go to state 14
+    CHAR            shift and go to state 15
+    COMMA           shift and go to state 16
+    DIFF            shift and go to state 17
+    DIVIDE          shift and go to state 18
+    ELSE            shift and go to state 19
+    EQUALS          shift and go to state 9
+    EQ              shift and go to state 20
+    FLOAT           shift and go to state 21
+    FLOAT_CONST     shift and go to state 22
+    FOR             shift and go to state 23
+    HE              shift and go to state 24
+    HT              shift and go to state 25
+    IF              shift and go to state 26
+    INT             shift and go to state 27
+    LBRACE          shift and go to state 28
+    LBRACKET        shift and go to state 29
+    LE              shift and go to state 30
+    LT              shift and go to state 31
+    MINUS           shift and go to state 32
+    MOD             shift and go to state 33
+    PLUSPLUS        shift and go to state 34
+    RBRACE          shift and go to state 35
+    RBRACKET        shift and go to state 36
+    READ            shift and go to state 37
+    RETURN          shift and go to state 38
+    SEMI            shift and go to state 39
+    STRING          shift and go to state 40
+    VOID            shift and go to state 41
+    WHILE           shift and go to state 42
+    MINUSMINUS      shift and go to state 43
+    AND             shift and go to state 44
+    OR              shift and go to state 45
+    DIVIDEASSIGN    shift and go to state 46
+    TIMESASSIGN     shift and go to state 47
+    MODASSIGN       shift and go to state 48
+    PLUSASSIGN      shift and go to state 49
+    MINUSASSIGN     shift and go to state 50
+    UNARYDIFF       shift and go to state 51
+    UNARYAND        shift and go to state 52
+    LPAREN          shift and go to state 53
+
+    expr                           shift and go to state 59
+
+state 56
+
+    (6) expr -> expr TIMES . expr
+    (5) expr -> . expr PLUS expr
+    (6) expr -> . expr TIMES expr
+    (7) expr -> . INT_CONST
+    (8) expr -> . ID
+    (9) expr -> . ADDRESS
+    (10) expr -> . ASSERT
+    (11) expr -> . BREAK
+    (12) expr -> . CHAR
+    (13) expr -> . COMMA
+    (14) expr -> . DIFF
+    (15) expr -> . DIVIDE
+    (16) expr -> . ELSE
+    (17) expr -> . EQUALS
+    (18) expr -> . EQ
+    (19) expr -> . FLOAT
+    (20) expr -> . FLOAT_CONST
+    (21) expr -> . FOR
+    (22) expr -> . HE
+    (23) expr -> . HT
+    (24) expr -> . IF
+    (25) expr -> . INT
+    (26) expr -> . LBRACE
+    (27) expr -> . LBRACKET
+    (28) expr -> . LE
+    (29) expr -> . LT
+    (30) expr -> . MINUS
+    (31) expr -> . MOD
+    (32) expr -> . PLUSPLUS
+    (33) expr -> . RBRACE
+    (34) expr -> . RBRACKET
+    (35) expr -> . READ
+    (36) expr -> . RETURN
+    (37) expr -> . SEMI
+    (38) expr -> . STRING
+    (39) expr -> . VOID
+    (40) expr -> . WHILE
+    (41) expr -> . MINUSMINUS
+    (42) expr -> . AND
+    (43) expr -> . OR
+    (44) expr -> . DIVIDEASSIGN
+    (45) expr -> . TIMESASSIGN
+    (46) expr -> . MODASSIGN
+    (47) expr -> . PLUSASSIGN
+    (48) expr -> . MINUSASSIGN
+    (49) expr -> . UNARYDIFF
+    (50) expr -> . UNARYAND
+    (51) expr -> . LPAREN expr RPAREN
+
+    INT_CONST       shift and go to state 11
+    ID              shift and go to state 8
+    ADDRESS         shift and go to state 12
+    ASSERT          shift and go to state 13
+    BREAK           shift and go to state 14
+    CHAR            shift and go to state 15
+    COMMA           shift and go to state 16
+    DIFF            shift and go to state 17
+    DIVIDE          shift and go to state 18
+    ELSE            shift and go to state 19
+    EQUALS          shift and go to state 9
+    EQ              shift and go to state 20
+    FLOAT           shift and go to state 21
+    FLOAT_CONST     shift and go to state 22
+    FOR             shift and go to state 23
+    HE              shift and go to state 24
+    HT              shift and go to state 25
+    IF              shift and go to state 26
+    INT             shift and go to state 27
+    LBRACE          shift and go to state 28
+    LBRACKET        shift and go to state 29
+    LE              shift and go to state 30
+    LT              shift and go to state 31
+    MINUS           shift and go to state 32
+    MOD             shift and go to state 33
+    PLUSPLUS        shift and go to state 34
+    RBRACE          shift and go to state 35
+    RBRACKET        shift and go to state 36
+    READ            shift and go to state 37
+    RETURN          shift and go to state 38
+    SEMI            shift and go to state 39
+    STRING          shift and go to state 40
+    VOID            shift and go to state 41
+    WHILE           shift and go to state 42
+    MINUSMINUS      shift and go to state 43
+    AND             shift and go to state 44
+    OR              shift and go to state 45
+    DIVIDEASSIGN    shift and go to state 46
+    TIMESASSIGN     shift and go to state 47
+    MODASSIGN       shift and go to state 48
+    PLUSASSIGN      shift and go to state 49
+    MINUSASSIGN     shift and go to state 50
+    UNARYDIFF       shift and go to state 51
+    UNARYAND        shift and go to state 52
+    LPAREN          shift and go to state 53
+
+    expr                           shift and go to state 60
+
+state 57
+
+    (51) expr -> LPAREN expr . RPAREN
+    (5) expr -> expr . PLUS expr
+    (6) expr -> expr . TIMES expr
+
+    RPAREN          shift and go to state 61
+    PLUS            shift and go to state 55
+    TIMES           shift and go to state 56
+
+
+state 58
+
+    (4) statement -> PRINT LPAREN expr RPAREN .
+
+    ID              reduce using rule 4 (statement -> PRINT LPAREN expr RPAREN .)
+    PRINT           reduce using rule 4 (statement -> PRINT LPAREN expr RPAREN .)
+    $end            reduce using rule 4 (statement -> PRINT LPAREN expr RPAREN .)
+
+
+state 59
+
+    (5) expr -> expr PLUS expr .
+    (5) expr -> expr . PLUS expr
+    (6) expr -> expr . TIMES expr
+
+    PLUS            reduce using rule 5 (expr -> expr PLUS expr .)
+    ID              reduce using rule 5 (expr -> expr PLUS expr .)
+    PRINT           reduce using rule 5 (expr -> expr PLUS expr .)
+    $end            reduce using rule 5 (expr -> expr PLUS expr .)
+    RPAREN          reduce using rule 5 (expr -> expr PLUS expr .)
+    TIMES           shift and go to state 56
+
+  ! TIMES           [ reduce using rule 5 (expr -> expr PLUS expr .) ]
+  ! PLUS            [ shift and go to state 55 ]
+
+
+state 60
+
+    (6) expr -> expr TIMES expr .
+    (5) expr -> expr . PLUS expr
+    (6) expr -> expr . TIMES expr
+
+    PLUS            reduce using rule 6 (expr -> expr TIMES expr .)
+    TIMES           reduce using rule 6 (expr -> expr TIMES expr .)
+    ID              reduce using rule 6 (expr -> expr TIMES expr .)
+    PRINT           reduce using rule 6 (expr -> expr TIMES expr .)
+    $end            reduce using rule 6 (expr -> expr TIMES expr .)
+    RPAREN          reduce using rule 6 (expr -> expr TIMES expr .)
+
+  ! PLUS            [ shift and go to state 55 ]
+  ! TIMES           [ shift and go to state 56 ]
+
+
+state 61
+
+    (51) expr -> LPAREN expr RPAREN .
+
+    PLUS            reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+    TIMES           reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+    ID              reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+    PRINT           reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+    $end            reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+    RPAREN          reduce using rule 51 (expr -> LPAREN expr RPAREN .)
+
