@@ -22,7 +22,6 @@ class UCLexer():
     def build(self, **kwargs):
         """ Builds the lexer from the specification. Must be
             called after the lexer object is created.
-
             This method exists separately, because the PLY
             manual warns against calling lex.lex inside __init__
         """
@@ -73,11 +72,11 @@ class UCLexer():
         'ID',
 
         # constants
-        'INT_CONST', 'FLOAT_CONST',
+        'INT_CONST', 'FLOAT_CONST', 'STRING',
 
 
         # operations
-        'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS', 'LT', 'HT', 'LE', 'HE',
+        'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS', 'LT', 'HT', 'LE', 'HE', 'DIVIDE', 'MOD', 'DIFF',
 
         # braces
         'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE', 'RBRACKET', 'LBRACKET',
@@ -101,13 +100,28 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "ID")
         return t
 
-    def t_comment(self, t):
+    def t_multilinecomment(self, t):
         r'/\*(.|\n)*?\*/'
         t.lexer.lineno += t.value.count('\n')
+
+    def t_comment(self,t):
+        r'\/\/.*'
+
+    def t_string(self,t):
+        r'\".*?\"'
+        t.type = self.keyword_map.get(t.value, "STRING")
+        return t
+
+
 
     def t_error(self, t):
         msg = "Illegal character %s" % repr(t.value[0])
         self._error(msg, t)
+
+    def t_divide(self,t):
+        r'\/'
+        t.type = self.keyword_map.get(t.value, "DIVIDE")
+        return t
 
     def t_EQ(self, t):
         r'\=\='
@@ -132,6 +146,11 @@ class UCLexer():
     def t_MINUS(self, t):
         r'\-'
         t.type = self.keyword_map.get(t.value, "MINUS")
+        return t
+
+    def t_DIFF(self,t):
+        r'\!='
+        t.type = self.keyword_map.get(t.value, "DIFF")
         return t
 
     def t_LE(self, t):
@@ -177,6 +196,11 @@ class UCLexer():
     def t_TIMES(self, t):
         r'\*'
         t.type = self.keyword_map.get(t.value, "TIMES")
+        return t
+
+    def t_MOD(self,t):
+        r'\%'
+        t.type = self.keyword_map.get(t.value, "MOD")
         return t
 
     def t_LPAREN(self, t):
