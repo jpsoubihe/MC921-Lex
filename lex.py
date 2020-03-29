@@ -1,3 +1,5 @@
+import sys
+
 from ply.lex import lex
 
 # tokens
@@ -107,6 +109,194 @@ lexer.input("a = 3 * 4 + 5")
 for tok in lexer:
     print(tok)
 
+
+def p_global_declaration(p):
+    ''' global_declaration : function_definition
+                            | declaration
+        '''
+
+def p_function_declaration(p):
+    ''' function_definition : LBRACE type_specifier RBRACE ? declarator LBRACE declaration RBRACE * compound_statement
+        '''
+
+def p_type_specifier(p):
+    ''' type_specifier : void
+                        | char
+                        | int
+                        | float
+            '''
+
+def p_declarator(p):
+    '''declarator : direct_declarator
+    '''
+
+def p_direct_declarator(p):
+    '''direct_declarator : identifier
+                        | LPAREN declarator RPAREN
+                        | direct_declarator [ constant_expression ]
+                        | direct_declarator LPAREN parameter_list RPAREN
+                        | direct_declarator LPAREN { identifier } * RPAREN
+    '''
+
+def p_constant_expression(p):
+    '''constant_expression : binary_expression'''
+
+def p_binary_expression(p):
+    '''binary_expression :  cast_expression
+                        | binary_expression * binary_expression
+                        | binary_expression / binary_expression
+                        | binary_expression % binary_expression
+                        | binary_expression + binary_expression
+                        | binary_expression - binary_expression
+                        | binary_expression < binary_expression
+                        | binary_expression <= binary_expression
+                        | binary_expression > binary_expression
+                        | binary_expression >= binary_expression
+                        | binary_expression == binary_expression
+                        | binary_expression != binary_expression
+                        | binary_expression && binary_expression
+                        | binary_expression || binary_expression
+    '''
+
+def p_cast_expression(p):
+    '''cast_expression : unary_expression
+                        | LPAREN type_specifier RPAREN cast_expression
+    '''
+
+def p_unary_expression(p):
+    ''' unary_expression : postfix_expression
+                        | ++ unary_expression
+                        | -- unary_expression
+                        | unary_operator cast_expression
+    '''
+
+def p_postfix_expression(p):
+    '''postfix_expression : primary_expression
+                        | postfix_expression [ expression ]
+                        | postfix_expression LPAREN {argument_expression} ? RPAREN
+                        | postfix_expression ++
+                        | postfix_expression --
+    '''
+
+def p_primary_expression(p):
+    '''primary_expression : identifier
+                        | constant
+                        | string
+                        | LPAREN expression RPAREN
+    '''
+
+def p_constant(p):
+    '''constant : integer_constant
+                | character_constant
+                | floating_constant
+    '''
+
+def p_expression(p):
+    '''expression : assignment_expression
+                | expression , assignment_expression
+    '''
+
+def p_argument_expression(p):
+    '''argument_expression : assignment_expression
+                            | argument_expression , assignment_expression
+    '''
+
+def p_assignment_expression(p):
+    '''assignment_expression : binary_expression
+                            | unary_expression assignment_operator assignment_expression
+    '''
+
+def p_assignment_operator(p):
+    '''assignment_operator : =
+                        | *=
+                        | /=
+                        | %=
+                        | +=
+                        | -=
+    '''
+
+def p_unary_operator(p):
+    '''unary_operator : &
+                   | *
+                   | +
+                   | -
+                   | !
+    '''
+
+def p_parameter_list(p):
+    ''' parameter_list : parameter_declaration
+                        | parameter_list parameter_declaration
+    '''
+
+def p_parameter_declaration(p):
+    '''parameter_declaration : type_specifier declarator
+    '''
+
+def p_declaration(p):
+    '''declaration : type_specifier {init_declarator_list} ? ;'''
+
+def p_init_declarator_list(p):
+    '''init_declarator_list : init_declarator
+                            | init_declarator_list , init_declarator
+    '''
+
+def p_init_declarator(p):
+    '''init_declarator : declarator
+                        | declarator = initializer
+    '''
+
+def p_initializer(p):
+    '''initializer : assignment_expression
+                    | { initializer_list }
+                    | { initializer_list , }
+    '''
+
+def p_initializer_list(p):
+    '''initializer_list : initializer
+                     | initializer_list , initializer
+    '''
+
+def p_compound_statement(p):
+    '''compound_statement : { { declaration } * { statement } *}'''
+
+def p_statement(p):
+    '''statement : expression_statement
+              | compound_statement
+              | selection_statement
+              | iteration_statement
+              | jump_statement
+              | assert_statement
+              | print_statement
+              | read_statement
+    '''
+
+def p_expression_statement(p):
+    '''expression_statement : { expression }? ; '''
+
+def p_selection_statement(p):
+    '''selection_statement : if LPAREN expression RPAREN statement
+                        | if LPAREN expression RPAREN statement else statement
+    '''
+
+def p_iteration_statement(p):
+    '''iteration_statement : while LPAREN expression RPAREN statement
+                        | for LPAREN {expression}? ; {expression}? ; {expression}? RPAREN statement
+    '''
+
+def p_jump_statement(p):
+    '''jump_statement : break ;
+                   | return {expression}? ;
+    '''
+
+def p_assert_statement(p):
+    '''assert_statement : assert expression ;
+    '''
+
+def p_print_statement(p):
+    '''print_statement : print LPAREN { expression }? RPAREN ;'''
+
+def p_read_statement(p):
+    '''read_statement : read LPAREN argument_expression RPAREN ;'''
 
 def p_statement_list(p):
     ''' statements : statements statement
@@ -341,6 +531,6 @@ precedence = (
     )
 
 parser = yacc(write_tables=False)
-parser.parse('a = 3 * 4 + 5')
+print(parser.parse(open(sys.argv[1]).read()))
 
 # parser.parse('a == 3')
