@@ -120,7 +120,7 @@ def p_global_declaration(p):
         '''
 
 def p_function_declaration(p):
-    ''' function_definition : LBRACE type_specifier RBRACE ? declarator LBRACE declaration RBRACE * compound_statement
+    ''' function_definition : LBRACE type_specifier RBRACE declarator LBRACE declaration RBRACE compound_statement
         '''
 
 def p_type_specifier(p):
@@ -135,11 +135,11 @@ def p_declarator(p):
     '''
 
 def p_direct_declarator(p):
-    '''direct_declarator : identifier
+    '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LBRACKET constant_expression RBRACKET
                         | direct_declarator LPAREN parameter_list RPAREN
-                        | direct_declarator LPAREN LBRACE identifier RBRACE * RPAREN
+                        | direct_declarator LPAREN LBRACE ID RBRACE RPAREN
     '''
 
 def p_constant_expression(p):
@@ -177,23 +177,21 @@ def p_unary_expression(p):
 def p_postfix_expression(p):
     '''postfix_expression : primary_expression
                         | postfix_expression LBRACKET expression RBRACKET
-                        | postfix_expression LPAREN LBRACE argument_expression RBRACE ? RPAREN
+                        | postfix_expression LPAREN LBRACE argument_expression RBRACE RPAREN
                         | postfix_expression PLUSPLUS
                         | postfix_expression MINUSMINUS
     '''
 
 def p_primary_expression(p):
-    '''primary_expression : identifier
-                        | INT_CONST
-                        | FLOAT_CONST
-                        | STRING
+    '''primary_expression : ID
+                        | constant
                         | LPAREN expression RPAREN
     '''
 
 def p_constant(p):
-    '''constant : integer_constant
-                | character_constant
-                | floating_constant
+    '''constant : INT_CONST
+                | STRING
+                | FLOAT_CONST
     '''
 
 def p_expression(p):
@@ -238,7 +236,7 @@ def p_parameter_declaration(p):
     '''
 
 def p_declaration(p):
-    '''declaration : type_specifier LBRACE init_declarator_list RBRACE ? SEMI'''
+    '''declaration : type_specifier LBRACE init_declarator_list RBRACE SEMI'''
 
 def p_init_declarator_list(p):
     '''init_declarator_list : init_declarator
@@ -262,7 +260,7 @@ def p_initializer_list(p):
     '''
 
 def p_compound_statement(p):
-    '''compound_statement : LBRACE LBRACE declaration RBRACE TIMES LBRACE statement RBRACE * RBRACE'''
+    '''compound_statement : LBRACE LBRACE declaration RBRACE TIMES LBRACE statement RBRACE RBRACE'''
 
 def p_statement(p):
     '''statement : expression_statement
@@ -276,7 +274,7 @@ def p_statement(p):
     '''
 
 def p_expression_statement(p):
-    '''expression_statement : LBRACE expression RBRACE ? SEMI '''
+    '''expression_statement : LBRACE expression RBRACE SEMI '''
 
 def p_selection_statement(p):
     '''selection_statement : IF LPAREN expression RPAREN statement
@@ -285,32 +283,32 @@ def p_selection_statement(p):
 
 def p_iteration_statement(p):
     '''iteration_statement : WHILE LPAREN expression RPAREN statement
-                        | FOR LPAREN LBRACE expression RBRACE ? SEMI {expression}? SEMI LBRACE expression RBRACE? RPAREN statement
+                        | FOR LPAREN LBRACE expression RBRACE SEMI LBRACE expression RBRACE SEMI LBRACE expression RBRACE RPAREN statement
     '''
 
 def p_jump_statement(p):
     '''jump_statement : BREAK SEMI
-                   | RETURN LBRACE expression RBRACE ? SEMI
+                   | RETURN LBRACE expression RBRACE SEMI
     '''
 
 def p_assert_statement(p):
     '''assert_statement : ASSERT expression SEMI
     '''
 
-def p_print_statement(p):
-    '''print_statement : PRINT LPAREN LBRACE expression RBRACE ? RPAREN SEMI'''
+# def p_print_statement(p):
+#     '''print_statement : PRINT LPAREN LBRACE expression RBRACE ? RPAREN SEMI'''
 
 def p_read_statement(p):
     '''read_statement : READ LPAREN argument_expression RPAREN SEMI'''
 
-def p_statement_list(p):
-    ''' statements : statements statement
-                   | statement
-    '''
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = p[1] + (p[2])
+# def p_statement_list(p):
+#     ''' statements : statements statement
+#                    | statement
+#     '''
+#     if len(p) == 2:
+#         p[0] = p[1]
+#     else:
+#         p[0] = p[1] + (p[2])
 
 
 
@@ -320,7 +318,7 @@ def p_assign_statement(p):
     p[0] = ('assign', p[1], p[3])
 
 def p_print_statement(p):
-    ''' statement : PRINT LPAREN expr RPAREN
+    ''' print_statement : PRINT LPAREN expr RPAREN
     '''
     p[0] = ('print', p[3])
 
