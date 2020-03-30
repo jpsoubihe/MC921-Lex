@@ -29,7 +29,7 @@ tokens = keywords + (
 
 
     # operations
-    'TIMES', 'MINUS', 'UNARYAND', 'UNARYDIFF', 'MINUSMINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS',
+    'TIMES', 'MINUS', 'UNARYDIFF', 'MINUSMINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS',
 
     #operators
     'LT', 'HT', 'LE', 'HE', 'DIVIDE', 'MOD', 'DIFF', 'AND', 'OR',
@@ -87,8 +87,12 @@ t_COMMA = r'\,'
 t_ADDRESS = r'\&'
 t_AND = r'\&\&'
 t_OR = r'\|\|'
-t_UNARYDIFF = '\!'
-t_UNARYAND = '\&'
+t_UNARYDIFF = r'\!'
+t_DIVIDEASSIGN = r'\/\='
+t_MODASSIGN = r'\%\='
+t_MINUSASSIGN = r'\-\='
+t_PLUSASSIGN = r'\+\='
+t_TIMESASSIGN = r'\*\='
 
 
 
@@ -120,10 +124,10 @@ def p_function_declaration(p):
         '''
 
 def p_type_specifier(p):
-    ''' type_specifier : void
-                        | char
-                        | int
-                        | float
+    ''' type_specifier : VOID
+                        | CHAR
+                        | INT
+                        | FLOAT
             '''
 
 def p_declarator(p):
@@ -133,9 +137,9 @@ def p_declarator(p):
 def p_direct_declarator(p):
     '''direct_declarator : identifier
                         | LPAREN declarator RPAREN
-                        | direct_declarator [ constant_expression ]
+                        | direct_declarator LBRACKET constant_expression RBRACKET
                         | direct_declarator LPAREN parameter_list RPAREN
-                        | direct_declarator LPAREN { identifier } * RPAREN
+                        | direct_declarator LPAREN LBRACE identifier RBRACE * RPAREN
     '''
 
 def p_constant_expression(p):
@@ -143,19 +147,19 @@ def p_constant_expression(p):
 
 def p_binary_expression(p):
     '''binary_expression :  cast_expression
-                        | binary_expression * binary_expression
-                        | binary_expression / binary_expression
-                        | binary_expression % binary_expression
-                        | binary_expression + binary_expression
-                        | binary_expression - binary_expression
-                        | binary_expression < binary_expression
-                        | binary_expression <= binary_expression
-                        | binary_expression > binary_expression
-                        | binary_expression >= binary_expression
-                        | binary_expression == binary_expression
-                        | binary_expression != binary_expression
-                        | binary_expression && binary_expression
-                        | binary_expression || binary_expression
+                        | binary_expression TIMES binary_expression
+                        | binary_expression DIVIDE binary_expression
+                        | binary_expression MOD binary_expression
+                        | binary_expression PLUS binary_expression
+                        | binary_expression MINUS binary_expression
+                        | binary_expression LT binary_expression
+                        | binary_expression LE binary_expression
+                        | binary_expression HT binary_expression
+                        | binary_expression HE binary_expression
+                        | binary_expression EQ binary_expression
+                        | binary_expression DIFF binary_expression
+                        | binary_expression AND binary_expression
+                        | binary_expression OR binary_expression
     '''
 
 def p_cast_expression(p):
@@ -165,23 +169,24 @@ def p_cast_expression(p):
 
 def p_unary_expression(p):
     ''' unary_expression : postfix_expression
-                        | ++ unary_expression
-                        | -- unary_expression
+                        | PLUSPLUS unary_expression
+                        | MINUSMINUS unary_expression
                         | unary_operator cast_expression
     '''
 
 def p_postfix_expression(p):
     '''postfix_expression : primary_expression
-                        | postfix_expression [ expression ]
-                        | postfix_expression LPAREN {argument_expression} ? RPAREN
-                        | postfix_expression ++
-                        | postfix_expression --
+                        | postfix_expression LBRACKET expression RBRACKET
+                        | postfix_expression LPAREN LBRACE argument_expression RBRACE ? RPAREN
+                        | postfix_expression PLUSPLUS
+                        | postfix_expression MINUSMINUS
     '''
 
 def p_primary_expression(p):
     '''primary_expression : identifier
-                        | constant
-                        | string
+                        | INT_CONST
+                        | FLOAT_CONST
+                        | STRING
                         | LPAREN expression RPAREN
     '''
 
@@ -193,12 +198,12 @@ def p_constant(p):
 
 def p_expression(p):
     '''expression : assignment_expression
-                | expression , assignment_expression
+                | expression COMMA assignment_expression
     '''
 
 def p_argument_expression(p):
     '''argument_expression : assignment_expression
-                            | argument_expression , assignment_expression
+                            | argument_expression COMMA assignment_expression
     '''
 
 def p_assignment_expression(p):
@@ -207,20 +212,20 @@ def p_assignment_expression(p):
     '''
 
 def p_assignment_operator(p):
-    '''assignment_operator : =
-                        | *=
-                        | /=
-                        | %=
-                        | +=
-                        | -=
+    '''assignment_operator : EQUALS
+                        | TIMESASSIGN
+                        | DIVIDEASSIGN
+                        | MODASSIGN
+                        | PLUSASSIGN
+                        | MINUSASSIGN
     '''
 
 def p_unary_operator(p):
-    '''unary_operator : &
-                   | *
-                   | +
-                   | -
-                   | !
+    '''unary_operator : ADDRESS
+                   | TIMES
+                   | PLUS
+                   | MINUS
+                   | UNARYDIFF
     '''
 
 def p_parameter_list(p):
@@ -233,31 +238,31 @@ def p_parameter_declaration(p):
     '''
 
 def p_declaration(p):
-    '''declaration : type_specifier {init_declarator_list} ? ;'''
+    '''declaration : type_specifier LBRACE init_declarator_list RBRACE ? SEMI'''
 
 def p_init_declarator_list(p):
     '''init_declarator_list : init_declarator
-                            | init_declarator_list , init_declarator
+                            | init_declarator_list COMMA init_declarator
     '''
 
 def p_init_declarator(p):
     '''init_declarator : declarator
-                        | declarator = initializer
+                        | declarator EQ initializer
     '''
 
 def p_initializer(p):
     '''initializer : assignment_expression
-                    | { initializer_list }
-                    | { initializer_list , }
+                    | LBRACE initializer_list RBRACE
+                    | LBRACE initializer_list COMMA RBRACE
     '''
 
 def p_initializer_list(p):
     '''initializer_list : initializer
-                     | initializer_list , initializer
+                     | initializer_list COMMA initializer
     '''
 
 def p_compound_statement(p):
-    '''compound_statement : { { declaration } * { statement } *}'''
+    '''compound_statement : LBRACE LBRACE declaration RBRACE TIMES LBRACE statement RBRACE * RBRACE'''
 
 def p_statement(p):
     '''statement : expression_statement
@@ -271,32 +276,32 @@ def p_statement(p):
     '''
 
 def p_expression_statement(p):
-    '''expression_statement : { expression }? ; '''
+    '''expression_statement : LBRACE expression RBRACE ? SEMI '''
 
 def p_selection_statement(p):
-    '''selection_statement : if LPAREN expression RPAREN statement
-                        | if LPAREN expression RPAREN statement else statement
+    '''selection_statement : IF LPAREN expression RPAREN statement
+                        | IF LPAREN expression RPAREN statement ELSE statement
     '''
 
 def p_iteration_statement(p):
-    '''iteration_statement : while LPAREN expression RPAREN statement
-                        | for LPAREN {expression}? ; {expression}? ; {expression}? RPAREN statement
+    '''iteration_statement : WHILE LPAREN expression RPAREN statement
+                        | FOR LPAREN LBRACE expression RBRACE ? SEMI {expression}? SEMI LBRACE expression RBRACE? RPAREN statement
     '''
 
 def p_jump_statement(p):
-    '''jump_statement : break ;
-                   | return {expression}? ;
+    '''jump_statement : BREAK SEMI
+                   | RETURN LBRACE expression RBRACE ? SEMI
     '''
 
 def p_assert_statement(p):
-    '''assert_statement : assert expression ;
+    '''assert_statement : ASSERT expression SEMI
     '''
 
 def p_print_statement(p):
-    '''print_statement : print LPAREN { expression }? RPAREN ;'''
+    '''print_statement : PRINT LPAREN LBRACE expression RBRACE ? RPAREN SEMI'''
 
 def p_read_statement(p):
-    '''read_statement : read LPAREN argument_expression RPAREN ;'''
+    '''read_statement : READ LPAREN argument_expression RPAREN SEMI'''
 
 def p_statement_list(p):
     ''' statements : statements statement
@@ -504,9 +509,6 @@ def p_UNARYDIFF(p):
     ''' expr : UNARYDIFF
     '''
 
-def p_UNARYAND(p):
-    ''' expr : UNARYAND
-    '''
 
 
 
