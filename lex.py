@@ -113,6 +113,8 @@ lexer.input("a = 3 * 4 + 5")
 for tok in lexer:
     print(tok)
 
+def p_program(p):
+    '''program : LBRACE global_declaration RBRACE'''
 
 def p_global_declaration(p):
     ''' global_declaration : function_definition
@@ -177,7 +179,7 @@ def p_unary_expression(p):
 def p_postfix_expression(p):
     '''postfix_expression : primary_expression
                         | postfix_expression LBRACKET expression RBRACKET
-                        | postfix_expression LPAREN LBRACE argument_expression RBRACE RPAREN
+                        | postfix_expression LPAREN LBRACE expression RBRACE RPAREN
                         | postfix_expression PLUSPLUS
                         | postfix_expression MINUSMINUS
     '''
@@ -199,10 +201,10 @@ def p_expression(p):
                 | expression COMMA assignment_expression
     '''
 
-def p_argument_expression(p):
-    '''argument_expression : assignment_expression
-                            | argument_expression COMMA assignment_expression
-    '''
+# def p_argument_expression(p):
+#     '''argument_expression : assignment_expression
+#                             | argument_expression COMMA assignment_expression
+#     '''
 
 def p_assignment_expression(p):
     '''assignment_expression : binary_expression
@@ -295,11 +297,11 @@ def p_assert_statement(p):
     '''assert_statement : ASSERT expression SEMI
     '''
 
-# def p_print_statement(p):
-#     '''print_statement : PRINT LPAREN LBRACE expression RBRACE ? RPAREN SEMI'''
+def p_print_statement(p):
+    '''print_statement : PRINT LPAREN LBRACE expression RBRACE RPAREN SEMI'''
 
 def p_read_statement(p):
-    '''read_statement : READ LPAREN argument_expression RPAREN SEMI'''
+    '''read_statement : READ LPAREN expression RPAREN SEMI'''
 
 # def p_statement_list(p):
 #     ''' statements : statements statement
@@ -312,210 +314,39 @@ def p_read_statement(p):
 
 
 
-def p_assign_statement(p):
-    ''' statement : ID EQUALS expr
-    '''
-    p[0] = ('assign', p[1], p[3])
-
-def p_print_statement(p):
-    ''' print_statement : PRINT LPAREN expr RPAREN
-    '''
-    p[0] = ('print', p[3])
-
-
-def p_binop_expr(p):
-    ''' expr : expr PLUS expr
-             | expr TIMES expr
-    '''
-    p[0] = (p[2], p[1], p[3])
+# def p_assign_statement(p):
+#     ''' statement : ID EQUALS expr
+#     '''
+#     p[0] = ('assign', p[1], p[3])
+#
+# def p_print_statement(p):
+#     ''' print_statement : PRINT LPAREN expr RPAREN
+#     '''
+#     p[0] = ('print', p[3])
 
 
-def p_num_expr(p):
-    ''' expr : INT_CONST
-    '''
-    p[0] = ('int', p[1])
+# def p_binop_expr(p):
+#     ''' expr : expr PLUS expr
+#              | expr TIMES expr
+#     '''
+#     p[0] = (p[2], p[1], p[3])
+#
+#
+# def p_num_expr(p):
+#     ''' expr : INT_CONST
+#     '''
+#     p[0] = ('int', p[1])
+#
+#
+# def p_name_expr(p):
+#     ''' expr : ID
+#     '''
+#     p[0] = ('id', p[1])
 
-
-def p_name_expr(p):
-    ''' expr : ID
-    '''
-    p[0] = ('id', p[1])
-
-def p_ADDRESS(p):
-    ''' expr : ADDRESS
-    '''
-
-def p_ASSERT(p):
-    ''' expr : ASSERT
-    '''
-
-def p_BREAK(p):
-    ''' expr : BREAK
-    '''
-
-def p_CHAR(p):
-    ''' expr : CHAR
-    '''
-
-def p_COMMA(p):
-    ''' expr : COMMA
-    '''
-
-def p_DIFF(p):
-    ''' expr : DIFF
-    '''
-
-def p_DIVIDE(p):
-    ''' expr : DIVIDE
-    '''
-
-def p_ELSE(p):
-    ''' expr : ELSE
-    '''
-
-def p_EQUALS(p):
-    ''' expr : EQUALS
-    '''
-
-def p_EQ(p):
-    ''' expr : EQ
-    '''
-
-def p_FLOAT(p):
-    ''' expr : FLOAT
-    '''
-
-def p_FLOAT_CONST(p):
-    ''' expr : FLOAT_CONST
-    '''
-
-def p_FOR(p):
-    ''' expr : FOR
-    '''
-
-def p_HE(p):
-    ''' expr : HE
-    '''
-
-def p_HT(p):
-    ''' expr : HT
-    '''
-
-def p_IF(p):
-    ''' expr : IF
-    '''
-
-def p_INT(p):
-    ''' expr : INT
-    '''
-
-def p_LBRACE(p):
-    ''' expr : LBRACE
-    '''
-
-def p_LBRACKET(p):
-    ''' expr : LBRACKET
-    '''
-
-def p_LE(p):
-    ''' expr : LE
-    '''
-
-def p_LT(p):
-    ''' expr : LT
-    '''
-
-def p_MINUS(p):
-    ''' expr : MINUS
-    '''
-
-def p_MOD(p):
-    ''' expr : MOD
-    '''
-
-def p_PLUSPLUS(p):
-    ''' expr : PLUSPLUS
-    '''
-
-def p_RBRACE(p):
-    ''' expr : RBRACE
-    '''
-
-def p_RBRACKET(p):
-    ''' expr : RBRACKET
-    '''
-
-def p_READ(p):
-    ''' expr : READ
-    '''
-
-def p_RETURN(p):
-    ''' expr : RETURN
-    '''
-
-def p_SEMI(p):
-    ''' expr : SEMI
-    '''
-
-def p_STRING(p):
-    ''' expr : STRING
-    '''
-
-def p_VOID(p):
-    ''' expr : VOID
-    '''
-
-def p_WHILE(p):
-    ''' expr : WHILE
-    '''
-
-def p_MINUSMINUS(p):
-    ''' expr : MINUSMINUS
-    '''
-
-def p_AND(p):
-    ''' expr : AND
-    '''
-
-def p_OR(p):
-    ''' expr : OR
-    '''
-
-def p_DIVIDEASSIGN(p):
-    ''' expr : DIVIDEASSIGN
-    '''
-
-def p_TIMESASSIGN(p):
-    ''' expr : TIMESASSIGN
-    '''
-
-
-def p_MODASSIGN(p):
-    ''' expr : MODASSIGN
-    '''
-
-
-def p_PLUSASSIGN(p):
-    ''' expr : PLUSASSIGN
-    '''
-
-def p_MINUSASSIGN(p):
-    ''' expr : MINUSASSIGN
-    '''
-
-def p_UNARYDIFF(p):
-    ''' expr : UNARYDIFF
-    '''
-
-
-
-
-
-
-def p_compound_expr(p):
-    ''' expr : LPAREN expr RPAREN
-    '''
-    p[0] = p[2]
+# def p_compound_expr(p):
+#     ''' expr : LPAREN expr RPAREN
+#     '''
+#     p[0] = p[2]
 
 
 def p_error (p):
@@ -526,8 +357,11 @@ def p_error (p):
 
 
 precedence = (
-    ('left', 'PLUS'),
-    ('left', 'TIMES')
+    ('left', 'OR'),
+    ('left', 'AND'),
+    ('left', 'HT', 'HE', 'LT', 'LE'),
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE', 'MOD')
     )
 
 parser = yacc(write_tables=False)
