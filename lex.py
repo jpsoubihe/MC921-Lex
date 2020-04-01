@@ -50,18 +50,9 @@ def t_ID(t):
         t.type = "PRINT"
     return t
 
-# def t_NUM(t):
-#     r'[0-9]+'
-#     t.value = int(t.value)
-#     return t
-
 t_TIMES = r'\*'
-# t_EQ = r'='
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
-# t_NEWLINE = r'\n+'
-# t_multilinecomment = r'/\*(.|\n)*?\*/'
-# t_comment = r'\/\/.*'
 t_STRING = r'\".*?\"'
 t_DIVIDE = r'\/'
 t_EQ = r'\=\='
@@ -95,12 +86,6 @@ t_PLUSASSIGN = r'\+\='
 t_TIMESASSIGN = r'\*\='
 
 
-
-
-
-
-
-
 def t_error(t):
     print(f'Illegal character {t.value[0]}')
     t.lexer.skip(1)
@@ -113,8 +98,8 @@ lexer.input("a = 3 * 4 + 5")
 for tok in lexer:
     print(tok)
 
-def p_program(p):
-    '''program : LBRACE global_declaration RBRACE'''
+#def p_program(p):
+ #   '''program : LBRACE global_declaration RBRACE'''
 
 def p_global_declaration(p):
     ''' global_declaration : function_definition
@@ -303,53 +288,8 @@ def p_print_statement(p):
 def p_read_statement(p):
     '''read_statement : READ LPAREN expression RPAREN SEMI'''
 
-# def p_statement_list(p):
-#     ''' statements : statements statement
-#                    | statement
-#     '''
-#     if len(p) == 2:
-#         p[0] = p[1]
-#     else:
-#         p[0] = p[1] + (p[2])
 
-
-
-# def p_assign_statement(p):
-#     ''' statement : ID EQUALS expr
-#     '''
-#     p[0] = ('assign', p[1], p[3])
-#
-# def p_print_statement(p):
-#     ''' print_statement : PRINT LPAREN expr RPAREN
-#     '''
-#     p[0] = ('print', p[3])
-
-
-# def p_binop_expr(p):
-#     ''' expr : expr PLUS expr
-#              | expr TIMES expr
-#     '''
-#     p[0] = (p[2], p[1], p[3])
-#
-#
-# def p_num_expr(p):
-#     ''' expr : INT_CONST
-#     '''
-#     p[0] = ('int', p[1])
-#
-#
-# def p_name_expr(p):
-#     ''' expr : ID
-#     '''
-#     p[0] = ('id', p[1])
-
-# def p_compound_expr(p):
-#     ''' expr : LPAREN expr RPAREN
-#     '''
-#     p[0] = p[2]
-
-
-def p_error (p):
+def p_error(p):
     if p:
         print("Error near the symbol %s" % p.value)
     else:
@@ -359,12 +299,14 @@ def p_error (p):
 precedence = (
     ('left', 'OR'),
     ('left', 'AND'),
+    ('left', 'EQ','DIFF'),
     ('left', 'HT', 'HE', 'LT', 'LE'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'MOD')
     )
 
+
 parser = yacc(write_tables=False)
-print(parser.parse(open(sys.argv[1]).read()))
+parser.parse(open(sys.argv[1]).read())
 
 # parser.parse('a == 3')
