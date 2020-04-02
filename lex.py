@@ -7,10 +7,8 @@ from ply.yacc import yacc
 
 # Reserved keywords
 keywords = (
-    # type specifiers
-    'CHAR', 'FLOAT', 'VOID', 'INT',
-    'ASSERT', 'BREAK', 'ELSE', 'FOR', 'IF',
-    'PRINT', 'READ', 'RETURN', 'WHILE',
+    'ASSERT', 'BREAK', 'CHAR', 'ELSE', 'FLOAT', 'FOR', 'IF',
+    'INT', 'PRINT', 'READ', 'RETURN', 'VOID', 'WHILE',
 )
 
 keyword_map = {}
@@ -27,15 +25,13 @@ tokens = keywords + (
     # constants
     'INT_CONST', 'FLOAT_CONST', 'STRING',
 
-
     # operations
-    'TIMES', 'MINUS', 'UNARYDIFF', 'MINUSMINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS',
-
-    #operators
+    'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS', 'UNARYDIFF', 'MINUSMINUS',
+    # operators
     'LT', 'HT', 'LE', 'HE', 'DIVIDE', 'MOD', 'DIFF', 'AND', 'OR',
 
     # assignment
-    'EQUALS', 'EQ', 'DIVIDEASSIGN', 'MODASSIGN', 'PLUSASSIGN', 'MINUSASSIGN', 'TIMESASSIGN',
+    'DIVIDEASSIGN', 'MODASSIGN', 'PLUSASSIGN', 'MINUSASSIGN', 'TIMESASSIGN',
 
     # braces
     'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE', 'RBRACKET', 'LBRACKET',
@@ -44,71 +40,250 @@ tokens = keywords + (
     'SEMI', 'COMMA',
 )
 
+#
+# Rules
+#
+t_ignore = ' \t'
+
+
+# Newlines
+def t_NEWLINE(t):
+    r'\n+'
+    t.lexer.lineno += t.value.count("\n")
+
+
 def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    if t.value == 'print':
-        t.type = "PRINT"
+    r'[a-zA-Z_][0-9a-zA-Z_]*'
+    t.type = keyword_map.get(t.value, "ID")
     return t
 
-t_TIMES = r'\*'
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_STRING = r'\".*?\"'
-t_DIVIDE = r'\/'
-t_EQ = r'\=\='
-t_EQUALS = r'='
-t_PLUS = r'\+'
-t_PLUSPLUS = r'\+\+'
-t_MINUS = r'\-'
-t_MINUSMINUS = r'\-\-'
-t_DIFF = r'\!='
-t_LE = r'\<\='
-t_LT = r'\<'
-t_HE = r'\>\='
-t_HT = r'\>'
-t_SEMI = r';'
-t_FLOAT_CONST = r'[0-9]\.[0-9]*'
-t_INT_CONST = r'[0-9][0-9]*'
-t_MOD = r'\%'
-t_LBRACE = r'\{'
-t_RBRACE = r'\}'
-t_LBRACKET = r'\['
-t_RBRACKET = r'\]'
-t_COMMA = r'\,'
-t_ADDRESS = r'\&'
-t_AND = r'\&\&'
-t_OR = r'\|\|'
-t_UNARYDIFF = r'\!'
-t_DIVIDEASSIGN = r'\/\='
-t_MODASSIGN = r'\%\='
-t_MINUSASSIGN = r'\-\='
-t_PLUSASSIGN = r'\+\='
-t_TIMESASSIGN = r'\*\='
 
+def t_multilinecomment(t):
+    r'/\*(.|\n)*?\*/'
+    t.lexer.lineno += t.value.count('\n')
+
+def t_comment(t):
+    r'\/\/.*'
+
+
+def t_string(t):
+    r'\".*?\"'
+    t.type = keyword_map.get(t.value, "STRING")
+    return t
+
+
+def t_UNARYDIFF(t):
+    r'\!'
+    t.type = keyword_map.get(t.value, "UNARYDIFF")
+    return t
+
+
+def t_DIVIDEASSIGN(t):
+    r'\/\='
+    t.type = keyword_map.get(t.value, "DIVIDEASSIGN")
+    return t
+
+
+def t_MODASSIGN(t):
+    r'\%\='
+    t.type = keyword_map.get(t.value, "MODASSIGN")
+    return t
+
+
+def t_PLUSASSIGN(t):
+    r'\+\='
+    t.type = keyword_map.get(t.value, "PLUSASSIGN")
+    return t
+
+def t_MINUSASSIGN(t):
+    r'\-\='
+    t.type = keyword_map.get(t.value, "MINUSASSIGN")
+    return t
+
+
+def t_MINUSMINUS(t):
+    r'\-\-'
+    t.type = keyword_map.get(t.value, "MINUSMINUS")
+    return t
+
+
+def t_AND(t):
+    r'\|\|'
+    t.type = keyword_map.get(t.value, "AND")
+    return t
+
+def t_OR(t):
+    r'\|\|'
+    t.type = keyword_map.get(t.value, "OR")
+    return t
+
+
+def t_divide(t):
+    r'\/'
+    t.type = keyword_map.get(t.value, "DIVIDE")
+    return t
+
+
+def t_EQ(t):
+    r'\=\='
+    t.type = keyword_map.get(t.value, "EQ")
+    return t
+
+
+def t_EQUALS(t):
+    r'='
+    t.type = keyword_map.get(t.value, "EQUALS")
+    return t
+
+
+def t_PLUSPLUS(t):
+    r'\+\+'
+    t.type = keyword_map.get(t.value, "PLUSPLUS")
+    return t
+
+
+def t_PLUS(t):
+    r'\+'
+    t.type = keyword_map.get(t.value, "PLUS")
+    return t
+
+
+def t_MINUS(t):
+    r'\-'
+    t.type = keyword_map.get(t.value, "MINUS")
+    return t
+
+def t_DIFF(t):
+    r'\!='
+    t.type = keyword_map.get(t.value, "DIFF")
+    return t
+
+
+def t_LE(t):
+    r'\<\='
+    t.type = keyword_map.get(t.value, "LE")
+    return t
+
+
+def t_LT(t):
+    r'\<'
+    t.type = keyword_map.get(t.value, "LT")
+    return t
+
+
+def t_HE(t):
+    r'\>\='
+    t.type = keyword_map.get(t.value, "HE")
+    return t
+
+
+def t_HT(t):
+    r'\>'
+    t.type = keyword_map.get(t.value, "HT")
+    return t
+
+
+def t_SEMI(t):
+    r';'
+    t.type = keyword_map.get(t.value, "SEMI")
+    return t
+
+
+def t_FLOAT_CONST(t):
+    r'[0-9]\.[0-9]*'
+    t.type = keyword_map.get(t.value, "FLOAT_CONST")
+    return t
+
+def t_INT_CONST(t):
+    r'[0-9][0-9]*'
+    t.type = keyword_map.get(t.value, "INT_CONST")
+    return t
+
+def t_TIMES(t):
+    r'\*'
+    t.type = keyword_map.get(t.value, "TIMES")
+    return t
+
+
+def t_MOD(t):
+    r'\%'
+    t.type = keyword_map.get(t.value, "MOD")
+    return t
+
+
+def t_LPAREN(t):
+    r'\('
+    t.type = keyword_map.get(t.value, "LPAREN")
+    return t
+
+
+def t_RPAREN(t):
+    r'\)'
+    t.type = keyword_map.get(t.value, "RPAREN")
+    return t
+
+
+def t_LBRACE(t):
+    r'\{'
+    t.type = keyword_map.get(t.value, "LBRACE")
+    return t
+
+
+def t_RBRACE(t):
+    r'\}'
+    t.type = keyword_map.get(t.value, "RBRACE")
+    return t
+
+
+def t_LBRACKET(t):
+    r'\['
+    t.type = keyword_map.get(t.value, "LBRACKET")
+    return t
+
+
+def t_RBRACKET(t):
+    r'\]'
+    t.type = keyword_map.get(t.value, "RBRACKET")
+    return t
+
+def t_COMMA(t):
+    r'\,'
+    t.type = keyword_map.get(t.value, "COMMA")
+    return t
+
+def t_ADDRESS(t):
+    r'\&'
+    t.type = keyword_map.get(t.value, "ADDRESS")
+    return t
 
 def t_error(t):
     print(f'Illegal character {t.value[0]}')
     t.lexer.skip(1)
 
-t_ignore = ' \t'
 
 lexer = lex()
-
-lexer.input("a = 3 * 4 + 5")
+lexer.input(open(sys.argv[1]).read())
 for tok in lexer:
     print(tok)
 
-#def p_program(p):
- #   '''program : LBRACE global_declaration RBRACE'''
+def p_program(p):
+    '''program :  global_declaration '''
+    print("program")
+
 
 def p_global_declaration(p):
     ''' global_declaration : function_definition
                             | declaration
         '''
+    print("global_declaration")
 
-def p_function_declaration(p):
-    ''' function_definition : LBRACE type_specifier RBRACE declarator LBRACE declaration RBRACE compound_statement
+
+def p_function_definition(p):
+    ''' function_definition : type_specifier direct_declarator compound_statement
+                            | direct_declarator declaration compound_statement
         '''
+    print("function_definition")
+
 
 def p_type_specifier(p):
     ''' type_specifier : VOID
@@ -116,21 +291,20 @@ def p_type_specifier(p):
                         | INT
                         | FLOAT
             '''
+    print("type_specifier")
 
-def p_declarator(p):
-    '''declarator : direct_declarator
-    '''
 
 def p_direct_declarator(p):
     '''direct_declarator : ID
-                        | LPAREN declarator RPAREN
-                        | direct_declarator LBRACKET constant_expression RBRACKET
+                        | LPAREN direct_declarator RPAREN
+                        | direct_declarator LBRACKET RBRACKET
+                        | direct_declarator LBRACKET binary_expression RBRACKET
                         | direct_declarator LPAREN parameter_list RPAREN
-                        | direct_declarator LPAREN LBRACE ID RBRACE RPAREN
+                        | direct_declarator LPAREN RPAREN
+                        | direct_declarator LPAREN ID RPAREN
     '''
+    print("direct_declarator")
 
-def p_constant_expression(p):
-    '''constant_expression : binary_expression'''
 
 def p_binary_expression(p):
     '''binary_expression :  cast_expression
@@ -148,11 +322,15 @@ def p_binary_expression(p):
                         | binary_expression AND binary_expression
                         | binary_expression OR binary_expression
     '''
+    print("binary_expression")
+
 
 def p_cast_expression(p):
     '''cast_expression : unary_expression
                         | LPAREN type_specifier RPAREN cast_expression
     '''
+    print("cast_expression")
+
 
 def p_unary_expression(p):
     ''' unary_expression : postfix_expression
@@ -160,41 +338,48 @@ def p_unary_expression(p):
                         | MINUSMINUS unary_expression
                         | unary_operator cast_expression
     '''
+    print("unary_expression")
+
 
 def p_postfix_expression(p):
     '''postfix_expression : primary_expression
                         | postfix_expression LBRACKET expression RBRACKET
-                        | postfix_expression LPAREN LBRACE expression RBRACE RPAREN
+                        | postfix_expression LPAREN expression RPAREN
+                        | postfix_expression LPAREN RPAREN
                         | postfix_expression PLUSPLUS
                         | postfix_expression MINUSMINUS
     '''
+    print("postfix_expression")
+
 
 def p_primary_expression(p):
     '''primary_expression : ID
                         | constant
                         | LPAREN expression RPAREN
     '''
+    print("primary_expression")
+
 
 def p_constant(p):
     '''constant : INT_CONST
                 | STRING
                 | FLOAT_CONST
     '''
+    print("constant")
+
 
 def p_expression(p):
     '''expression : assignment_expression
                 | expression COMMA assignment_expression
     '''
+    print("expression")
 
-# def p_argument_expression(p):
-#     '''argument_expression : assignment_expression
-#                             | argument_expression COMMA assignment_expression
-#     '''
 
 def p_assignment_expression(p):
     '''assignment_expression : binary_expression
                             | unary_expression assignment_operator assignment_expression
     '''
+    print("assignment_expression")
 
 def p_assignment_operator(p):
     '''assignment_operator : EQUALS
@@ -204,6 +389,7 @@ def p_assignment_operator(p):
                         | PLUSASSIGN
                         | MINUSASSIGN
     '''
+    print("assignment_expression")
 
 def p_unary_operator(p):
     '''unary_operator : ADDRESS
@@ -212,28 +398,38 @@ def p_unary_operator(p):
                    | MINUS
                    | UNARYDIFF
     '''
+    print("unary_operator")
 
 def p_parameter_list(p):
     ''' parameter_list : parameter_declaration
                         | parameter_list parameter_declaration
     '''
+    print("parameter_list")
 
 def p_parameter_declaration(p):
-    '''parameter_declaration : type_specifier declarator
+    '''parameter_declaration : type_specifier direct_declarator
     '''
+    print("parameter_declaration")
 
 def p_declaration(p):
-    '''declaration : type_specifier LBRACE init_declarator_list RBRACE SEMI'''
+    '''declaration : type_specifier init_declarator_list SEMI
+                   | type_specifier SEMI
+    '''
+    print("declaration")
+
 
 def p_init_declarator_list(p):
     '''init_declarator_list : init_declarator
                             | init_declarator_list COMMA init_declarator
     '''
+    print("init_declarator_list")
 
 def p_init_declarator(p):
-    '''init_declarator : declarator
-                        | declarator EQ initializer
+    '''init_declarator : direct_declarator
+                        | direct_declarator EQ initializer
+                        | direct_declarator EQUALS initializer
     '''
+    print("init_declarator")
 
 def p_initializer(p):
     '''initializer : assignment_expression
@@ -247,7 +443,8 @@ def p_initializer_list(p):
     '''
 
 def p_compound_statement(p):
-    '''compound_statement : LBRACE LBRACE declaration RBRACE TIMES LBRACE statement RBRACE RBRACE'''
+    '''compound_statement : LBRACE declaration statement RBRACE
+                          | LBRACE statement RBRACE'''
 
 def p_statement(p):
     '''statement : expression_statement
@@ -275,8 +472,10 @@ def p_iteration_statement(p):
 
 def p_jump_statement(p):
     '''jump_statement : BREAK SEMI
-                   | RETURN LBRACE expression RBRACE SEMI
+                   | RETURN expression SEMI
+                   | RETURN SEMI
     '''
+    print("jump_statement")
 
 def p_assert_statement(p):
     '''assert_statement : ASSERT expression SEMI
@@ -305,8 +504,6 @@ precedence = (
     ('left', 'TIMES', 'DIVIDE', 'MOD')
     )
 
-
+print("----------------------------------------PARSE----------------------------------------")
 parser = yacc(write_tables=False)
 parser.parse(open(sys.argv[1]).read())
-
-# parser.parse('a == 3')
