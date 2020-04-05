@@ -262,9 +262,9 @@ def t_error(t):
 
 
 lexer = lex()
-lexer.input(open(sys.argv[1]).read())
-for tok in lexer:
-    print(tok)
+# lexer.input(open(sys.argv[1]).read())
+# for tok in lexer:
+#     print(tok)
 
 def p_program(p):
     '''program :  global_declaration '''
