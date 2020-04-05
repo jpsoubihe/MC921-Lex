@@ -26,7 +26,7 @@ tokens = keywords + (
     'INT_CONST', 'FLOAT_CONST', 'STRING', 'CHAR_CONST',
 
     # operations
-    'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS', 'UNARYDIFF', 'MINUSMINUS',
+    'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'UNARYDIFF', 'PLUSPLUS', 'MINUSMINUS',
     # operators
     'LT', 'HT', 'LE', 'HE', 'DIVIDE', 'MOD', 'DIFF', 'AND', 'OR',
 
@@ -72,10 +72,6 @@ def t_string(t):
     return t
 
 
-def t_UNARYDIFF(t):
-    r'\!'
-    t.type = keyword_map.get(t.value, "UNARYDIFF")
-    return t
 
 
 def t_DIVIDEASSIGN(t):
@@ -156,6 +152,12 @@ def t_MINUS(t):
 def t_DIFF(t):
     r'\!='
     t.type = keyword_map.get(t.value, "DIFF")
+    return t
+
+
+def t_UNARYDIFF(t):
+    r'\!'
+    t.type = keyword_map.get(t.value, "UNARYDIFF")
     return t
 
 
@@ -269,13 +271,20 @@ def t_error(t):
 
 
 lexer = lex()
+lexer.input(open(sys.argv[1]).read())
+for tok in lexer:
+    print(tok)
 
 def p_program(p):
-    ''' program : global_declaration
-               | global_declaration global_declaration
+    ''' program : global_declaration_list_opt
     '''
     print("program")
 
+
+def p_global_declaration_list_opt(p):
+    ''' global_declaration_list_opt : global_declaration global_declaration_list_opt
+                                    | empty
+    '''
 
 def p_global_declaration(p):
     ''' global_declaration : function_definition
@@ -284,14 +293,16 @@ def p_global_declaration(p):
 
 
 def p_function_definition(p):
-    ''' function_definition : type_specifier declarator declaration_list_opt  compound_statement
-                            | declarator declaration_list_opt  compound_statement '''
+    ''' function_definition : type_specifier declarator compound_statement
+                            | declarator declaration_list_opt  compound_statement
+    '''
 
 
 def p_declaration_list_opt(p):
     ''' declaration_list_opt : declaration declaration_list_opt
                              | empty
     '''
+    print("declaration_list_opt")
 
 
 def p_declarator(p):
@@ -332,6 +343,7 @@ def p_binary_expression(p):
                           | binary_expression PLUS binary_expression
                           | binary_expression MINUS binary_expression
                           | binary_expression LT binary_expression
+                          | binary_expression EQUALS binary_expression
                           | binary_expression EQ binary_expression
                           | binary_expression LE binary_expression
                           | binary_expression HT binary_expression
@@ -378,7 +390,6 @@ def p_primary_expression(p):
                            | STRING
                            | LPAREN expression RPAREN
     '''
-
 
 def p_constant(p):
     ''' constant : INT_CONST
@@ -442,6 +453,7 @@ def p_parameter_declaration(p):
 
 def p_declaration(p):
     ''' declaration : type_specifier init_declarator_list_opt SEMI'''
+    print("declaration")
 
 
 def p_init_declarator_list_opt(p):
@@ -460,7 +472,6 @@ def p_init_declarator(p):
     ''' init_declarator : declarator
                         | declarator EQUALS initializer
     '''
-    print("24")
 
 
 def p_initializer(p):
@@ -477,15 +488,16 @@ def p_initializer_list(p):
 
 
 def p_compound_statement(p):
-    ''' compound_statement : LBRACE declaration_list_opt statement_list_opt RBRACE'''
-    print("statement")
+    ''' compound_statement : LBRACE declaration_list_opt statement_list_opt RBRACE
+    '''
 
 
 def p_statement_list_opt(p):
     ''' statement_list_opt : statement statement_list_opt
                            | empty
     '''
-    print("statement")
+    print("statement_list_opt")
+
 
 def p_statement(p):
     ''' statement : expression_statement
@@ -497,7 +509,7 @@ def p_statement(p):
                   | print_statement
                   | read_statement
     '''
-
+    print("statement")
 
 def p_expression_statement(p):
     ''' expression_statement : expression_opt SEMI'''
@@ -518,9 +530,9 @@ def p_selection_statement(p):
 def p_iteration_statement(p):
     ''' iteration_statement : WHILE LPAREN expression RPAREN statement
                             | FOR LPAREN init_declarator SEMI expression_opt SEMI expression_opt RPAREN statement
-                            | FOR LPAREN declaration expression_opt SEMI expression_opt SEMI RPAREN statement
-                            | FOR LPAREN type_specifier declaration expression_opt SEMI expression_opt SEMI RPAREN statement
+                            | FOR LPAREN type_specifier init_declarator SEMI expression_opt SEMI expression_opt RPAREN statement
     '''
+    print("iteration")
 
 
 def p_jump_statement(p):
@@ -555,7 +567,7 @@ def p_error(p):
 
 precedence = (
     ('left', 'OR'),
-    ('left', 'AND'),
+    ('left', 'AND', 'EQUALS'),
     ('left', 'EQ','DIFF'),
     ('left', 'HT', 'HE', 'LT', 'LE'),
     ('left', 'PLUS', 'MINUS'),
