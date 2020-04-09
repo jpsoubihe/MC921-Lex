@@ -1,2 +1,8 @@
 Program: 
     GlobalDecl: 
+        VarDecl: 
+            Type: int
+            Decl: 
+                ID: n
+                Cast: 
+                    Constant: 3, int

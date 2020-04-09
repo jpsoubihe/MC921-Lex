@@ -156,7 +156,7 @@ class UCParser():
             ''' argument_expression_opt : argument_expression '''
             p[0] = p[1]
 
-        def p_argument_expression_opt1(p):
+        def p_argument_expression_opt2(p):
             ''' argument_expression_opt : empty '''
             p[0] = p[1]
 
@@ -185,7 +185,7 @@ class UCParser():
             ''' constant : FLOAT_CONST '''
             p[0] = Constant('float', p[1])
 
-        def p_constant2(p):
+        def p_constant3(p):
             ''' constant : CHAR_CONST '''
             p[0] = Constant('char', p[1])
 
@@ -259,9 +259,9 @@ class UCParser():
 
         def p_declaration(p):
             ''' declaration : type_specifier init_declarator_list_opt SEMI'''
-            print("tipo + lista_declaracao")
+            # print("tipo + lista_declaracao")
             # Decl() maybe?
-            p[0] = p[1] + p[2]
+            p[0] = VarDecl(p[1], p[2])
 
         def p_init_declarator_list_opt(p):
             ''' init_declarator_list_opt : init_declarator_list
@@ -289,7 +289,7 @@ class UCParser():
             if len(p) == 2:
                 p[0] = p[1]
             else:
-                p[0] = p[1] + p[3]
+                p[0] = Decl(p[1],p[3])
 
         def p_initializer1(p):
             ''' initializer : assignment_expression '''

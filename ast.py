@@ -71,6 +71,8 @@ class Program(Node):
             nodelist.append(("gdecls[%d]" % i, child))
         return tuple(nodelist)
 
+    attr_names = ()
+
     # def show(self, buf=sys.stdout, offset=0, attrnames=False, nodenames=False, showcoord=False, _my_node_name=None):
     #     """ Pretty print the Node and all its attributes and children (recursively) to a buffer.
     #         buf:
@@ -434,4 +436,38 @@ class Cast(Node):
         return tuple(nodelist)
 
     attr_names = ()
+
+
+class Decl(Node):
+    __slots__ = ('declarator', 'initializer', 'coord')
+
+    def __init__(self, declarator, initializer, coord=None):
+        self.declarator = declarator
+        self.initializer = initializer
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        nodelist.append(('declarator', self.declarator))
+        nodelist.append(('initializer', self.initializer))
+        return tuple(nodelist)
+
+    attr_names = ()
+
+class VarDecl(Node):
+    __slots__ = ('type', 'declarator', 'coord')
+
+    def __init__(self,  type, declarator, coord=None):
+        self.type = type
+        self.declarator = declarator
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        nodelist.append(('type', self.type))
+        nodelist.append(('declarator', self.declarator))
+        return tuple(nodelist)
+
+    attr_names = ()
+
 
