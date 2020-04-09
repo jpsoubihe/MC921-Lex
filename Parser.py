@@ -2,35 +2,41 @@ import sys
 
 from ply.yacc import yacc
 from Lexer import tokens
+from ast import Program, GlobalDecl, EmptyStatement, FuncDef, Type, ID
+
 
 class UCParser():
+
     def parse(self, code, bosta, debug):
+
         def p_program(p):
             ''' program : global_declaration_list_opt
             '''
             print("accept")
-            # p[0] = Program(p[1])
+            p[0] = Program(p[1])
 
         def p_global_declaration_list_opt(p):
             ''' global_declaration_list_opt : global_declaration global_declaration_list_opt
-                                            | empty
+                                            | global_declaration
             '''
-            # if len(p) < 1:
-                # p[0] = EmptyStatement()
+            p[0] = [p[1]] if len(p) == 2 else p[1] + [p[2]]
 
-        def p_global_declaration(p):
-            ''' global_declaration : function_definition
-                                   | declaration
-            '''
-            # p[0] = GlobalDecl(p[1])
+        def p_global_declaration1(p):
+            ''' global_declaration : function_definition '''
+            p[0] = GlobalDecl(p[1])
+
+        def p_global_declaration2(p):
+            ''' global_declaration : declaration '''
+            print("declaration")
+            p[0] = GlobalDecl(p[1])
 
         def p_function_definition1(p):
-            ''' function_definition : type_specifier declarator compound_statement
-            '''
-            # p[0] = FuncDef(p[0], p[1], p[2])
+            ''' function_definition : type_specifier direct_declarator compound_statement '''
+            p[0] = FuncDef(p[0], p[1], p[2])
 
         def p_function_definition2(p):
-            ''' function_definition : declarator declaration_list_opt  compound_statement'''
+            ''' function_definition : direct_declarator declaration_list_opt  compound_statement'''
+            p[0] = p[1] + [p[2]] + p[3]
             # p[0] = FuncDef(p[0], [p[1]], p[2])
 
         def p_declaration_list_opt(p):
@@ -38,17 +44,30 @@ class UCParser():
                                      | empty
             '''
 
-        def p_declarator(p):
-            ''' declarator : direct_declarator
-            '''
 
-        def p_direct_declarator(p):
+        def p_direct_declarator1(p):
             ''' direct_declarator : ID
-                                  | LPAREN declarator RPAREN
-                                  | direct_declarator LBRACKET constant_expression_opt RBRACKET
-                                  | direct_declarator LPAREN parameter_list RPAREN
-                                  | direct_declarator LPAREN identifier_list_opt RPAREN
+                                  | LPAREN direct_declarator RPAREN
             '''
+            if len(p) <= 2:
+                p[0] = ID(p[1])
+            else:
+                p[0] = p[2]
+
+        def p_direct_declarator2(p):
+            ''' direct_declarator : direct_declarator LBRACKET constant_expression_opt RBRACKET'''
+            p[0] = (p[1], p[3])
+
+        def p_direct_declarator3(p):
+            ''' direct_declarator : direct_declarator LPAREN parameter_list RPAREN'''
+            # ToDo: to be completed
+            # p[0] = Func
+
+
+        def p_direct_declarator4(p):
+            ''' direct_declarator : direct_declarator LPAREN identifier_list_opt RPAREN'''
+
+
 
         def p_constant_expression_opt(p):
             ''' constant_expression_opt : constant_expression
@@ -156,6 +175,8 @@ class UCParser():
                                | INT
                                | FLOAT
             '''
+            p[0] = Type(p[1])
+
 
         def p_parameter_list(p):
             ''' parameter_list : parameter_declaration
@@ -163,10 +184,11 @@ class UCParser():
             '''
 
         def p_parameter_declaration(p):
-            ''' parameter_declaration : type_specifier declarator '''
+            ''' parameter_declaration : type_specifier direct_declarator '''
 
         def p_declaration(p):
             ''' declaration : type_specifier init_declarator_list_opt SEMI'''
+            print("tipo + lista_declaracao")
             # p[0] = Decl("jsojdos", p[1], [p[2]])
 
         def p_init_declarator_list_opt(p):
@@ -180,8 +202,8 @@ class UCParser():
             '''
 
         def p_init_declarator(p):
-            ''' init_declarator : declarator
-                                | declarator EQUALS initializer
+            ''' init_declarator : direct_declarator
+                                | direct_declarator EQUALS initializer
             '''
 
         def p_initializer(p):
@@ -198,6 +220,7 @@ class UCParser():
         def p_compound_statement(p):
             ''' compound_statement : LBRACE declaration_list_opt statement_list_opt RBRACE
             '''
+            # Compound_rule
 
         def p_statement_list_opt(p):
             ''' statement_list_opt : statement statement_list_opt
@@ -269,7 +292,8 @@ class UCParser():
         )
 
 
+
         parser = yacc(write_tables=False)
-        parser.parse(code)
+        return parser.parse(code)
 
 

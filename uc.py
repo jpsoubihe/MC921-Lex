@@ -191,6 +191,100 @@ def run_compiler():
 
     sys.exit(retval)
 
+class NodeVisitor(object):
+    """ A base NodeVisitor class for visiting uc_ast nodes.
+        Subclass it and define your own visit_XXX methods, where
+        XXX is the class name you want to visit with these
+        methods.
+
+        For example:
+
+        class ConstantVisitor(NodeVisitor):
+            def __init__(self):
+                self.values = []
+
+            def visit_Constant(self, node):
+                self.values.append(node.value)
+
+        Creates a list of values of all the constant nodes
+        encountered below the given node. To use it:
+
+        cv = ConstantVisitor()
+        cv.visit(node)
+
+        Notes:
+
+        *   generic_visit() will be called for AST nodes for which
+            no visit_XXX method was defined.
+        *   The children of nodes for which a visit_XXX was
+            defined will not be visited - if you need this, call
+            generic_visit() on the node.
+            You can use:
+                NodeVisitor.generic_visit(self, node)
+        *   Modeled after Python's own AST visiting facilities
+            (the ast module of Python 3.0)
+    """
+
+    _method_cache = None
+
+    def visit(self, node):
+        """ Visit a node.
+        """
+
+        if self._method_cache is None:
+            self._method_cache = {}
+
+        visitor = self._method_cache.get(node.__class__.__name__, None)
+        if visitor is None:
+            method = 'visit_' + node.__class__.__name__
+            visitor = getattr(self, method, self.generic_visit)
+            self._method_cache[node.__class__.__name__] = visitor
+
+        return visitor(node)
+
+    def generic_visit(self, node):
+        """ Called if no explicit visitor function exists for a
+            node. Implements preorder visiting of the node.
+        """
+        for c in node:
+            self.visit(c)
+
+
+def _repr(obj):
+    """
+    Get the representation of an object, with dedicated pprint-like format for lists.
+    """
+    if isinstance(obj, list):
+        return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
+    else:
+        return repr(obj)
+
+
+class Node(object):
+    """ Abstract base class for AST nodes.
+    """
+
+    def __repr__(self):
+        """ Generates a python representation of the current node
+        """
+        result = self.__class__.__name__ + '('
+        indent = ''
+        separator = ''
+        for name in self.__slots__[:-2]:
+            result += separator
+            result += indent
+            result += name + '=' + (
+                _repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
+            separator = ','
+            indent = ' ' * len(self.__class__.__name__)
+        result += indent + ')'
+        return result
+
+    def children(self):
+        """ A sequence of all children that are Nodes
+        """
+        pass
+
 
 if __name__ == '__main__':
     run_compiler()
