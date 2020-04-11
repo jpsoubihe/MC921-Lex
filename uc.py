@@ -7,7 +7,7 @@
 # to read and write to, and invokes the different stages of
 # the compiler proper.
 # ============================================================
-
+import ast
 import sys
 from contextlib import contextmanager
 from Parser import UCParser
@@ -147,7 +147,7 @@ def run_compiler():
 
     emit_ast = True
     susy = False
-    debug = False
+    debug = True
 
     params = sys.argv[1:]
     files = sys.argv[1:]
@@ -258,32 +258,6 @@ def _repr(obj):
         return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
     else:
         return repr(obj)
-
-
-class Node(object):
-    """ Abstract base class for AST nodes.
-    """
-
-    def __repr__(self):
-        """ Generates a python representation of the current node
-        """
-        result = self.__class__.__name__ + '('
-        indent = ''
-        separator = ''
-        for name in self.__slots__[:-2]:
-            result += separator
-            result += indent
-            result += name + '=' + (
-                _repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
-            separator = ','
-            indent = ' ' * len(self.__class__.__name__)
-        result += indent + ')'
-        return result
-
-    def children(self):
-        """ A sequence of all children that are Nodes
-        """
-        pass
 
 
 if __name__ == '__main__':
