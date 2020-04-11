@@ -16,7 +16,7 @@ class UCParser():
         self.lexer = UCLexer(print_error)
         self.lexer.build()
         self.parser = yacc(module=self)
-        pass
+
 
     def _fix_decl_name_type(self, decl, typename):
         """ Fixes a declaration. Modifies decl.
@@ -113,10 +113,12 @@ class UCParser():
 
     def p_global_declaration_list_opt(self, p):
         ''' global_declaration_list_opt : global_declaration global_declaration_list_opt
-                                        | empty
+                                        | global_declaration
         '''
-        if len(p) == 2:
-            p[0] = p[1]
+        if len(p) >= 3:
+            p[0] = [p[1] + p[2]]
+        else:
+            p[0] = [p[1]]
         print('p_global_declaration_list_opt')
 
     def p_global_declaration(self, p):
@@ -301,8 +303,14 @@ class UCParser():
         print('parameter_declaration')
 
     def p_declaration(self, p):
-        ''' declaration : type_specifier init_declarator_list_opt SEMI'''
-        p[0] = Decl(p[2], p[1], p[2])
+        ''' declaration : declaration_body SEMI'''
+        p[0] = p[1]
+        print("declaration")
+
+    def p_declaration_body(self, p):
+        ''' declaration_body : type_specifier init_declarator_list_opt'''
+        # p[0] = self._build_declarations(p[1], p[2])
+        p[0] = Decl(p[2], VarDecl(p[1], p[2]), None)
         print("declaration")
 
     def p_init_declarator_list_opt(self, p):

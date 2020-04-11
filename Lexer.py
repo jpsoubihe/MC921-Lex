@@ -1,6 +1,6 @@
 import sys
 
-import kwargs as kwargs
+
 from ply.lex import lex
 
 # tokens

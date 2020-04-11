@@ -1,1 +1,6 @@
 Program: 
+    GlobalDecl: 
+        ID: n
+        VarDecl: 
+            ID: n
+            Type: int

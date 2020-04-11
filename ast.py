@@ -253,7 +253,7 @@ class Type(Node):
         return
         yield
 
-    attr_names = ('names',)
+    attr_names = ('names', )
 
 
 class ID(Node):
