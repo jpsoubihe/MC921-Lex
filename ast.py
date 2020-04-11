@@ -215,6 +215,9 @@ class EmptyStatement(Node):
         nodelist = []
         return tuple(nodelist)
 
+    def __iter__(self):
+        return
+
     attr_names = ()
 
 
@@ -230,11 +233,68 @@ class FuncDef(Node):
 
     def children(self):
         nodelist = []
-        if self.first is not None: nodelist.append(("type", self.first))
+        if self.first is not None: nodelist.append(("first", self.first))
         if self.second is not None: nodelist.append(("declarator", self.second))
         if self.third is not None: nodelist.append(("compound", self.third))
         print(nodelist)
         return tuple(nodelist)
+
+    def __iter__(self):
+        if self.first is not None:
+            yield self.first
+        if self.second is not None:
+            yield self.second
+        if self.third is not None:
+            yield self.third
+
+
+class FuncDef(Node):
+    __slots__ = ('first', 'type', 'coord')
+
+    def __init__(self, first, type, coord=None):
+        self.first = first
+        self.second = type
+        self.coord = coord
+        print("FuncDef")
+
+    def children(self):
+        nodelist = []
+        if self.first is not None: nodelist.append(("first", self.first))
+        if self.type is not None: nodelist.append(("type", self.second))
+        print(nodelist)
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.first is not None:
+            yield self.first
+        if self.type is not None:
+            yield self.type
+
+class If(Node):
+    __slots__ = ('expression', 'if_statement', 'else_statement', 'coord')
+
+    def __init__(self, expression, if_statement, else_statement=None, coord=None):
+        self.expression = expression
+        self.if_statement = if_statement
+        self.else_statement = else_statement
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.expression is not None:
+            nodelist.append(('expression', self.expression))
+        if self.if_statement is not None:
+            nodelist.append(('if_statement', self.if_statement))
+        if self.else_statement is not None:
+            nodelist.append(('else_statement', self.else_statement))
+
+    def __iter__(self):
+        if self.expression is not None:
+            yield self.expression
+        if self.if_statement is not None:
+            yield self.if_statement
+        if self.else_statement is not None:
+            yield self.else_statement
 
 
 class Type(Node):
@@ -332,6 +392,9 @@ class Assert(Node):
         nodelist = [('expression', self.expression)]
         return tuple(nodelist)
 
+    def __iter__(self):
+        if self.expression is not None: yield self.expression
+
     attr_names = ()
 
 
@@ -347,6 +410,10 @@ class Return(Node):
         if self.expression is not None: nodelist.append(('expression', self.expression))
         return tuple(nodelist)
 
+    def __iter__(self):
+        if self.expression is not None:
+            yield self.expression
+
     attr_names = ()
 
 
@@ -359,6 +426,9 @@ class Break(Node):
     def children(self):
         nodelist = []
         return tuple(nodelist)
+
+    def __iter__(self):
+        return
 
     attr_names = ()
 
@@ -413,7 +483,7 @@ class While(Node):
     attr_names = ()
 
 
-class If(Node):
+class IF(Node):
     __slots__ = ('expression', 'statement1', 'statement2', 'coord')
 
     def __init__(self, expression, statement1, statement2, coord=None):
@@ -426,10 +496,10 @@ class If(Node):
         nodelist = []
         nodelist.append(('expression', self.expression))
         nodelist.append(('statement1', self.statement1))
-        nodelist.append(('statement', self.statement2))
-        return tuple(nodelist)
-
-    attr_names = ()
+#         nodelist.append(('statement', self.statement2))
+#         return tuple(nodelist)
+#
+#     attr_names = ()
 
 
 class Assignment(Node):
@@ -446,6 +516,10 @@ class Assignment(Node):
         if self.expression is not None: nodelist.append(('expression', self.expression))
         if self.assignment is not None: nodelist.append(('assignment', self.assignment))
         return tuple(nodelist)
+
+    def __iter__(self):
+        if self.expression is not None: yield self.expression
+        if self.assignment is not None: yield self.assignment
 
     attr_names = ('op', )
 
@@ -497,6 +571,10 @@ class Constant(Node):
         nodelist = []
         return tuple(nodelist)
 
+    def __iter__(self):
+        if self.type is not None: yield self.type
+        if self.value is not None: yield self.value
+
     attr_names = ('value', 'type')
 
 
@@ -511,6 +589,9 @@ class Cast(Node):
         nodelist = []
         nodelist.append(('cast', self.cast))
         return tuple(nodelist)
+
+    def __iter__(self):
+        if self.cast is not None: yield self.cast
 
     attr_names = ()
 
@@ -561,3 +642,106 @@ class VarDecl(Node):
             yield self.declarator
 
     attr_names = ()
+
+
+class FuncCall(Node):
+    __slots__ = ('name', 'args', 'coord')
+
+    def __init__(self,  name, args, coord=None):
+        self.name = name
+        self.args = args
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.name is not None: nodelist.append(('name', self.name))
+        if self.args is not None: nodelist.append(('args', self.args))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.name is not None:
+            yield self.name
+        if self.args is not None:
+            yield self.args
+
+    attr_names = ()
+
+
+class ArrayDecl(Node):
+    __slots__ = ('type', 'num', 'coord')
+
+    def __init__(self,  type, num, coord=None):
+        self.type = type
+        self.num = num
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.type is not None: nodelist.append(('type', self.type))
+        if self.num is not None: nodelist.append(('num', self.num))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.type is not None:
+            yield self.type
+        if self.num is not None:
+            yield self.num
+
+    attr_names = ()
+
+
+class ArrayRef(Node):
+    __slots__ = ('name', 'coord')
+
+    def __init__(self,  name, coord=None):
+        self.name = name
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.name is not None: nodelist.append(('name', self.name))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.name is not None:
+            yield self.name
+
+    attr_names = ()
+
+
+class ExprList(Node):
+    __slots__ = ('expression', 'coord')
+
+    def __init__(self,  expression, coord=None):
+        self.expression = expression
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.expression is not None: nodelist.append(('expression', self.expression))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.expression is not None:
+            yield self.expression
+
+    attr_names = ()
+
+class DeclList(Node):
+    __slots__ = ('decls', 'coord')
+
+    def __init__(self, decls, coord=None):
+        self.decls = decls
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        if self.decls is not None: nodelist.append(('decls', self.decls))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.decls is not None:
+            yield self.decls
+
+    attr_names = ()
+
