@@ -253,7 +253,7 @@ class UCParser():
         ''' argument_expression_opt : argument_expression '''
         p[0] = p[1]
 
-    def p_argument_expression_opt1(self, p):
+    def p_argument_expression_opt2(self, p):
         ''' argument_expression_opt : empty '''
         p[0] = p[1]
 
@@ -282,7 +282,7 @@ class UCParser():
         ''' constant : FLOAT_CONST '''
         p[0] = Constant('float', p[1])
 
-    def p_constant2(self, p):
+    def p_constant3(self, p):
         ''' constant : CHAR_CONST '''
         p[0] = Constant('char', p[1])
 
