@@ -16,14 +16,58 @@ class UCParser():
         self.lexer = UCLexer(print_error)
         self.lexer.build()
         self.parser = yacc(module=self)
+        self.debug = False
 
+    def _type_modify_decl(self, decl, modifier):
+        if self.debug:
+            print("Inside _type_modify_decl:")
+            print(decl)
+            print('End')
+
+        modifier_head = modifier
+        modifier_tail = modifier
+
+        while modifier_tail.type:
+            modifier_tail = modifier_tail.type
+
+        if isinstance(decl, VarDecl):
+            modifier_tail.type = decl
+            return modifier
+        else:
+            decl_tail = decl
+
+            while not isinstance(decl_tail.type, VarDecl):
+                decl_tail = decl_tail.type
+
+            modifier_tail.type = decl_tail.type
+            decl_tail.type = modifier_head
+            return decl
+
+    def p_error(self, p):
+        if p:
+            print("Error near the symbol %s" % p.value)
+        else:
+            print("Error at the end of input")
+
+    def _build_function_definition(self, spec, decl, param_decls, body):
+        if self.debug:
+            print("Inside _build_function_definition:")
+            print(spec)
+            print(decl)
+            print(param_decls)
+            print(body)
+            print('End')
+
+        declaration = self._build_declarations(spec=spec, decls=dict(decl=decl, init=None))
+
+        return FuncDef(spec=spec, decl=declaration, param_decls=param_decls, body=body, coord=decl.coord)
 
     def _fix_decl_name_type(self, decl, typename):
         """ Fixes a declaration. Modifies decl.
         """
         # Reach the underlying basic type
         type = decl
-        while not isinstance(type, ast.VarDecl):
+        while not isinstance(type, VarDecl):
             type = type.type
 
         decl.name = type.declname
@@ -34,7 +78,7 @@ class UCParser():
         # If all the types are basic, they're collected in the
         # Type holder.
         for tn in typename:
-            if not isinstance(tn, ast.Type):
+            if not isinstance(tn, Type):
                 if len(typename) > 1:
                     self._parse_error(
                         "Invalid multiple types specified", tn.coord)
@@ -43,68 +87,46 @@ class UCParser():
                     return decl
 
         if not typename:
-            # Functions default to returning int
-            if not isinstance(decl.type, ast.FuncDecl):
-                self._parse_error("Missing type in declaration", decl.coord)
-            type.type = ast.Type(['int'], coord=decl.coord)
+            pass
+            # # Functions default to returning int
+            # if not isinstance(decl.type, ast_classes.FuncDecl):
+            #     self._parse_error("Missing type in declaration", decl.coord)
+            # type.type = ast_classes.Type(['int'], coord=decl.coord)
         else:
             # At this point, we know that typename is a list of Type
             # nodes. Concatenate all the names into a single list.
-            type.type = ast.Type(
+            type.type = Type(
                 [typename.names[0]],
                 coord=typename.coord)
         return decl
 
-    def _type_modify_decl(self, decl, modifier):
-        """ Tacks a type modifier on a declarator, and returns
-            the modified declarator.
-            Note: the declarator and modifier may be modified
-        """
-        modifier_head = modifier
-        modifier_tail = modifier
-
-        # The modifier may be a nested list. Reach its tail.
-        while modifier_tail.type:
-            modifier_tail = modifier_tail.type
-
-        # If the decl is a basic type, just tack the modifier onto it
-        if isinstance(decl, ast.VarDecl):
-            modifier_tail.type = decl
-            return modifier
-        else:
-            # Otherwise, the decl is a list of modifiers. Reach
-            # its tail and splice the modifier onto the tail,
-            # pointing to the underlying basic type.
-            decl_tail = decl
-
-            while not isinstance(decl_tail.type, ast.VarDecl):
-                decl_tail = decl_tail.type
-
-            modifier_tail.type = decl_tail.type
-            decl_tail.type = modifier_head
-            return decl
-
     def _build_declarations(self, spec, decls):
-        """ Builds a list of declarations all sharing the given specifiers.
-        """
+        if self.debug:
+            print("Inside _build_declarations:")
+            for decl in decls:
+                print(decl)
+            print(spec)
+            print('End')
+
         declarations = []
 
         for decl in decls:
-            assert decl['decl'] is not None
-            declaration = ast.Decl(
-                name=None,
-                type=decl['decl'],
-                init=decl.get('init'),
-                coord=decl['decl'].coord)
+            if self.debug:
+                print(decl)
+            assert decl[0] is not None
+            declaration = Decl(name=None, type=decl['decl'], init=decl.get('init'), coord=decl.get('coord'))
 
-            fixed_decl = self._fix_decl_name_type(declaration, spec)
+            if isinstance(declaration.type, Type):
+                fixed_decl = declaration
+            else:
+                fixed_decl = self._fix_decl_name_type(declaration, spec)
+
             declarations.append(fixed_decl)
 
         return declarations
 
-    def parse(self, code, bosta, debug):
-
-        return self.parser.parse(code)
+    def parse(self, code, param1, param2):
+        return self.parser.parse(code, param1, True)
 
     def p_program(self, p):
         ''' program : global_declaration_list_opt
@@ -127,6 +149,64 @@ class UCParser():
         print("declaration")
         p[0] = GlobalDecl(p[1])
 
+    def p_declaration(self, p):
+        ''' declaration : declaration_body SEMI'''
+        p[0] = p[1]
+        print("declaration")
+
+    def p_declaration_body(self, p):
+        ''' declaration_body : type_specifier init_declarator_list_opt'''
+        # p[0] = self._build_declarations(p[1], p[2])
+        # p[0] = Decl(p[2], VarDecl(p[1], p[2]), None)
+        spec = p[1]
+        decls = None
+        if p[2] is not None:
+            decls = self._build_declarations(spec=spec, decls=p[2])
+        p[0] = decls
+        print("declaration")
+
+    def p_init_declarator_list_opt(self, p):
+        ''' init_declarator_list_opt : init_declarator_list
+                                        | empty
+        '''
+        p[0] = p[1]
+
+    def p_init_declarator_list1(self, p):
+        ''' init_declarator_list : init_declarator '''
+        p[0] = p[1]
+
+    def p_init_declarator(self, p):
+        ''' init_declarator : direct_declarator
+                            | direct_declarator EQUALS initializer
+        '''
+        if len(p) == 2:
+            p[0] = dict(decl=p[1], init=None)
+        else:
+            p[0] = dict(decl=p[1], init=p[3])
+
+    def p_direct_declarator1(self, p):
+        ''' direct_declarator : identifier
+                                | LPAREN direct_declarator RPAREN
+        '''
+        if len(p) <= 2:
+            p[0] = VarDecl(p[1], type=None, coord=None)
+        else:
+            p[0] = p[2]
+
+    def p_identifier(self, p):
+        ''' identifier : ID'''
+        p[0] = ID(p[1], coord=None)
+
+    def p_type_specifier(self, p):
+        ''' type_specifier : VOID
+                            | CHAR
+                            | INT
+                            | FLOAT
+        '''
+        p[0] = Type([p[1]], coord=None)
+
+    #         -----------------------------------------------------------
+
     def p_function_definition1(self, p):
         ''' function_definition : type_specifier direct_declarator compound_statement '''
         p[0] = FuncDef(p[0], p[1], p[2])
@@ -146,16 +226,6 @@ class UCParser():
             p[0] = p[1] + p[2]
         else:
             p[0] = EmptyStatement(p[1])
-
-
-    def p_direct_declarator1(self, p):
-        ''' direct_declarator : ID
-                                | LPAREN direct_declarator RPAREN
-        '''
-        if len(p) <= 2:
-            p[0] = ID(p[1])
-        else:
-            p[0] = p[2]
 
     def p_direct_declarator2(self, p):
         ''' direct_declarator : direct_declarator LBRACKET constant_expression_opt RBRACKET'''
@@ -332,15 +402,6 @@ class UCParser():
         '''
         p[0] = p[1]
 
-    def p_type_specifier(self, p):
-        ''' type_specifier : VOID
-                            | CHAR
-                            | INT
-                            | FLOAT
-        '''
-        p[0] = Type(p[1], coord=None)
-
-
     def p_parameter_list(self, p):
         ''' parameter_list : parameter_declaration
                             | parameter_list COMMA parameter_declaration
@@ -354,44 +415,11 @@ class UCParser():
         ''' parameter_declaration : type_specifier direct_declarator '''
         p[0] = p[1] + p[2]
 
-    def p_declaration(self, p):
-        ''' declaration : declaration_body SEMI'''
-        p[0] = p[1]
-        print("declaration")
-
-    def p_declaration_body(self, p):
-        ''' declaration_body : type_specifier init_declarator_list_opt'''
-        # p[0] = self._build_declarations(p[1], p[2])
-        p[0] = Decl(p[2], VarDecl(p[1], p[2]), None)
-        print("declaration")
-
-    def p_init_declarator_list_opt(self, p):
-        ''' init_declarator_list_opt : init_declarator_list
-                                        | empty
-        '''
-
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = p[1]
-
-    def p_init_declarator_list1(self, p):
-        ''' init_declarator_list : init_declarator '''
-        p[0] = p[1]
-
     def p_init_declarator_list2(self, p):
         ''' init_declarator_list : init_declarator_list COMMA init_declarator '''
         p[0] = p[1] + p[3]
 
 
-    def p_init_declarator(self, p):
-        ''' init_declarator : direct_declarator
-                            | direct_declarator EQUALS initializer
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = p[1] + p[3]
 
     def p_initializer1(self, p):
         ''' initializer : assignment_expression '''

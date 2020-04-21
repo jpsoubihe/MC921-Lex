@@ -1,3 +1,4 @@
+
 import sys
 
 def _repr(obj):
@@ -78,7 +79,7 @@ class Node(object):
         result = self.__class__.__name__ + '('
         indent = ''
         separator = ''
-        for name in self.__slots__[:-2]:
+        for name in self.__slots__[:-1]:
             result += separator
             result += indent
             result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
@@ -118,6 +119,7 @@ class Node(object):
             else:
                 vlist = [getattr(self, n) for n in self.attr_names]
                 attrstr = ', '.join('%s' % v for v in vlist)
+
             buf.write(attrstr)
 
         if showcoord:
@@ -125,8 +127,9 @@ class Node(object):
                 buf.write('%s' % self.coord)
         buf.write('\n')
 
-        for (child_name, child) in self.children():
-            child.show(buf, offset + 4, attrnames, nodenames, showcoord, child_name)
+        if self.children() is not None:
+            for (child_name, child) in self.children():
+                child.show(buf, offset + 4, attrnames, nodenames, showcoord, child_name)
 
 
 class Coord(object):
@@ -162,6 +165,10 @@ class Program(Node):
             nodelist.append(("gdecls[%d]" % i, child))
         return tuple(nodelist)
 
+    def __iter__(self):
+        for child in (self.gdecls or []):
+            yield child
+
     attr_names = ()
 
 
@@ -179,8 +186,8 @@ class GlobalDecl(Node):
         return tuple(nodelist)
 
     def __iter__(self):
-        if self.decl is not None:
-            yield self.decl
+        for child in (self.decls or []):
+            yield child
 
     attr_names = ()
 
@@ -303,7 +310,7 @@ class Type(Node):
     def __init__(self, names, coord):
         self.names = names
         self.coord = coord
-        print("Type")
+        # print("Type")
 
     def children(self):
         nodelist = []
@@ -319,7 +326,7 @@ class Type(Node):
 class ID(Node):
     __slots__ = ('name', 'coord')
 
-    def __init__(self, name, coord=None):
+    def __init__(self, name,  coord=None):
         self.name = name
         self.coord = coord
 
@@ -329,9 +336,8 @@ class ID(Node):
 
     def __iter__(self):
         return
-        yield
 
-    attr_names = ('name', )
+    attr_names = ('name',)
 
 
 class Compound(Node):
@@ -612,8 +618,6 @@ class Decl(Node):
         return tuple(nodelist)
 
     def __iter__(self):
-        if self.name is not None:
-            yield self.name
         if self.type is not None:
             yield self.type
         if self.initializer is not None:
@@ -622,24 +626,21 @@ class Decl(Node):
     attr_names = ('name', )
 
 class VarDecl(Node):
-    __slots__ = ('type', 'declarator', 'coord')
+    __slots__ = ('declname', 'type', 'coord')
 
-    def __init__(self,  type, declarator, coord=None):
+    def __init__(self, declname, type, coord=None):
+        self.declname = declname
         self.type = type
-        self.declarator = declarator
         self.coord = coord
 
     def children(self):
         nodelist = []
-        if self.declarator is not None: nodelist.append(('declarator', self.declarator))
-        if self.type is not None: nodelist.append(('type', self.type))
+        if self.type is not None: nodelist.append(("type", self.type))
         return tuple(nodelist)
 
     def __iter__(self):
         if self.type is not None:
             yield self.type
-        if self.declarator is not None:
-            yield self.declarator
 
     attr_names = ()
 
