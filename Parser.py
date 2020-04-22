@@ -17,23 +17,35 @@ class UCParser():
         self.lexer.build()
         self.parser = yacc(module=self)
         self.debug = False
+        pass
+
+    def _token_coord(self, p, token_idx, set_column=False):
+        last_cr = p.lexer.lexer.lexdata.rfind('\n', 0, p.lexpos(token_idx))
+        if last_cr < 0:
+            last_cr = -1
+        column = (p.lexpos(token_idx) - (last_cr))
+        return Coord(p.lineno(token_idx), 1 if set_column else column)
 
     def _type_modify_decl(self, decl, modifier):
-        if self.debug:
-            print("Inside _type_modify_decl:")
-            print(decl)
-            print('End')
-
+        """ Tacks a type modifier on a declarator, and returns
+            the modified declarator.
+            Note: the declarator and modifier may be modified
+        """
         modifier_head = modifier
         modifier_tail = modifier
 
+        # The modifier may be a nested list. Reach its tail.
         while modifier_tail.type:
             modifier_tail = modifier_tail.type
 
+        # If the decl is a basic type, just tack the modifier onto it
         if isinstance(decl, VarDecl):
             modifier_tail.type = decl
             return modifier
         else:
+            # Otherwise, the decl is a list of modifiers. Reach
+            # its tail and splice the modifier onto the tail,
+            # pointing to the underlying basic type.
             decl_tail = decl
 
             while not isinstance(decl_tail.type, VarDecl):
@@ -87,11 +99,10 @@ class UCParser():
                     return decl
 
         if not typename:
-            pass
-            # # Functions default to returning int
-            # if not isinstance(decl.type, ast_classes.FuncDecl):
-            #     self._parse_error("Missing type in declaration", decl.coord)
-            # type.type = ast_classes.Type(['int'], coord=decl.coord)
+            # Functions default to returning int
+            if not isinstance(decl.type, FuncDecl):
+                self._parse_error("Missing type in declaration", decl.coord)
+            type.type = Type(['int'], coord=decl.coord)
         else:
             # At this point, we know that typename is a list of Type
             # nodes. Concatenate all the names into a single list.
@@ -101,29 +112,22 @@ class UCParser():
         return decl
 
     def _build_declarations(self, spec, decls):
-        if self.debug:
-            print("Inside _build_declarations:")
-            for decl in decls:
-                print(decl)
-            print(spec)
-            print('End')
-
+        """ Builds a list of declarations all sharing the given specifiers.
+        """
         declarations = []
 
         for decl in decls:
-            if self.debug:
-                print(decl)
-            assert decl[0] is not None
-            declaration = Decl(name=None, type=decl['decl'], init=decl.get('init'), coord=decl.get('coord'))
-
-            if isinstance(declaration.type, Type):
-                fixed_decl = declaration
-            else:
-                fixed_decl = self._fix_decl_name_type(declaration, spec)
-
+            assert decl['decl'] is not None
+            declaration = Decl(
+                name=None,
+                type=decl['decl'],
+                initializer=decl.get('initializer'),
+                coord=decl['decl'].coord)
+            fixed_decl = self._fix_decl_name_type(declaration, spec)
             declarations.append(fixed_decl)
 
         return declarations
+
 
     def parse(self, code, param1, param2):
         return self.parser.parse(code, param1, True)
@@ -132,7 +136,7 @@ class UCParser():
         ''' program : global_declaration_list_opt
         '''
         print("accept")
-        p[0] = Program(p[1])
+        p[0] = Program(p[1], None)
 
     def p_global_declaration_list_opt(self, p):
         ''' global_declaration_list_opt : global_declaration global_declaration_list_opt
@@ -173,7 +177,7 @@ class UCParser():
 
     def p_init_declarator_list1(self, p):
         ''' init_declarator_list : init_declarator '''
-        p[0] = p[1]
+        p[0] = [p[1]]
 
     def p_init_declarator(self, p):
         ''' init_declarator : direct_declarator
@@ -182,7 +186,7 @@ class UCParser():
         if len(p) == 2:
             p[0] = dict(decl=p[1], init=None)
         else:
-            p[0] = dict(decl=p[1], init=p[3])
+            p[0] = dict(decl=p[1], initializer=p[3])
 
     def p_direct_declarator1(self, p):
         ''' direct_declarator : identifier
@@ -274,7 +278,7 @@ class UCParser():
                                 | binary_expression OR binary_expression
         '''
         if len(p) == 2:
-            p[0] = Cast(p[1])
+            p[0] = p[1]
         else:
             p[0] = BinaryOp(p[2], p[1], p[3])
 
@@ -346,7 +350,7 @@ class UCParser():
 
     def p_constant1(self, p):
         ''' constant : INT_CONST '''
-        p[0] = Constant('int', p[1])
+        p[0] = Constant('int', p[1], None)
 
     def p_constant2(self, p):
         ''' constant : FLOAT_CONST '''

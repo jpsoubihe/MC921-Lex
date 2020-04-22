@@ -10,6 +10,7 @@ def _repr(obj):
     else:
         return repr(obj)
 
+
 class NodeVisitor(object):
     """ A base NodeVisitor class for visiting uc_ast nodes.
         Subclass it and define your own visit_XXX methods, where
@@ -108,9 +109,9 @@ class Node(object):
         """
         lead = ' ' * offset
         if nodenames and _my_node_name is not None:
-            buf.write(lead + self.__class__.__name__+ ' <' + _my_node_name + '>: ')
+            buf.write(lead + self.__class__.__name__ + ' <' + _my_node_name + '>: ')
         else:
-            buf.write(lead + self.__class__.__name__+ ': ')
+            buf.write(lead + self.__class__.__name__ + ': ')
 
         if self.attr_names:
             if attrnames:
@@ -119,17 +120,14 @@ class Node(object):
             else:
                 vlist = [getattr(self, n) for n in self.attr_names]
                 attrstr = ', '.join('%s' % v for v in vlist)
-
             buf.write(attrstr)
 
         if showcoord:
             if self.coord:
                 buf.write('%s' % self.coord)
         buf.write('\n')
-
-        if self.children() is not None:
-            for (child_name, child) in self.children():
-                child.show(buf, offset + 4, attrnames, nodenames, showcoord, child_name)
+        for (child_name, child) in self.children():
+            child.show(buf, offset + 4, attrnames, nodenames, showcoord, child_name)
 
 
 class Coord(object):
@@ -255,27 +253,20 @@ class FuncDef(Node):
             yield self.third
 
 
-class FuncDef(Node):
-    __slots__ = ('first', 'type', 'coord')
-
-    def __init__(self, first, type, coord=None):
-        self.first = first
-        self.second = type
+class FuncDecl(Node):
+    __slots__ = ('args', 'type', 'coord')
+    def __init__(self, args, type, coord=None):
+        self.args = args
+        self.type = type
         self.coord = coord
-        print("FuncDef")
 
     def children(self):
         nodelist = []
-        if self.first is not None: nodelist.append(("first", self.first))
-        if self.type is not None: nodelist.append(("type", self.second))
-        print(nodelist)
+        if self.args is not None: nodelist.append(("args", self.args))
+        if self.type is not None: nodelist.append(("type", self.type))
         return tuple(nodelist)
 
-    def __iter__(self):
-        if self.first is not None:
-            yield self.first
-        if self.type is not None:
-            yield self.type
+    attr_names = ()
 
 class If(Node):
     __slots__ = ('expression', 'if_statement', 'else_statement', 'coord')
@@ -310,7 +301,6 @@ class Type(Node):
     def __init__(self, names, coord):
         self.names = names
         self.coord = coord
-        # print("Type")
 
     def children(self):
         nodelist = []
@@ -577,11 +567,11 @@ class Constant(Node):
         nodelist = []
         return tuple(nodelist)
 
-    def __iter__(self):
-        if self.type is not None: yield self.type
-        if self.value is not None: yield self.value
+    # def __iter__(self):
+    #     if self.type is not None: yield self.type
+    #     if self.value is not None: yield self.value
 
-    attr_names = ('value', 'type')
+    attr_names = ('type', 'value')
 
 
 class Cast(Node):
@@ -613,8 +603,8 @@ class Decl(Node):
 
     def children(self):
         nodelist = []
+        if self.type is not None: nodelist.append(('type', self.type))
         if self.initializer is not None: nodelist.append(('initializer', self.initializer))
-        if self.type is not None: nodelist.append(('type', self.initializer))
         return tuple(nodelist)
 
     def __iter__(self):
@@ -638,9 +628,9 @@ class VarDecl(Node):
         if self.type is not None: nodelist.append(("type", self.type))
         return tuple(nodelist)
 
-    def __iter__(self):
-        if self.type is not None:
-            yield self.type
+    # def __iter__(self):
+    #     if self.type is not None:
+    #         yield self.type
 
     attr_names = ()
 
