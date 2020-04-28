@@ -79,7 +79,7 @@ class UCLexer():
         'ID',
 
         # constants
-        'INT_CONST', 'FLOAT_CONST', 'STRING', 'CHAR_CONST',
+        'INT_CONST', 'FLOAT_CONST', 'STRING',
 
         # operations
         'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'UNARYDIFF', 'PLUSPLUS', 'MINUSMINUS',
@@ -247,11 +247,11 @@ class UCLexer():
         return t
 
 
-    # ToDo: check if rule applies
-    def t_CHAR_CONST(self, t):
-        r'\'[a-z | A-Z]\''
-        t.type = self.keyword_map.get(t.value, "CHAR_CONST")
-        return t
+    # # ToDo: check if rule applies
+    # def t_CHAR_CONST(self, t):
+    #     r'\'[a-z | A-Z]\''
+    #     t.type = self.keyword_map.get(t.value, "CHAR_CONST")
+    #     return t
 
 
     def t_FLOAT_CONST(self, t):
