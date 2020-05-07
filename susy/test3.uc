@@ -7,12 +7,13 @@ int f(int n, int k) {
     else {
         t = f(n-1, p) + f(n-2, q);
         k = p + q + 1;
+        int n = 4;
         return t;
     }
 }
 
-int main() {
+void main() {
     int m = 9;
+    int n = 3;
     print(f(3, m), m);
-    return 0;
 }

@@ -1,0 +1,6 @@
+Program: 
+    GlobalDecl: 
+        Decl: ID(name='v'  )
+            VarDecl: 
+                Type: ['int']   @ 1:1
+            Constant: float, 3.4   @ 1:9

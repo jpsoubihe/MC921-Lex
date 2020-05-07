@@ -147,7 +147,7 @@ def run_compiler():
 
     emit_ast = True
     susy = False
-    debug = True
+    debug = False
 
     params = sys.argv[1:]
     files = sys.argv[1:]

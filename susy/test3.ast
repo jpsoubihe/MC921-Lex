@@ -25,6 +25,7 @@ Program:
             If:    @ 3:5
                 BinaryOp: <   @ 3:9
                     ID: n   @ 3:9
+                    ID: n   @ 3:9
                     Constant: int, 2   @ 3:13
                 Compound:    @ 3:1
                     Assignment: =   @ 4:9
@@ -41,12 +42,22 @@ Program:
                                 ExprList:    @ 8:15
                                     BinaryOp: -   @ 8:15
                                         ID: n   @ 8:15
+                                        ID: n   @ 8:15
+                                        Constant: int, 1   @ 8:17
+                                    ID: p   @ 8:20
+                            FuncCall:    @ 8:13
+                                ID: f   @ 8:13
+                                ExprList:    @ 8:15
+                                    BinaryOp: -   @ 8:15
+                                        ID: n   @ 8:15
+                                        ID: n   @ 8:15
                                         Constant: int, 1   @ 8:17
                                     ID: p   @ 8:20
                             FuncCall:    @ 8:25
                                 ID: f   @ 8:25
                                 ExprList:    @ 8:27
                                     BinaryOp: -   @ 8:27
+                                        ID: n   @ 8:27
                                         ID: n   @ 8:27
                                         Constant: int, 2   @ 8:29
                                     ID: q   @ 8:32
@@ -55,28 +66,39 @@ Program:
                         BinaryOp: +   @ 9:13
                             BinaryOp: +   @ 9:13
                                 ID: p   @ 9:13
+                                ID: p   @ 9:13
+                                ID: q   @ 9:17
+                            BinaryOp: +   @ 9:13
+                                ID: p   @ 9:13
+                                ID: p   @ 9:13
                                 ID: q   @ 9:17
                             Constant: int, 1   @ 9:21
-                    Return:    @ 10:9
-                        ID: t   @ 10:16
+                    Decl: ID(name='n'  )
+                        VarDecl: 
+                            Type: ['int']   @ 10:9
+                        Constant: int, 4   @ 10:17
+                    Return:    @ 11:9
+                        ID: t   @ 11:16
     FuncDef: 
-        Type: ['int']   @ 14:1
+        Type: ['void']   @ 15:1
         Decl: ID(name='main'  )
             FuncDecl: 
                 VarDecl: 
-                    Type: ['int']   @ 14:1
-        Compound:    @ 14:1
+                    Type: ['void']   @ 15:1
+        Compound:    @ 15:1
             Decl: ID(name='m'  )
                 VarDecl: 
-                    Type: ['int']   @ 15:5
-                Constant: int, 9   @ 15:13
-            Print:    @ 16:5
-                ExprList:    @ 16:11
-                    FuncCall:    @ 16:11
-                        ID: f   @ 16:11
-                        ExprList:    @ 16:13
-                            Constant: int, 3   @ 16:13
-                            ID: m   @ 16:16
-                    ID: m   @ 16:20
-            Return:    @ 17:5
-                Constant: int, 0   @ 17:12
+                    Type: ['int']   @ 16:5
+                Constant: int, 9   @ 16:13
+            Decl: ID(name='n'  )
+                VarDecl: 
+                    Type: ['int']   @ 17:5
+                Constant: int, 3   @ 17:13
+            Print:    @ 18:5
+                ExprList:    @ 18:11
+                    FuncCall:    @ 18:11
+                        ID: f   @ 18:11
+                        ExprList:    @ 18:13
+                            Constant: int, 3   @ 18:13
+                            ID: m   @ 18:16
+                    ID: m   @ 18:20

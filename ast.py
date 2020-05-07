@@ -1,6 +1,11 @@
 
 import sys
 
+import uctype
+from Visitor import Visitor
+
+visitor = Visitor()
+
 def _repr(obj):
     """
     Get the representation of an object, with dedicated pprint-like format for lists.
@@ -115,8 +120,13 @@ class Program(Node):
     __slots__ = ('gdecls', 'coord')
 
     def __init__(self, gdecls, coord=None):
+        # sym_index = visitor.symtab.begin_scope()
         self.gdecls = gdecls
         self.coord = coord
+        visitor.visit(self)
+        visitor.print_error()
+        # print(str(visitor.symtab))
+        # visitor.symtab.end_scope(sym_index)
 
     def children(self):
         nodelist = []
@@ -125,6 +135,63 @@ class Program(Node):
         return tuple(nodelist)
 
     attr_names = ()
+
+class GlobalDecl(Node):
+    __slots__ = ('decls', 'coord')
+    def __init__(self, decls, coord=None):
+        self.decls = decls
+        self.coord = coord
+
+    def children(self):
+        nodelist = []
+        for i,decl in enumerate(self.decls if self.decls is not None else []):
+            if self.decls is not None:
+                nodelist.append(("decls[%d]" % i, decl))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.decls is not None:
+            yield self.decls
+
+    attr_names = ()
+
+
+class Decl(Node):
+    __slots__ = ('name', 'type', 'init', 'coord')
+
+    def __init__(self, type, name, init, coord=None):
+        self.name = name
+        self.type = type
+        self.init = init
+        self.coord = coord
+        # if isinstance(type, VarDecl):
+        #     print("type = " + str(name.names) + " declname = " + str(type.declname.name))
+        #     # print("type = " + str(name.names))
+        # if isinstance(type, FuncDecl):
+        #     if type.args is None:
+        #         pass
+        #     else:
+        #         for t in type.args:
+        #             # print(t)
+        #             # print("type = " + str(t.type.type.names) +" declname = " + str(t.type.declname.name))
+        #             # if str(t.type.type.names)[2:-2] == "int":
+        #                 # visitor.symtab.add(t.type.declname.name, uctype.IntType)
+        #             # print("type = " + str(type.type))
+
+    def children(self):
+        nodelist = []
+        if self.type is not None: nodelist.append(("type", self.type))
+        if self.init is not None: nodelist.append(("init", self.init))
+        return tuple(nodelist)
+
+    def __iter__(self):
+        if self.type is not None:
+            yield self.type
+        if self.init is not None:
+            yield self.init
+
+    attr_names = ('name',)
+
 
 class Constant(Node):
     __slots__ = ('type', 'value', 'coord')
@@ -230,10 +297,12 @@ class If(Node):
     __slots__ = ('cond', 'iftrue', 'iffalse', 'coord')
 
     def __init__(self, cond, iftrue, iffalse, coord=None):
+        # sym_index = visitor.symtab.begin_scope()
         self.cond = cond
         self.iftrue = iftrue
         self.iffalse = iffalse
         self.coord = coord
+        # visitor.symtab.end_scope(sym_index)
 
     def children(self):
         nodelist = []
@@ -252,6 +321,13 @@ class FuncDef(Node):
         self.param_decls = param_decls
         self.body = body
         self.coord = coord
+
+        # print("FuncDefType = " + str(spec.names) + " FuncDefName = " + str(decl.name.name))
+        # if str(spec.names)[2:-2] == "int":
+        #     visitor.symtab.add(decl.name.name, uctype.IntType)
+        # if str(spec.names)[2:-2] == "void":
+        #     visitor.symtab.add(decl.name.name, uctype.VoidType)
+        # print("FuncDefType = " + str(spec.names))
 
     def children(self):
         nodelist = []
@@ -278,9 +354,11 @@ class While(Node):
     __slots__ = ('cond', 'statement', 'coord')
 
     def __init__(self, cond, statement, coord):
+        # sym_index = visitor.symtab.begin_scope()
         self.cond = cond
         self.statement = statement
         self.coord = coord
+        # visitor.symtab.end_scope(sym_index)
 
     def children(self):
         nodelist = []
@@ -294,8 +372,10 @@ class Compound(Node):
     __slots__ = ('block_items', 'coord')
 
     def __init__(self, block_items, coord=None):
+        # sym_index = visitor.symtab.begin_scope()
         self.block_items = block_items
         self.coord = coord
+        # visitor.symtab.end_scope(sym_index)
 
     def children(self):
         nodelist = []
@@ -324,11 +404,13 @@ class For(Node):
     __slots__ = ("initial", "cond", "next", "statement", "coord")
 
     def __init__(self, initial, cond, next, statement, coord=None):
+        # sym_index = visitor.symtab.begin_scope()
         self.initial = initial
         self.cond = cond
         self.next = next
         self.statement = statement
         self.coord = coord
+        # visitor.symtab.end_scope(sym_index)
 
     def children(self):
         nodelist = []
@@ -393,6 +475,7 @@ class BinaryOp(Node):
         nodelist = []
         if self.left is not None:
             nodelist.append(("left", self.left))
+            nodelist.append(("left", self.left))
         if self.right is not None:
             nodelist.append(("right", self.right))
         return tuple(nodelist)
@@ -405,6 +488,8 @@ class ID(Node):
     def __init__(self, name, coord=None):
         self.name = name
         self.coord = coord
+        # NodeVisitor.visit(NodeVisitor, self.name)
+        # print("name = " + name)
 
     def children(self):
         nodelist = []
@@ -488,6 +573,10 @@ class VarDecl(Node):
         self.declname = declname
         self.type = type
         self.coord = coord
+        # print("declname = " + str(declname.name))
+        # print("type = " + str(type))
+        # visitor.symtab.add(str(type)[2:-2], declname)
+        # print(str(visitor.symtab))
 
     def children(self):
         nodelist = []
@@ -526,27 +615,6 @@ class FuncDecl(Node):
 
     attr_names = ()
 
-class Decl(Node):
-    __slots__ = ('name', 'type', 'init', 'coord')
-    def __init__(self, name, type, init, coord=None):
-        self.name = name
-        self.type = type
-        self.init = init
-        self.coord = coord
-
-    def children(self):
-        nodelist = []
-        if self.type is not None: nodelist.append(("type", self.type))
-        if self.init is not None: nodelist.append(("init", self.init))
-        return tuple(nodelist)
-
-    def __iter__(self):
-        if self.type is not None:
-            yield self.type
-        if self.init is not None:
-            yield self.init
-
-    attr_names = ('name',)
 
 class ArrayRef(Node):
     __slots__ = ('name', 'subscript', 'coord')
@@ -569,24 +637,7 @@ class ArrayRef(Node):
 
     attr_names = ()
 
-class GlobalDecl(Node):
-    __slots__ = ('decls', 'coord')
-    def __init__(self, decls, coord=None):
-        self.decls = decls
-        self.coord = coord
 
-    def children(self):
-        nodelist = []
-        for i,decl in enumerate(self.decls if self.decls is not None else []):
-            if self.decls is not None:
-                nodelist.append(("decls[%d]" % i, decl))
-        return tuple(nodelist)
-
-    def __iter__(self):
-        if self.decls is not None:
-            yield self.decls
-
-    attr_names = ()
 
 class PtrDecl(Node):
     __slots__ = ('type', 'coord')

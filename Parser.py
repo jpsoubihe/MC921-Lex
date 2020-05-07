@@ -58,8 +58,7 @@ class UCParser:
             return decl
 
     def _fix_decl_name_type(self, decl, typename):
-        """ Fixes a declaration. Modifies decl.
-        """
+        """ Fixes a declaration. Modifies decl. """
         # Reach the underlying basic type
         type = decl
         while not isinstance(type, VarDecl):
@@ -102,7 +101,7 @@ class UCParser:
         for decl in decls:
             assert decl['decl'] is not None
             declaration = Decl(
-                name=None,
+                name=spec,
                 type=decl['decl'],
                 init=decl.get('init'),
                 coord=decl['decl'].coord)
