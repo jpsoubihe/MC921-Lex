@@ -37,13 +37,13 @@ class SymbolTable(object):
     def lookup(self, a):
         return self.symtab.get(a)
 
-    def add(self, a, v):
-        if a in self.symtab.keys():
+    def add(self, k, v):
+        if k in self.symtab.keys():
             # if self.symtab.
             # print("actual = " + a + " -> " +str(self.symtab.get(a)))
-            self.undo.push((a, self.symtab.get(a)))
-        self.symtab[a] = v
-        self.undo.push((a, self.symtab.get(a)))
+            self.undo.push((k, self.symtab.get(k)))
+        self.symtab[k] = v
+        self.undo.push((k, self.symtab.get(k)))
         # print("\nADD:")
         # for a in self.symtab.keys():
         #     print(a + " -> " + str(self.symtab[a]), end=" | ")
@@ -64,9 +64,8 @@ class SymbolTable(object):
         self.undo.push('*')
         return self.undo.size()
 
-    def end_scope(self, scope_len):
+    def end_scope(self):
         if self.undo.isEmpty() is False:
-            repeated = self.undo.size() - scope_len
             # var = self.undo.pop()
             while self.undo.isEmpty() is False:
                 var = self.undo.pop()

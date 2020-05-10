@@ -151,6 +151,11 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "MINUSMINUS")
         return t
 
+    def t_TIMESASSIGN(self, t):
+        r'\-\-'
+        t.type = self.keyword_map.get(t.value, "MINUSMINUS")
+        return t
+
     def t_AND(self, t):
         r'\&\&'
         t.type = self.keyword_map.get(t.value, "AND")

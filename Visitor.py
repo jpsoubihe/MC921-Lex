@@ -97,10 +97,10 @@ class Visitor(NodeVisitor):
     def visit_Program(self,node):
         # 1. Visit all of the global declarations
         # 2. Record the associated symbol table
-        ind = self.symtab.begin_scope()
+        self.symtab.begin_scope()
         for _decl in node.gdecls:
             self.visit(_decl)
-        self.symtab.end_scope(ind)
+        self.symtab.end_scope()
 
     def visit_GlobalDecl(self, node):
         for _decl in node.decls:
@@ -114,16 +114,23 @@ class Visitor(NodeVisitor):
             if type != self.symtab.lookup(node.type.type.declname.name):
                 self.error("wrong func {} type association".format(node.name.name))
         elif isinstance(node.type, ast.VarDecl):
-            type_type = self.symtab.lookup(node.type.declname.name)
+            type_reg = self.symtab.lookup(node.type.declname.name)
             if type != self.symtab.lookup(node.type.declname.name):
                 self.error("wrong variable type association")
         elif isinstance(node.type, ast.ArrayDecl):
-            type_type = self.symtab.lookup(node.type.type.declname.name)
-            if type_type.typename is not None:
-                if node.init is not None:
-                    for i in node.init.exprs:
-                        if i.type != type_type.typename:
-                            self.error("Error: element on the array is not correct")
+            type_reg = self.symtab.lookup(node.type.type.declname.name)
+            if type_reg.typename is not None:
+                if type_reg == uctype.CharType:
+                    if isinstance(node.init, ast.BinaryOp):
+                        if node.init.left.type == 'char' is False or node.init.right.type == 'char' is False:
+                            self.error("error")
+                elif node.init is not None:
+                    if isinstance(node.init, ast.Constant):
+                        pass
+                    else:
+                        for i in node.init.exprs:
+                            if i.type != type_reg.typename:
+                                self.error("Error: element on the array is not correct")
             else:
                 self.error("Error. Variable {} not defined".format(node.type.type.declname.name))
 
@@ -147,46 +154,26 @@ class Visitor(NodeVisitor):
 
     def visit_Type(self, node):
         return node
-        # if isinstance(node.names, uctype.IntType):
-        #     return node
-        # elif isinstance(node.names, uctype.VoidType):
-        #             return node
-        # elif isinstance(node.names, uctype.ArrayType):
-        #             return node
 
     def visit_BinaryOp(self, node):
         # 1. Make sure left and right operands have the same type
         # 2. Make sure the operation is supported
         # 3. Assign the result type
-        type1 = self.visit(node.left)
+        self.visit(node.left)
+        self.visit(node.right)
+        if isinstance(node.left, ast.Constant):
+            operator1 = uctype.constant_type(node.left.type)
+        else:
+            operator1 = self.symtab.lookup(node.left.name)
+        if isinstance(node.right, ast.Constant):
+            operator2 = uctype.constant_type(node.right.type)
+        else:
+            operator2 = self.symtab.lookup(node.right.name)
+        if operator1 != operator2:
+            self.error("invalid operands to binary " + node.op)
+        elif operator1.binary_ops.__contains__(node.op) is False:
+            self.error("operation not supported by operands")
 
-        type2 = self.visit(node.right)
-
-        if node.left is not None and node.right is not None:
-            if node.op == '%':
-                print("MOD")
-                if isinstance(node.left, ast.Constant):
-                    operator1 = node.left.type
-                else:
-                    operator1 = self.symtab.lookup(node.left.name).typename
-                if isinstance(node.right, ast.Constant):
-                    operator2 = node.right.type
-                else:
-                    operator2 = self.symtab.lookup(type2.name).typename
-                if operator1 == 'float' or operator2 == 'float':
-                    self.error("error: invalid operands to binary %")
-                        # if isinstance(node.right, ast.Constant):
-                        #     if node.right.type != operator1:
-                    # elif isinstance(operator1, ast.Constant):
-
-                # operator2 = seçf
-                else:
-                    self.error("error: operator {} is invalid".format(node.left.name))
-
-                pass
-            pass
-
-        # node.type = node.right.type
 
     def visit_Assignment(self, node):
         # ToDo: TYPECHECKING
@@ -196,12 +183,9 @@ class Visitor(NodeVisitor):
         # ## 2. Check that the types match
         # self.visit(node.value)
         # assert sym.type == node.value.type, "Type mismatch in assignment"
-        type1 = self.visit(node.lvalue)
-        type2 = self.visit(node.rvalue)
-        # if self.symtab.lookup(type1.name) == type2:
-        #     print("TRUE")
-        # else:
-        #     print("FALSE")
+        self.visit(node.lvalue)
+        self.visit(node.rvalue)
+
 
     def visit_ID(self, node):
         return node
@@ -212,7 +196,6 @@ class Visitor(NodeVisitor):
     def visit_Cast(self, node):
         self.visit(node.new_type)
         self.visit(node.expr)
-        # self.symtab.add(str(type)[2:-2], name)
 
     def visit_Constant(self, node):
         return node.type
@@ -231,11 +214,11 @@ class Visitor(NodeVisitor):
         self.visit(node.expr)
 
     def visit_If(self, node):
-        ind = self.symtab.begin_scope()
+        self.symtab.begin_scope()
         self.visit(node.cond)
         self.visit(node.iftrue)
         self.visit(node.iffalse)
-        self.symtab.end_scope(ind)
+        self.symtab.end_scope()
 
     def visit_FuncDef(self, node):
         # type = self.visit(node.spec)
@@ -246,16 +229,16 @@ class Visitor(NodeVisitor):
                 self.visit(_decl)
 
     def visit_While(self, node):
-        ind = self.symtab.begin_scope()
+        self.symtab.begin_scope()
         self.visit(node.cond)
         self.visit(node.statement)
-        self.symtab.end_scope(ind)
+        self.symtab.end_scope()
 
     def visit_Compound(self, node):
-        ind = self.symtab.begin_scope()
+        self.symtab.begin_scope()
         for _decl in node.block_items:
             self.visit(_decl)
-        self.symtab.end_scope(ind)
+        self.symtab.end_scope()
 
     def visit_DeclList(self, node):
         for _decl in node.decls:

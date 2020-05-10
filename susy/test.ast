@@ -14,9 +14,26 @@ Program:
                 VarDecl: 
                     Type: ['float']   @ 3:5
                 Constant: float, 9.4   @ 3:16
-            BinaryOp: %   @ 4:5
-                Constant: int, 8   @ 4:5
-                Constant: int, 8   @ 4:5
-                ID: n2   @ 4:7
-            Return:    @ 5:5
-                Constant: int, 0   @ 5:12
+            Decl: ID(name='c'  )
+                ArrayDecl: 
+                    VarDecl: 
+                        Type: ['char']   @ 5:5
+                Constant: char, "abc"   @ 5:16
+            Decl: ID(name='a'  )
+                ArrayDecl: 
+                    VarDecl: 
+                        Type: ['char']   @ 6:5
+                BinaryOp: +   @ 6:16
+                    Constant: char, "Hello"   @ 6:16
+                    Constant: char, "Hello"   @ 6:16
+                    Constant: char, "World"   @ 6:26
+            Decl: ID(name='b'  )
+                ArrayDecl: 
+                    VarDecl: 
+                        Type: ['char']   @ 7:5
+                BinaryOp: *   @ 7:16
+                    Constant: char, "Hello"   @ 7:16
+                    Constant: char, "Hello"   @ 7:16
+                    Constant: char, "World"   @ 7:26
+            Return:    @ 8:5
+                Constant: int, 0   @ 8:12

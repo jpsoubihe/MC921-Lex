@@ -16,6 +16,8 @@ class uCType(object):
     def __str__(self):
         return str(self.typename)
 
+
+
     # Create specific instances of types. You will need to add
     # appropriate arguments depending on your definition of uCType
 
@@ -50,8 +52,18 @@ StringType = uCType("string",
 
 #ToDo: determine operations for arrays
 ArrayType = uCType("array",
+                   binary_ops  = {"+"},
                    unary_ops   = {"*", "&"},
                    rel_ops     = {"==", "!="}
                    )
 
 VoidType = uCType("void")
+
+
+def constant_type(a):
+    if a == 'int':
+        return IntType
+    elif a == 'float':
+        return FloatType
+    elif a == 'char':
+        return CharType
