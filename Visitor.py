@@ -107,22 +107,23 @@ class Visitor(NodeVisitor):
             self.visit(_decl)
 
     def visit_Decl(self, node):
-        self.visit(node.type)
-        self.visit(node.init)
+        type = self.visit(node.type)
+        init = self.visit(node.init)
 
-        if isinstance(node.type, ast.VarDecl):
+        if isinstance(node.type, ast.FuncDecl):
+            if type != self.symtab.lookup(node.type.type.declname.name):
+                self.error("wrong func {} type association".format(node.name.name))
+        elif isinstance(node.type, ast.VarDecl):
             type_type = self.symtab.lookup(node.type.declname.name)
-            # print("lookup: " + str(type_type))
-            type_init = node.init.type
-            if type_type.typename != type_init:
-                self.error("errorf")
-
+            if type != self.symtab.lookup(node.type.declname.name):
+                self.error("wrong variable type association")
         elif isinstance(node.type, ast.ArrayDecl):
             type_type = self.symtab.lookup(node.type.type.declname.name)
             if type_type.typename is not None:
-                for i in node.init.exprs:
-                    if i.type != type_type.typename:
-                        self.error("error")
+                if node.init is not None:
+                    for i in node.init.exprs:
+                        if i.type != type_type.typename:
+                            self.error("Error: element on the array is not correct")
             else:
                 self.error("Error. Variable {} not defined".format(node.type.type.declname.name))
 
@@ -132,24 +133,59 @@ class Visitor(NodeVisitor):
         if str(node2.names)[2:-2] == "int":
             self.symtab.add(node1.name, uctype.IntType)
             return uctype.IntType
-        elif str(node2)[2:-2] == "void":
+        elif str(node2.names)[2:-2] == "char":
+            self.symtab.add(node1.name, uctype.CharType)
+            return uctype.CharType
+        elif str(node2.names)[2:-2] == "float":
+            self.symtab.add(node1.name, uctype.FloatType)
+            return uctype.FloatType
+        elif str(node2.names)[2:-2] == "void":
             self.symtab.add(node1.name, uctype.VoidType)
             return uctype.VoidType
+        else:
+            self.error("variable {} has an invalid type : ".format(node1.name))
 
     def visit_Type(self, node):
-        if isinstance(node.names, uctype.IntType):
-            return node
-        elif isinstance(node.names, uctype.VoidType):
-                    return node
-        elif isinstance(node.names, uctype.ArrayType):
-                    return node
+        return node
+        # if isinstance(node.names, uctype.IntType):
+        #     return node
+        # elif isinstance(node.names, uctype.VoidType):
+        #             return node
+        # elif isinstance(node.names, uctype.ArrayType):
+        #             return node
 
     def visit_BinaryOp(self, node):
         # 1. Make sure left and right operands have the same type
         # 2. Make sure the operation is supported
         # 3. Assign the result type
-        self.visit(node.left)
-        self.visit(node.right)
+        type1 = self.visit(node.left)
+
+        type2 = self.visit(node.right)
+
+        if node.left is not None and node.right is not None:
+            if node.op == '%':
+                print("MOD")
+                if isinstance(node.left, ast.Constant):
+                    operator1 = node.left.type
+                else:
+                    operator1 = self.symtab.lookup(node.left.name).typename
+                if isinstance(node.right, ast.Constant):
+                    operator2 = node.right.type
+                else:
+                    operator2 = self.symtab.lookup(type2.name).typename
+                if operator1 == 'float' or operator2 == 'float':
+                    self.error("error: invalid operands to binary %")
+                        # if isinstance(node.right, ast.Constant):
+                        #     if node.right.type != operator1:
+                    # elif isinstance(operator1, ast.Constant):
+
+                # operator2 = seçf
+                else:
+                    self.error("error: operator {} is invalid".format(node.left.name))
+
+                pass
+            pass
+
         # node.type = node.right.type
 
     def visit_Assignment(self, node):
@@ -179,7 +215,7 @@ class Visitor(NodeVisitor):
         # self.symtab.add(str(type)[2:-2], name)
 
     def visit_Constant(self, node):
-        #ToDo: what to do with the value of a variable?
+        return node.type
         pass
 
     def visit_Break(self, node):
@@ -260,7 +296,8 @@ class Visitor(NodeVisitor):
 
     def visit_FuncDecl(self, node):
         self.visit(node.args)
-        self.visit(node.type)
+        type = self.visit(node.type)
+        return type
 
     def visit_ArrayRef(self, node):
         self.visit(node.name)

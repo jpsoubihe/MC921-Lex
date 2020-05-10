@@ -21,17 +21,34 @@ class uCType(object):
 
 IntType = uCType("int",
                  unary_ops   = {"-", "+", "--", "++", "p--", "p++", "*", "&"},
-                 binary_ops  = {"+", "-", "*", "/", "%"},
+                 binary_ops  = {"+", "-", "*", "/", "%", "&&", "||"},
                  rel_ops     = {"==", "!=", "<", ">", "<=", ">="},
                  assign_ops  = {"=", "+=", "-=", "*=", "/=", "%="}
                  )
 
-# FloatType = uCType("float",
-#                    ...
-#     )
-# CharType = uCType("char",
-#                    ...
-#     )
+FloatType = uCType("float",
+                   unary_ops = {"-", "+", "++", "p--", "p++", "*", "&"},
+                   binary_ops={"+", "-", "*", "/", "&&", "||"},
+                   rel_ops     = {"==", "!=", "<", ">", "<=", ">="},
+                   assign_ops  = {"=", "+=", "-=", "*=", "/="}
+    )
+
+CharType = uCType("char",
+                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
+#ToDo: determine how we'll treat strings
+StringType = uCType("string",
+                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
+#ToDo: determine operations for arrays
 ArrayType = uCType("array",
                    unary_ops   = {"*", "&"},
                    rel_ops     = {"==", "!="}

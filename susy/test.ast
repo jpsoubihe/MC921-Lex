@@ -1,6 +1,22 @@
 Program: 
-    GlobalDecl: 
-        Decl: ID(name='v'  )
-            VarDecl: 
-                Type: ['int']   @ 1:1
-            Constant: float, 3.4   @ 1:9
+    FuncDef: 
+        Type: ['int']   @ 1:1
+        Decl: ID(name='main'  )
+            FuncDecl: 
+                VarDecl: 
+                    Type: ['int']   @ 1:1
+        Compound:    @ 1:1
+            Decl: ID(name='n1'  )
+                VarDecl: 
+                    Type: ['int']   @ 2:5
+                Constant: int, 7   @ 2:14
+            Decl: ID(name='n2'  )
+                VarDecl: 
+                    Type: ['float']   @ 3:5
+                Constant: float, 9.4   @ 3:16
+            BinaryOp: %   @ 4:5
+                Constant: int, 8   @ 4:5
+                Constant: int, 8   @ 4:5
+                ID: n2   @ 4:7
+            Return:    @ 5:5
+                Constant: int, 0   @ 5:12

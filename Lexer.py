@@ -79,7 +79,8 @@ class UCLexer():
         'ID',
 
         # constants
-        'INT_CONST', 'FLOAT_CONST', 'STRING',
+        'INT_CONST', 'FLOAT_CONST',  'CHAR_CONST',
+        'STRING',
 
         # operations
         'EQUALS', 'EQ', 'TIMES', 'MINUS', 'ADDRESS', 'PLUS', 'UNARYDIFF', 'PLUSPLUS', 'MINUSMINUS',
@@ -113,7 +114,6 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "ID")
         return t
 
-
     def t_multilinecomment(self, t):
         r'/\*(.|\n)*?\*/'
         t.lexer.lineno += t.value.count('\n')
@@ -121,26 +121,20 @@ class UCLexer():
     def t_comment(self, t):
         r'\/\/.*'
 
-
     def t_string(self, t):
         r'\".*?\"'
         t.type = self.keyword_map.get(t.value, "STRING")
         return t
-
-
-
 
     def t_DIVIDEASSIGN(self, t):
         r'\/\='
         t.type = self.keyword_map.get(t.value, "DIVIDEASSIGN")
         return t
 
-
     def t_MODASSIGN(self, t):
         r'\%\='
         t.type = self.keyword_map.get(t.value, "MODASSIGN")
         return t
-
 
     def t_PLUSASSIGN(self, t):
         r'\+\='
@@ -152,12 +146,10 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "MINUSASSIGN")
         return t
 
-
     def t_MINUSMINUS(self, t):
         r'\-\-'
         t.type = self.keyword_map.get(t.value, "MINUSMINUS")
         return t
-
 
     def t_AND(self, t):
         r'\&\&'
@@ -169,24 +161,20 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "OR")
         return t
 
-
     def t_DIVIDE(self, t):
         r'\/'
         t.type = self.keyword_map.get(t.value, "DIVIDE")
         return t
-
 
     def t_EQ(self, t):
         r'\=\='
         t.type = self.keyword_map.get(t.value, "EQ")
         return t
 
-
     def t_EQUALS(self, t):
         r'='
         t.type = self.keyword_map.get(t.value, "EQUALS")
         return t
-
 
     def t_PLUSPLUS(self, t):
         r'\+\+'
@@ -199,7 +187,6 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "PLUS")
         return t
 
-
     def t_MINUS(self, t):
         r'\-'
         t.type = self.keyword_map.get(t.value, "MINUS")
@@ -210,36 +197,30 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "DIFF")
         return t
 
-
     def t_UNARYDIFF(self, t):
         r'\!'
         t.type = self.keyword_map.get(t.value, "UNARYDIFF")
         return t
-
 
     def t_LE(self, t):
         r'\<\='
         t.type = self.keyword_map.get(t.value, "LE")
         return t
 
-
     def t_LT(self, t):
         r'\<'
         t.type = self.keyword_map.get(t.value, "LT")
         return t
-
 
     def t_HE(self, t):
         r'\>\='
         t.type = self.keyword_map.get(t.value, "HE")
         return t
 
-
     def t_HT(self, t):
         r'\>'
         t.type = self.keyword_map.get(t.value, "HT")
         return t
-
 
     def t_SEMI(self, t):
         r';'
@@ -247,11 +228,11 @@ class UCLexer():
         return t
 
 
-    # # ToDo: check if rule applies
-    # def t_CHAR_CONST(self, t):
-    #     r'\'[a-z | A-Z]\''
-    #     t.type = self.keyword_map.get(t.value, "CHAR_CONST")
-    #     return t
+    # ToDo: check if rule applies
+    def t_CHAR_CONST(self, t):
+        r'\'[a-z | A-Z]\''
+        t.type = self.keyword_map.get(t.value, "CHAR_CONST")
+        return t
 
 
     def t_FLOAT_CONST(self, t):

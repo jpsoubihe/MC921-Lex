@@ -453,8 +453,12 @@ class UCParser:
         p[0] = Constant('float', p[1], self._token_coord(p, 1))
 
     def p_constant_3(self, p):
+        """ constant : CHAR_CONST """
+        p[0] = Constant('char', p[1], self._token_coord(p, 1))
+
+    def p_constant_4(self, p):
         """ constant : STRING """
-        p[0] = Constant('string', p[1], self._token_coord(p, 1))
+        p[0] = Constant('char', p[1], self._token_coord(p, 1))
 
     def p_jump_statement_1(self, p):
         """ jump_statement  : BREAK SEMI """

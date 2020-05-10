@@ -1,0 +1,71 @@
+Program: 
+    FuncDef: 
+        Type: ['int']   @ 1:1
+        Decl: ID(name='main'  )
+            FuncDecl: 
+                VarDecl: 
+                    Type: ['int']   @ 1:1
+        Compound:    @ 1:1
+            Decl: ID(name='n'  )
+                VarDecl: 
+                    Type: ['int']   @ 2:5
+            Decl: ID(name='r'  )
+                VarDecl: 
+                    Type: ['int']   @ 2:5
+            Decl: ID(name='temp'  )
+                VarDecl: 
+                    Type: ['int']   @ 2:5
+            Decl: ID(name='sum'  )
+                VarDecl: 
+                    Type: ['float']   @ 3:5
+                Constant: float, 0.   @ 3:17
+            Print:    @ 4:5
+                Constant: char, "enter the number = "   @ 4:11
+            Read:    @ 5:5
+                ID: n   @ 5:10
+            Assignment: =   @ 6:5
+                ID: temp   @ 6:5
+                ID: n   @ 6:12
+            While:    @ 7:5
+                BinaryOp: >   @ 7:11
+                    ID: n   @ 7:11
+                    ID: n   @ 7:11
+                    Constant: int, 0   @ 7:15
+                Compound:    @ 7:1
+                    Assignment: =   @ 8:9
+                        ID: r   @ 8:9
+                        BinaryOp: %   @ 8:13
+                            ID: n   @ 8:13
+                            ID: n   @ 8:13
+                            Constant: int, 10   @ 8:17
+                    Assignment: =   @ 9:9
+                        ID: sum   @ 9:9
+                        BinaryOp: +   @ 9:16
+                            BinaryOp: *   @ 9:16
+                                ID: sum   @ 9:16
+                                ID: sum   @ 9:16
+                                Constant: int, 10   @ 9:22
+                            BinaryOp: *   @ 9:16
+                                ID: sum   @ 9:16
+                                ID: sum   @ 9:16
+                                Constant: int, 10   @ 9:22
+                            Cast:    @ 9:29
+                                Type: ['float']   @ 9:30
+                                ID: r   @ 9:36
+                    Assignment: =   @ 10:9
+                        ID: n   @ 10:9
+                        BinaryOp: /   @ 10:13
+                            ID: n   @ 10:13
+                            ID: n   @ 10:13
+                            Constant: int, 10   @ 10:17
+            If:    @ 12:5
+                BinaryOp: ==   @ 12:8
+                    ID: temp   @ 12:8
+                    ID: temp   @ 12:8
+                    ID: sum   @ 12:16
+                Print:    @ 13:9
+                    Constant: char, "palindrome number "   @ 13:15
+                Print:    @ 15:9
+                    Constant: char, "not palindrome"   @ 15:15
+            Return:    @ 16:5
+                Constant: int, 0   @ 16:12
