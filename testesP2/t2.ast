@@ -18,7 +18,6 @@ Program:
             Return:    @ 4:5
                 BinaryOp: *   @ 4:12
                     ID: x   @ 4:12
-                    ID: x   @ 4:12
                     ID: x   @ 4:16
     FuncDef: 
         Type: ['void']   @ 7:1
@@ -39,9 +38,7 @@ Program:
             Assert:    @ 10:5
                 BinaryOp: ==   @ 10:12
                     ID: v   @ 10:12
-                    ID: v   @ 10:12
                     BinaryOp: *   @ 10:17
-                        ID: n   @ 10:17
                         ID: n   @ 10:17
                         ID: n   @ 10:21
             Return:    @ 11:5

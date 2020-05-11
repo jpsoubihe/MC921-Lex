@@ -20,7 +20,6 @@ Program:
             While:    @ 5:5
                 BinaryOp: >   @ 5:12
                     ID: x   @ 5:12
-                    ID: x   @ 5:12
                     Constant: int, 0   @ 5:16
                 Compound:    @ 5:1
                     Assignment: =   @ 6:9
@@ -30,14 +29,8 @@ Program:
                         ID: x   @ 7:6
                         BinaryOp: -   @ 7:10
                             ID: y   @ 7:10
-                            ID: y   @ 7:10
                             BinaryOp: *   @ 7:15
                                 BinaryOp: /   @ 7:15
-                                    ID: y   @ 7:15
-                                    ID: y   @ 7:15
-                                    ID: x   @ 7:17
-                                BinaryOp: /   @ 7:15
-                                    ID: y   @ 7:15
                                     ID: y   @ 7:15
                                     ID: x   @ 7:17
                                 ID: x   @ 7:22
@@ -65,11 +58,6 @@ Program:
                 Constant: int, 36   @ 15:9
             Assert:    @ 16:5
                 BinaryOp: ==   @ 16:12
-                    FuncCall:    @ 16:12
-                        ID: gcd   @ 16:12
-                        ExprList:    @ 16:16
-                            ID: a   @ 16:16
-                            ID: b   @ 16:19
                     FuncCall:    @ 16:12
                         ID: gcd   @ 16:12
                         ExprList:    @ 16:16

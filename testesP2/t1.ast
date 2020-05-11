@@ -24,7 +24,6 @@ Program:
                         Constant: int, 1   @ 3:18
                 BinaryOp: <=   @ 3:21
                     ID: i   @ 3:21
-                    ID: i   @ 3:21
                     Constant: int, 4   @ 3:26
                 UnaryOp: p++   @ 3:29
                     ID: i   @ 3:29

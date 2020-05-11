@@ -17,7 +17,7 @@ Program:
                 VarDecl: 
                     Type: ['int']   @ 2:5
             Print:    @ 3:5
-                Constant: char, "Enter a number: "   @ 3:11
+                Constant: string, "Enter a number: "   @ 3:11
             Read:    @ 4:5
                 ID: n   @ 4:10
             While:    @ 5:5
@@ -27,17 +27,11 @@ Program:
                         ID: rem   @ 6:9
                         BinaryOp: %   @ 6:15
                             ID: n   @ 6:15
-                            ID: n   @ 6:15
                             Constant: int, 10   @ 6:19
                     Assignment: =   @ 7:9
                         ID: reverse   @ 7:9
                         BinaryOp: +   @ 7:19
                             BinaryOp: *   @ 7:19
-                                ID: reverse   @ 7:19
-                                ID: reverse   @ 7:19
-                                Constant: int, 10   @ 7:29
-                            BinaryOp: *   @ 7:19
-                                ID: reverse   @ 7:19
                                 ID: reverse   @ 7:19
                                 Constant: int, 10   @ 7:29
                             ID: rem   @ 7:34
@@ -46,7 +40,7 @@ Program:
                         Constant: int, 10   @ 8:14
             Print:    @ 10:5
                 ExprList:    @ 10:11
-                    Constant: char, "Reversed Number: "   @ 10:11
+                    Constant: string, "Reversed Number: "   @ 10:11
                     ID: reverse   @ 10:32
             Return:    @ 11:5
                 Constant: int, 0   @ 11:12

@@ -1,6 +1,6 @@
 import ast
 
-from SymbolTable import SymbolTable
+from symbolTable import SymbolTable
 
 import uctype
 
@@ -105,7 +105,7 @@ class Visitor(NodeVisitor):
         self.symtab.end_scope()
 
     def visit_GlobalDecl(self, node):
-        for _decl in node.decls:
+        for _decl in node.decl:
             self.visit(_decl)
 
     def visit_Decl(self, node):
@@ -259,8 +259,8 @@ class Visitor(NodeVisitor):
         # type = self.visit(node.spec)
         self.visit(node.decl)
         self.visit(node.body)
-        if node.param_decls is not None:
-            for _decl in node.param_decls:
+        if node.decl is not None:
+            for _decl in node.decl:
                 self.visit(_decl)
 
     def visit_While(self, node):

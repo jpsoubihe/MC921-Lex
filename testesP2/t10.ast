@@ -25,33 +25,27 @@ Program:
             While:    @ 7:5
                 BinaryOp: !=   @ 7:12
                     ID: t   @ 7:12
-                    ID: t   @ 7:12
                     Constant: int, 0   @ 7:17
                 Compound:    @ 7:1
                     Assignment: =   @ 8:9
                         ID: reverse   @ 8:9
                         BinaryOp: *   @ 8:19
                             ID: reverse   @ 8:19
-                            ID: reverse   @ 8:19
                             Constant: int, 10   @ 8:29
                     Assignment: =   @ 9:9
                         ID: reverse   @ 9:9
                         BinaryOp: +   @ 9:19
                             ID: reverse   @ 9:19
-                            ID: reverse   @ 9:19
                             BinaryOp: %   @ 9:29
-                                ID: t   @ 9:29
                                 ID: t   @ 9:29
                                 Constant: int, 10   @ 9:33
                     Assignment: =   @ 10:9
                         ID: t   @ 10:9
                         BinaryOp: /   @ 10:13
                             ID: t   @ 10:13
-                            ID: t   @ 10:13
                             Constant: int, 10   @ 10:17
             Assert:    @ 12:5
                 BinaryOp: ==   @ 12:12
-                    ID: n   @ 12:12
                     ID: n   @ 12:12
                     ID: reverse   @ 12:17
             Return:    @ 13:5

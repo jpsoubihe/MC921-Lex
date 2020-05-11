@@ -25,22 +25,16 @@ Program:
                 ArrayDecl: 
                     VarDecl: 
                         Type: ['char']   @ 7:5
-                Constant: char, "abc"   @ 7:16
+                Constant: string, "abc"   @ 7:16
             Decl: ID(name='a'  )
                 ArrayDecl: 
                     VarDecl: 
                         Type: ['char']   @ 8:5
-                BinaryOp: +   @ 8:16
-                    Constant: char, "Hello"   @ 8:16
-                    Constant: char, "Hello"   @ 8:16
-                    Constant: char, "World"   @ 8:26
+                Constant: string, "Hello" + "World"   @ 8:16
             Decl: ID(name='b'  )
                 ArrayDecl: 
                     VarDecl: 
                         Type: ['char']   @ 9:5
-                BinaryOp: *   @ 9:16
-                    Constant: char, "Hello"   @ 9:16
-                    Constant: char, "Hello"   @ 9:16
-                    Constant: char, "World"   @ 9:26
+                Constant: string, "Hello" * "World"   @ 9:16
             Return:    @ 10:5
                 Constant: int, 0   @ 10:12

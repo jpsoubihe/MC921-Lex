@@ -1,5 +1,5 @@
 from ply.yacc import yacc
-from lexer import UCLexer
+from lex import UCLexer
 import ast
 import sys
 

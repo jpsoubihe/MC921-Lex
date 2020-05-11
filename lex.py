@@ -27,7 +27,6 @@ class UCLexer:
     def build(self, **kwargs):
         """ Builds the lexer from the specification. Must be
             called after the lexer object is created.
-
             This method exists separately, because the PLY
             manual warns against calling lex.lex inside __init__
         """

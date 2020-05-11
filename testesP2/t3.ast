@@ -25,7 +25,6 @@ Program:
             If:    @ 3:5
                 BinaryOp: <   @ 3:9
                     ID: n   @ 3:9
-                    ID: n   @ 3:9
                     Constant: int, 2   @ 3:13
                 Compound:    @ 3:1
                     Assignment: =   @ 4:9
@@ -42,32 +41,17 @@ Program:
                                 ExprList:    @ 8:15
                                     BinaryOp: -   @ 8:15
                                         ID: n   @ 8:15
-                                        ID: n   @ 8:15
-                                        Constant: int, 1   @ 8:17
-                                    ID: p   @ 8:20
-                            FuncCall:    @ 8:13
-                                ID: f   @ 8:13
-                                ExprList:    @ 8:15
-                                    BinaryOp: -   @ 8:15
-                                        ID: n   @ 8:15
-                                        ID: n   @ 8:15
                                         Constant: int, 1   @ 8:17
                                     ID: p   @ 8:20
                             FuncCall:    @ 8:25
                                 ID: f   @ 8:25
                                 BinaryOp: -   @ 8:27
                                     ID: n   @ 8:27
-                                    ID: n   @ 8:27
                                     Constant: int, 2   @ 8:29
                     Assignment: =   @ 9:9
                         ID: k   @ 9:9
                         BinaryOp: +   @ 9:13
                             BinaryOp: +   @ 9:13
-                                ID: p   @ 9:13
-                                ID: p   @ 9:13
-                                ID: q   @ 9:17
-                            BinaryOp: +   @ 9:13
-                                ID: p   @ 9:13
                                 ID: p   @ 9:13
                                 ID: q   @ 9:17
                             Constant: int, 1   @ 9:21

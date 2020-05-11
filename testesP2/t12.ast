@@ -21,9 +21,7 @@ Program:
             Return:    @ 4:5
                 BinaryOp: *   @ 4:12
                     ID: n   @ 4:12
-                    ID: n   @ 4:12
                     BinaryOp: +   @ 4:17
-                        ID: a   @ 4:17
                         ID: a   @ 4:17
                         ID: b   @ 4:21
     FuncDef: 
@@ -51,7 +49,6 @@ Program:
                         ID: d   @ 9:20
             Assert:    @ 10:5
                 BinaryOp: ==   @ 10:12
-                    ID: e   @ 10:12
                     ID: e   @ 10:12
                     Constant: int, 50   @ 10:17
             Return:    @ 11:5

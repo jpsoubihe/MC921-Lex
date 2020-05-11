@@ -21,17 +21,16 @@ Program:
                 VarDecl: 
                     Type: ['int']   @ 2:5
             Print:    @ 3:5
-                Constant: char, "Enter the number of terms: "   @ 3:11
+                Constant: string, "Enter the number of terms: "   @ 3:11
             Read:    @ 4:5
                 ID: n   @ 4:10
             Print:    @ 5:5
-                Constant: char, "Fibonacci Series: "   @ 5:11
+                Constant: string, "Fibonacci Series: "   @ 5:11
             For:    @ 7:5
                 Assignment: =   @ 7:10
                     ID: i   @ 7:10
                     Constant: int, 1   @ 7:14
                 BinaryOp: <=   @ 7:17
-                    ID: i   @ 7:17
                     ID: i   @ 7:17
                     ID: n   @ 7:22
                 UnaryOp: ++   @ 7:27
@@ -40,11 +39,10 @@ Program:
                     Print:    @ 8:9
                         ExprList:    @ 8:15
                             ID: t1   @ 8:15
-                            Constant: char, " "   @ 8:19
+                            Constant: string, " "   @ 8:19
                     Assignment: =   @ 9:9
                         ID: nextTerm   @ 9:9
                         BinaryOp: +   @ 9:20
-                            ID: t1   @ 9:20
                             ID: t1   @ 9:20
                             ID: t2   @ 9:25
                     Assignment: =   @ 10:9

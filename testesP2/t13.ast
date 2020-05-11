@@ -24,7 +24,7 @@ Program:
                 ArrayDecl: 
                     VarDecl: 
                         Type: ['char']   @ 4:5
-                Constant: char, "xpto"   @ 4:16
+                Constant: string, "xpto"   @ 4:16
             Decl: ID(name='w'  )
                 ArrayDecl: 
                     VarDecl: 
@@ -48,26 +48,10 @@ Program:
                         ArrayRef:    @ 8:12
                             ID: w   @ 8:12
                             ID: i   @ 8:14
-                        ArrayRef:    @ 8:12
-                            ID: w   @ 8:12
-                            ID: i   @ 8:14
-                        ArrayRef:    @ 8:20
-                            ID: c   @ 8:20
-                            Constant: int, 1   @ 8:22
-                    BinaryOp: ==   @ 8:12
-                        ArrayRef:    @ 8:12
-                            ID: w   @ 8:12
-                            ID: i   @ 8:14
-                        ArrayRef:    @ 8:12
-                            ID: w   @ 8:12
-                            ID: i   @ 8:14
                         ArrayRef:    @ 8:20
                             ID: c   @ 8:20
                             Constant: int, 1   @ 8:22
                     BinaryOp: ==   @ 8:28
-                        ArrayRef:    @ 8:28
-                            ID: v   @ 8:28
-                            ID: i   @ 8:30
                         ArrayRef:    @ 8:28
                             ID: v   @ 8:28
                             ID: i   @ 8:30
