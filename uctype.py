@@ -23,7 +23,7 @@ class uCType(object):
 
 IntType = uCType("int",
                  unary_ops   = {"-", "+", "--", "++", "p--", "p++", "*", "&"},
-                 binary_ops  = {"+", "-", "*", "/", "%", "&&", "||"},
+                 binary_ops  = {"+", "-", "*", "/", "%", "<=", "&&", "||"},
                  rel_ops     = {"==", "!=", "<", ">", "<=", ">="},
                  assign_ops  = {"=", "+=", "-=", "*=", "/=", "%="}
                  )
@@ -51,7 +51,17 @@ StringType = uCType("string",
     )
 
 #ToDo: determine operations for arrays
-ArrayType = uCType("array",
+IntArrayType = uCType("int_array",
+                   binary_ops  = {"+"},
+                   unary_ops   = {"*", "&"},
+                   rel_ops     = {"==", "!="}
+                   )
+FloatArrayType = uCType("float_array",
+                   binary_ops  = {"+"},
+                   unary_ops   = {"*", "&"},
+                   rel_ops     = {"==", "!="}
+                   )
+CharArrayType = uCType("char_array",
                    binary_ops  = {"+"},
                    unary_ops   = {"*", "&"},
                    rel_ops     = {"==", "!="}

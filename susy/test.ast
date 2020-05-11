@@ -6,34 +6,41 @@ Program:
                 VarDecl: 
                     Type: ['int']   @ 1:1
         Compound:    @ 1:1
-            Decl: ID(name='n1'  )
+            Decl: ID(name='n0'  )
                 VarDecl: 
                     Type: ['int']   @ 2:5
-                Constant: int, 7   @ 2:14
+            Decl: ID(name='n1'  )
+                VarDecl: 
+                    Type: ['int']   @ 3:5
+                Constant: int, 7   @ 3:14
             Decl: ID(name='n2'  )
                 VarDecl: 
-                    Type: ['float']   @ 3:5
-                Constant: float, 9.4   @ 3:16
+                    Type: ['float']   @ 4:5
+                Constant: float, 9.4   @ 4:16
+            Decl: ID(name='n3'  )
+                VarDecl: 
+                    Type: ['char']   @ 5:5
+                Constant: char, 'c'   @ 5:15
             Decl: ID(name='c'  )
                 ArrayDecl: 
                     VarDecl: 
-                        Type: ['char']   @ 5:5
-                Constant: char, "abc"   @ 5:16
+                        Type: ['char']   @ 7:5
+                Constant: char, "abc"   @ 7:16
             Decl: ID(name='a'  )
                 ArrayDecl: 
                     VarDecl: 
-                        Type: ['char']   @ 6:5
-                BinaryOp: +   @ 6:16
-                    Constant: char, "Hello"   @ 6:16
-                    Constant: char, "Hello"   @ 6:16
-                    Constant: char, "World"   @ 6:26
+                        Type: ['char']   @ 8:5
+                BinaryOp: +   @ 8:16
+                    Constant: char, "Hello"   @ 8:16
+                    Constant: char, "Hello"   @ 8:16
+                    Constant: char, "World"   @ 8:26
             Decl: ID(name='b'  )
                 ArrayDecl: 
                     VarDecl: 
-                        Type: ['char']   @ 7:5
-                BinaryOp: *   @ 7:16
-                    Constant: char, "Hello"   @ 7:16
-                    Constant: char, "Hello"   @ 7:16
-                    Constant: char, "World"   @ 7:26
-            Return:    @ 8:5
-                Constant: int, 0   @ 8:12
+                        Type: ['char']   @ 9:5
+                BinaryOp: *   @ 9:16
+                    Constant: char, "Hello"   @ 9:16
+                    Constant: char, "Hello"   @ 9:16
+                    Constant: char, "World"   @ 9:26
+            Return:    @ 10:5
+                Constant: int, 0   @ 10:12

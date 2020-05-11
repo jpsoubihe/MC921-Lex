@@ -37,16 +37,29 @@ class SymbolTable(object):
     def lookup(self, a):
         return self.symtab.get(a)
 
+    def check_scope(self, key):
+        for a in self.undo.items:
+            if a[0] == key:
+                return False
+            if a == '*':
+                return True
+        return True
+
     def add(self, k, v):
         if k in self.symtab.keys():
             # if self.symtab.
             # print("actual = " + a + " -> " +str(self.symtab.get(a)))
+            # flag = self.check_scope(k)
+            # if flag is False:
+            #     return flag
             self.undo.push((k, self.symtab.get(k)))
         self.symtab[k] = v
         self.undo.push((k, self.symtab.get(k)))
-        # print("\nADD:")
-        # for a in self.symtab.keys():
-        #     print(a + " -> " + str(self.symtab[a]), end=" | ")
+        print("\nADD:")
+        for a in self.symtab.keys():
+            print(a + " -> " + str(self.symtab[a]), end=" | ")
+        print()
+        return True
         # print()
         # print("UNDO:")
         # for b in self.undo.items:
@@ -73,8 +86,9 @@ class SymbolTable(object):
                     break
                 self.symtab[var[0]] = var[1]
                 # print("replacing with " + str(var[0]) + " -> " + str(self.symtab[var[0]]))
-        # for a in self.symtab.keys():
-        #     print(a + " -> " + str(self.symtab[a]), end=" | ")
+        for a in self.symtab.keys():
+            print(a + " -> " + str(self.symtab[a]), end=" | ")
+        print()
         # print(self.symtab)
 
     def __str__(self):
