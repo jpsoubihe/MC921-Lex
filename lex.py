@@ -1,312 +1,185 @@
-import sys
+#!/usr/bin/env python
+# coding: utf-8
 
-from ply.lex import lex
+# In[1]:
 
-# tokens
-from ply.yacc import yacc
-
-# Reserved keywords
-keywords = (
-    # type specifiers
-    'CHAR', 'FLOAT', 'VOID', 'INT',
-    'ASSERT', 'BREAK', 'ELSE', 'FOR', 'IF',
-    'PRINT', 'READ', 'RETURN', 'WHILE',
-)
-
-keyword_map = {}
-for keyword in keywords:
-    keyword_map[keyword.lower()] = keyword
-
-#
-# All the tokens recognized by the lexer
-#
-tokens = keywords + (
-    # Identifiers
-    'ID',
-
-    # constants
-    'INT_CONST', 'FLOAT_CONST', 'STRING',
+import ply.lex as lex
 
 
-    # operations
-    'TIMES', 'MINUS', 'UNARYDIFF', 'MINUSMINUS', 'ADDRESS', 'PLUS', 'PLUSPLUS',
+class UCLexer:
+    """ A lexer for the uC language. After building it, set the
+        input text with input(), and call token() to get new
+        tokens.
+    """
 
-    #operators
-    'LT', 'HT', 'LE', 'HE', 'DIVIDE', 'MOD', 'DIFF', 'AND', 'OR',
+    def __init__(self, error_func):
+        """ Create a new Lexer.
+            An error function. Will be called with an error
+            message, line and column as arguments, in case of
+            an error during lexing.
+        """
+        self.error_func = error_func
+        self.filename = ''
 
-    # assignment
-    'EQUALS', 'EQ', 'DIVIDEASSIGN', 'MODASSIGN', 'PLUSASSIGN', 'MINUSASSIGN', 'TIMESASSIGN',
+        # Keeps track of the last token returned from self.token()
+        self.last_token = None
 
-    # braces
-    'RPAREN', 'LPAREN', 'RBRACE', 'LBRACE', 'RBRACKET', 'LBRACKET',
+    def build(self, **kwargs):
+        """ Builds the lexer from the specification. Must be
+            called after the lexer object is created.
 
-    # punctuation
-    'SEMI', 'COMMA',
-)
+            This method exists separately, because the PLY
+            manual warns against calling lex.lex inside __init__
+        """
+        self.lexer = lex.lex(object=self, **kwargs)
 
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z0-9_]*'
-    if t.value == 'print':
-        t.type = "PRINT"
-    return t
+    def reset_lineno(self):
+        """ Resets the internal line number counter of the lexer.
+        """
+        self.lexer.lineno = 1
 
-t_TIMES = r'\*'
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_STRING = r'\".*?\"'
-t_DIVIDE = r'\/'
-t_EQ = r'\=\='
-t_EQUALS = r'='
-t_PLUS = r'\+'
-t_PLUSPLUS = r'\+\+'
-t_MINUS = r'\-'
-t_MINUSMINUS = r'\-\-'
-t_DIFF = r'\!='
-t_LE = r'\<\='
-t_LT = r'\<'
-t_HE = r'\>\='
-t_HT = r'\>'
-t_SEMI = r';'
-t_FLOAT_CONST = r'[0-9]\.[0-9]*'
-t_INT_CONST = r'[0-9][0-9]*'
-t_MOD = r'\%'
-t_LBRACE = r'\{'
-t_RBRACE = r'\}'
-t_LBRACKET = r'\['
-t_RBRACKET = r'\]'
-t_COMMA = r'\,'
-t_ADDRESS = r'\&'
-t_AND = r'\&\&'
-t_OR = r'\|\|'
-t_UNARYDIFF = r'\!'
-t_DIVIDEASSIGN = r'\/\='
-t_MODASSIGN = r'\%\='
-t_MINUSASSIGN = r'\-\='
-t_PLUSASSIGN = r'\+\='
-t_TIMESASSIGN = r'\*\='
+    def input(self, text):
+        self.lexer.input(text)
 
+    def token(self):
+        self.last_token = self.lexer.token()
+        return self.last_token
 
-def t_error(t):
-    print(f'Illegal character {t.value[0]}')
-    t.lexer.skip(1)
+    def find_tok_column(self, token):
+        """ Find the column of the token in its line.
+        """
+        last_cr = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
+        return token.lexpos - last_cr
 
-t_ignore = ' \t'
+    # Internal auxiliary methods
+    def _error(self, msg, token):
+        location = self._make_tok_location(token)
+        self.error_func(msg, location[0], location[1])
+        self.lexer.skip(1)
 
-lexer = lex()
+    def _make_tok_location(self, token):
+        return token.lineno, self.find_tok_column(token)
 
-lexer.input("a = 3 * 4 + 5")
-for tok in lexer:
-    print(tok)
-
-#def p_program(p):
- #   '''program : LBRACE global_declaration RBRACE'''
-
-def p_global_declaration(p):
-    ''' global_declaration : function_definition
-                            | declaration
-        '''
-
-def p_function_declaration(p):
-    ''' function_definition : LBRACE type_specifier RBRACE declarator LBRACE declaration RBRACE compound_statement
-        '''
-
-def p_type_specifier(p):
-    ''' type_specifier : VOID
-                        | CHAR
-                        | INT
-                        | FLOAT
-            '''
-
-def p_declarator(p):
-    '''declarator : direct_declarator
-    '''
-
-def p_direct_declarator(p):
-    '''direct_declarator : ID
-                        | LPAREN declarator RPAREN
-                        | direct_declarator LBRACKET constant_expression RBRACKET
-                        | direct_declarator LPAREN parameter_list RPAREN
-                        | direct_declarator LPAREN LBRACE ID RBRACE RPAREN
-    '''
-
-def p_constant_expression(p):
-    '''constant_expression : binary_expression'''
-
-def p_binary_expression(p):
-    '''binary_expression :  cast_expression
-                        | binary_expression TIMES binary_expression
-                        | binary_expression DIVIDE binary_expression
-                        | binary_expression MOD binary_expression
-                        | binary_expression PLUS binary_expression
-                        | binary_expression MINUS binary_expression
-                        | binary_expression LT binary_expression
-                        | binary_expression LE binary_expression
-                        | binary_expression HT binary_expression
-                        | binary_expression HE binary_expression
-                        | binary_expression EQ binary_expression
-                        | binary_expression DIFF binary_expression
-                        | binary_expression AND binary_expression
-                        | binary_expression OR binary_expression
-    '''
-
-def p_cast_expression(p):
-    '''cast_expression : unary_expression
-                        | LPAREN type_specifier RPAREN cast_expression
-    '''
-
-def p_unary_expression(p):
-    ''' unary_expression : postfix_expression
-                        | PLUSPLUS unary_expression
-                        | MINUSMINUS unary_expression
-                        | unary_operator cast_expression
-    '''
-
-def p_postfix_expression(p):
-    '''postfix_expression : primary_expression
-                        | postfix_expression LBRACKET expression RBRACKET
-                        | postfix_expression LPAREN LBRACE expression RBRACE RPAREN
-                        | postfix_expression PLUSPLUS
-                        | postfix_expression MINUSMINUS
-    '''
-
-def p_primary_expression(p):
-    '''primary_expression : ID
-                        | constant
-                        | LPAREN expression RPAREN
-    '''
-
-def p_constant(p):
-    '''constant : INT_CONST
-                | STRING
-                | FLOAT_CONST
-    '''
-
-def p_expression(p):
-    '''expression : assignment_expression
-                | expression COMMA assignment_expression
-    '''
-
-# def p_argument_expression(p):
-#     '''argument_expression : assignment_expression
-#                             | argument_expression COMMA assignment_expression
-#     '''
-
-def p_assignment_expression(p):
-    '''assignment_expression : binary_expression
-                            | unary_expression assignment_operator assignment_expression
-    '''
-
-def p_assignment_operator(p):
-    '''assignment_operator : EQUALS
-                        | TIMESASSIGN
-                        | DIVIDEASSIGN
-                        | MODASSIGN
-                        | PLUSASSIGN
-                        | MINUSASSIGN
-    '''
-
-def p_unary_operator(p):
-    '''unary_operator : ADDRESS
-                   | TIMES
-                   | PLUS
-                   | MINUS
-                   | UNARYDIFF
-    '''
-
-def p_parameter_list(p):
-    ''' parameter_list : parameter_declaration
-                        | parameter_list parameter_declaration
-    '''
-
-def p_parameter_declaration(p):
-    '''parameter_declaration : type_specifier declarator
-    '''
-
-def p_declaration(p):
-    '''declaration : type_specifier LBRACE init_declarator_list RBRACE SEMI'''
-
-def p_init_declarator_list(p):
-    '''init_declarator_list : init_declarator
-                            | init_declarator_list COMMA init_declarator
-    '''
-
-def p_init_declarator(p):
-    '''init_declarator : declarator
-                        | declarator EQ initializer
-    '''
-
-def p_initializer(p):
-    '''initializer : assignment_expression
-                    | LBRACE initializer_list RBRACE
-                    | LBRACE initializer_list COMMA RBRACE
-    '''
-
-def p_initializer_list(p):
-    '''initializer_list : initializer
-                     | initializer_list COMMA initializer
-    '''
-
-def p_compound_statement(p):
-    '''compound_statement : LBRACE LBRACE declaration RBRACE TIMES LBRACE statement RBRACE RBRACE'''
-
-def p_statement(p):
-    '''statement : expression_statement
-              | compound_statement
-              | selection_statement
-              | iteration_statement
-              | jump_statement
-              | assert_statement
-              | print_statement
-              | read_statement
-    '''
-
-def p_expression_statement(p):
-    '''expression_statement : LBRACE expression RBRACE SEMI '''
-
-def p_selection_statement(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement
-                        | IF LPAREN expression RPAREN statement ELSE statement
-    '''
-
-def p_iteration_statement(p):
-    '''iteration_statement : WHILE LPAREN expression RPAREN statement
-                        | FOR LPAREN LBRACE expression RBRACE SEMI LBRACE expression RBRACE SEMI LBRACE expression RBRACE RPAREN statement
-    '''
-
-def p_jump_statement(p):
-    '''jump_statement : BREAK SEMI
-                   | RETURN LBRACE expression RBRACE SEMI
-    '''
-
-def p_assert_statement(p):
-    '''assert_statement : ASSERT expression SEMI
-    '''
-
-def p_print_statement(p):
-    '''print_statement : PRINT LPAREN LBRACE expression RBRACE RPAREN SEMI'''
-
-def p_read_statement(p):
-    '''read_statement : READ LPAREN expression RPAREN SEMI'''
-
-
-def p_error(p):
-    if p:
-        print("Error near the symbol %s" % p.value)
-    else:
-        print("Error at the end of input")
-
-
-precedence = (
-    ('left', 'OR'),
-    ('left', 'AND'),
-    ('left', 'EQ','DIFF'),
-    ('left', 'HT', 'HE', 'LT', 'LE'),
-    ('left', 'PLUS', 'MINUS'),
-    ('left', 'TIMES', 'DIVIDE', 'MOD')
+    # Reserved keywords
+    keywords = (
+        'CHAR', 'FLOAT', 'INT', 'VOID',
+        'IF', 'ELSE', 'WHILE', 'FOR',
+        'PRINT', 'READ',
+        'BREAK', 'RETURN', 'ASSERT'
     )
 
+    keyword_map = {}
+    for keyword in keywords:
+        keyword_map[keyword.lower()] = keyword
 
-parser = yacc(write_tables=False)
-parser.parse(open(sys.argv[1]).read())
+    #
+    # All the tokens recognized by the lexer
+    #
+    tokens = keywords + (
+        # Identifiers
+        'ID',
+        # constants
+        'INT_CONST', 'FLOAT_CONST', 'CHAR_CONST', 'STRING',
+        # symbols
+        'LPAREN', 'RPAREN', 'LBRACKET', 'RBRACKET', 'LBRACE', 'RBRACE', 'COMMA', 'SEMI',
+        # operators
+        'EQUALS', 'EQ', 'NOT', 'NOT_EQUAL', 'PLUS', 'PLUSPLUS', 'PLUS_EQUALS', 'MINUS', 'MINUSMINUS', 'MINUS_EQUALS',
+        'TIMES', 'TIMES_EQUALS', 'DIV', 'DIV_EQUALS', 'MOD', 'MOD_EQUALS', 'GT', 'GTE', 'LT', 'LTE', 'AND', 'OR',
+        'ADDRESS'
+    )
 
-# parser.parse('a == 3')
+    #
+    # Rules
+    #
+    t_ignore = ' \t'
+    t_LPAREN = '\('
+    t_RPAREN = '\)'
+    t_LBRACKET = '\['
+    t_RBRACKET = '\]'
+    t_LBRACE = '\{'
+    t_RBRACE = '\}'
+    t_COMMA = ','
+    t_SEMI = ';'
+    t_EQ = '=='
+    t_EQUALS = '='
+    t_NOT_EQUAL = '\!='
+    t_NOT = '\!'
+    t_PLUSPLUS = '\+\+'
+    t_PLUS_EQUALS = '\+='
+    t_MINUSMINUS = '--'
+    t_PLUS = '\+'
+    t_MINUS_EQUALS = '-='
+    t_MINUS = '-'
+    t_TIMES_EQUALS = '\*='
+    t_TIMES = '\*'
+    t_DIV_EQUALS = '/='
+    t_DIV = '/'
+    t_MOD_EQUALS = '%='
+    t_MOD = '%'
+    t_GTE = '>='
+    t_GT = '>'
+    t_LTE = '<='
+    t_LT = '<'
+    t_AND = '&&'
+    t_OR = '\|\|'
+    t_ADDRESS = '&'
+
+    def t_comment(self, t):
+        r'(/\*(.|\n)*\*/)|(//.*)'
+        t.lexer.lineno += t.value.count('\n')
+
+    # Newlines
+    def t_NEWLINE(self, t):
+        r'\n+'
+        t.lexer.lineno += t.value.count("\n")
+
+    def t_ID(self, t):
+        r'[a-zA-Z_][0-9a-zA-Z_]*'
+        t.type = self.keyword_map.get(t.value, "ID")
+        return t
+
+    def t_STRING(self, t):
+        r'\".*\"'
+        t.type = self.keyword_map.get(t.value, "STRING")
+        return t
+
+    def t_CHAR_CONST(self, t):
+        r'\'.{1}\''
+        t.type = self.keyword_map.get(t.value, "CHAR_CONST")
+        return t
+
+    def t_FLOAT_CONST(self, t):
+        r'([0-9]*[.][0-9]+)|([0-9]+[.][0-9]*)'
+        t.type = self.keyword_map.get(t.value, "FLOAT_CONST")
+        return t
+
+    def t_INT_CONST(self, t):
+        r'[0-9]+'
+        t.type = self.keyword_map.get(t.value, "INT_CONST")
+        return t
+
+    def t_error(self, t):
+        msg = "Illegal character %s" % repr(t.value[0])
+        self._error(msg, t)
+
+    # Scanner (used only for test)
+    def scan(self, data):
+        self.lexer.input(data)
+        while True:
+            tok = self.lexer.token()
+            if not tok:
+                break
+            print(tok)
+
+
+if __name__ == '__main__':
+    import sys
+
+
+    def print_error(msg, x, y):
+        print("Lexical error: %s at %d:%d" % (msg, x, y))
+
+
+    m = UCLexer(print_error)
+    m.build()  # Build the lexer
+    m.scan(open(sys.argv[1]).read())  # print tokens

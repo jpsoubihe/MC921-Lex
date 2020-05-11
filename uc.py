@@ -1,16 +1,6 @@
-#!/usr/bin/env python3
-# ============================================================
-# uc.py -- uC (a.k.a. micro C) language compiler
-#
-# This is the main program for the uc compiler, which just
-# parses command-line options, figures out which source files
-# to read and write to, and invokes the different stages of
-# the compiler proper.
-# ============================================================
-import ast
 import sys
 from contextlib import contextmanager
-from Parser import UCParser
+from parser import UCParser
 
 """
 One of the most important (and difficult) parts of writing a compiler
@@ -70,7 +60,7 @@ def error(lineno, message, filename=None):
     if not filename:
         errmsg = "{}: {}".format(lineno, message)
     else:
-        errmsg = "{}:{}: {}".format(filename,lineno,message)
+        errmsg = "{}:{}: {}".format(filename, lineno, message)
     for subscriber in _subscribers:
         subscriber(errmsg)
     _num_errors += 1
@@ -109,6 +99,7 @@ class Compiler:
     """
 
     def __init__(self):
+        self.code = ''
         self.total_errors = 0
         self.total_warnings = 0
 
@@ -145,6 +136,7 @@ def run_compiler():
         print("Usage: ./uc.py <source-file> [-at-susy] [-no-ast] [-debug]")
         sys.exit(1)
 
+    retval = 0
     emit_ast = True
     susy = False
     debug = False
@@ -190,74 +182,6 @@ def run_compiler():
             sys.exit(retval)
 
     sys.exit(retval)
-
-class NodeVisitor(object):
-    """ A base NodeVisitor class for visiting uc_ast nodes.
-        Subclass it and define your own visit_XXX methods, where
-        XXX is the class name you want to visit with these
-        methods.
-
-        For example:
-
-        class ConstantVisitor(NodeVisitor):
-            def __init__(self):
-                self.values = []
-
-            def visit_Constant(self, node):
-                self.values.append(node.value)
-
-        Creates a list of values of all the constant nodes
-        encountered below the given node. To use it:
-
-        cv = ConstantVisitor()
-        cv.visit(node)
-
-        Notes:
-
-        *   generic_visit() will be called for AST nodes for which
-            no visit_XXX method was defined.
-        *   The children of nodes for which a visit_XXX was
-            defined will not be visited - if you need this, call
-            generic_visit() on the node.
-            You can use:
-                NodeVisitor.generic_visit(self, node)
-        *   Modeled after Python's own AST visiting facilities
-            (the ast module of Python 3.0)
-    """
-
-    _method_cache = None
-
-    def visit(self, node):
-        """ Visit a node.
-        """
-
-        if self._method_cache is None:
-            self._method_cache = {}
-
-        visitor = self._method_cache.get(node.__class__.__name__, None)
-        if visitor is None:
-            method = 'visit_' + node.__class__.__name__
-            visitor = getattr(self, method, self.generic_visit)
-            self._method_cache[node.__class__.__name__] = visitor
-
-        return visitor(node)
-
-    def generic_visit(self, node):
-        """ Called if no explicit visitor function exists for a
-            node. Implements preorder visiting of the node.
-        """
-        for c in node:
-            self.visit(c)
-
-
-def _repr(obj):
-    """
-    Get the representation of an object, with dedicated pprint-like format for lists.
-    """
-    if isinstance(obj, list):
-        return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
-    else:
-        return repr(obj)
 
 
 if __name__ == '__main__':
