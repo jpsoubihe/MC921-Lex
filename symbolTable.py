@@ -55,10 +55,10 @@ class SymbolTable(object):
             self.undo.push((k, self.symtab.get(k)))
         self.symtab[k] = v
         self.undo.push((k, self.symtab.get(k)))
-        print("\nADD:")
-        for a in self.symtab.keys():
-            print(a + " -> " + str(self.symtab[a]), end=" | ")
-        print()
+        # print("\nADD:")
+        # for a in self.symtab.keys():
+        #     print(a + " -> " + str(self.symtab[a]), end=" | ")
+        # print()
         return True
         # print()
         # print("UNDO:")
@@ -86,9 +86,9 @@ class SymbolTable(object):
                     break
                 self.symtab[var[0]] = var[1]
                 # print("replacing with " + str(var[0]) + " -> " + str(self.symtab[var[0]]))
-        for a in self.symtab.keys():
-            print(a + " -> " + str(self.symtab[a]), end=" | ")
-        print()
+        # for a in self.symtab.keys():
+        #     print(a + " -> " + str(self.symtab[a]), end=" | ")
+        # print()
         # print(self.symtab)
 
     def __str__(self):
