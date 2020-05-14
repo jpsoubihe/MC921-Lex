@@ -3,7 +3,6 @@ class UndoStack:
     def __init__(self):
         self.items = []
 
-
     def isEmpty(self):
         return self.items == []
 
@@ -25,10 +24,10 @@ class UndoStack:
 
 
 class SymbolTable(object):
-    '''
+    """
     Class representing a symbol table.  It should provide functionality
     for adding and looking up nodes associated with identifiers.
-    '''
+    """
     def __init__(self):
         self.symtab = {}
         self.undo = UndoStack()
@@ -71,7 +70,6 @@ class SymbolTable(object):
         # print("symtab = " + str(self.symtab.__str__()))
         # print("undo = " + str(self.undo.size()))
 
-
     def begin_scope(self):
         scope_ind = self.symtab.__sizeof__()
         self.undo.push('*')
@@ -93,4 +91,3 @@ class SymbolTable(object):
 
     def __str__(self):
         return str(self.symtab)
-

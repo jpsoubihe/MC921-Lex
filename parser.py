@@ -416,7 +416,7 @@ class UCParser:
         """
         string_constant : STRING
         """
-        p[0] = ast.Constant('string', p[1], self._token_coord(p, 1))
+        p[0] = ast.Constant('string', p[1][1:-1], self._token_coord(p, 1))
 
     def p_primary_expression_1(self, p):
         """
@@ -565,7 +565,6 @@ class UCParser:
             decls = self._build_declarations(
                 spec=spec,
                 decls=p[2])
-
         p[0] = decls
 
     def p_declaration(self, p):

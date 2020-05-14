@@ -61,7 +61,7 @@ class NodeVisitor(object):
             node. Implements preorder visiting of the node.
         """
         for c in node:
-            # print(c)
+            # (c)
             self.visit(c)
 
     # def visit_NoneType(self, node):
@@ -105,7 +105,7 @@ class Visitor(NodeVisitor):
         self.symtab.end_scope()
 
     def visit_GlobalDecl(self, node):
-        self.visit(node.decl)
+        type = self.visit(node.decl)
 
     def visit_Decl(self, node):
         type = self.visit(node.type)
@@ -145,6 +145,7 @@ class Visitor(NodeVisitor):
             if init is not None:
                 if init != type:
                     self.error("initializer mismatch")
+
         else:
             if type == 'int':
                 self.symtab.add(node.name.name, uctype.IntType)
@@ -162,6 +163,7 @@ class Visitor(NodeVisitor):
                 if init != type:
                     self.error("initializer mismatch")
 
+        return type
 
     def visit_VarDecl(self, node):
         node1 = self.visit(node.declname)
@@ -186,7 +188,6 @@ class Visitor(NodeVisitor):
         # 3. Assign the result type
         left_type = self.visit(node.left)
         right_type = self.visit(node.right)
-
 
         if left_type == right_type:
             if uctype.constant_type(left_type).binary_ops.__contains__(node.op) is False:
@@ -301,7 +302,7 @@ class Visitor(NodeVisitor):
         pass
 
     def visit_Return(self, node):
-        self.visit(node.expr)
+        type = self.visit(node.expr)
 
     def visit_UnaryOp(self, node):
         type = self.visit(node.expr)
@@ -313,8 +314,6 @@ class Visitor(NodeVisitor):
             return None
         else:
             return type
-
-
 
     def visit_ExprList(self, node):
         for _decl in node.exprs:
