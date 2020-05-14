@@ -39,15 +39,13 @@ Program:
                             FuncCall:    @ 8:13
                                 ID: f   @ 8:13
                                 ExprList:    @ 8:15
-                                    BinaryOp: -   @ 8:15
-                                        ID: n   @ 8:15
-                                        Constant: int, 1   @ 8:17
-                                    ID: p   @ 8:20
-                            FuncCall:    @ 8:25
-                                ID: f   @ 8:25
-                                BinaryOp: -   @ 8:27
-                                    ID: n   @ 8:27
-                                    Constant: int, 2   @ 8:29
+                                    Constant: int, 1   @ 8:15
+                                    ID: p   @ 8:18
+                            FuncCall:    @ 8:23
+                                ID: f   @ 8:23
+                                BinaryOp: -   @ 8:25
+                                    ID: n   @ 8:25
+                                    Constant: int, 2   @ 8:27
                     Assignment: =   @ 9:9
                         ID: k   @ 9:9
                         BinaryOp: +   @ 9:13

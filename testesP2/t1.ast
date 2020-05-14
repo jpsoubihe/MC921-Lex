@@ -27,8 +27,9 @@ Program:
                     Constant: int, 4   @ 3:26
                 UnaryOp: p++   @ 3:29
                     ID: i   @ 3:29
-                Print:    @ 4:9
-                    ArrayRef:    @ 4:15
-                        ID: v   @ 4:15
-                        ID: j   @ 4:17
-            Return:    @ 5:5
+                Compound:    @ 3:1
+                    Print:    @ 4:9
+                        ArrayRef:    @ 4:15
+                            ID: v   @ 4:15
+                            ID: j   @ 4:17
+            Return:    @ 6:5

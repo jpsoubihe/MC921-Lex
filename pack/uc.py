@@ -1,6 +1,6 @@
 import sys
 from contextlib import contextmanager
-from parser import UCParser
+from pack.parser import UCParser
 
 """
 One of the most important (and difficult) parts of writing a compiler

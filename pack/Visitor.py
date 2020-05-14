@@ -1,8 +1,7 @@
-import ast
+from pack.symbolTable import SymbolTable
 
-from symbolTable import SymbolTable
+from pack import uctype, ast
 
-import uctype
 
 
 class NodeVisitor(object):
@@ -81,6 +80,16 @@ class Visitor(NodeVisitor):
     def error(self, message):
         error_vector.append("Error: " + message)
 
+    def extract_types(self, param_list):
+        type = []
+        for p in param_list.params:
+            type.append(self.symtab.lookup(p.name.name).typename)
+        return type
+
+    def check_params(self, params_reg, params_actual):
+        to_type = self.extract_types(params_reg)
+        return to_type == params_actual
+
     '''
     Program visitor class. This class uses the visitor pattern. You need to define methods
     of the form visit_NodeName() for each kind of AST node that you want to process.
@@ -90,6 +99,7 @@ class Visitor(NodeVisitor):
     def __init__(self):
         # Initialize the symbol table
         self.symtab = SymbolTable()
+        self.functions = {}
 
         # Add built-in type names (int, float, char) to the symbol table
         # self.symtab.add("int", uctype.IntType)
@@ -112,7 +122,7 @@ class Visitor(NodeVisitor):
         if isinstance(node.type, ast.ArrayDecl):
             if node.type.dim is not None and node.init is not None:
                 if node.type.dim.value != str(len(node.init.exprs)):
-                    self.error("size mismatch on initialization")
+                    self.error("size mismatch on initialization" + str(node.coord))
 
             if type == 'int':
                 self.symtab.add(node.name.name, uctype.IntArrayType)
@@ -127,7 +137,7 @@ class Visitor(NodeVisitor):
                     if init == 'string' and type == 'char':
                         pass
                     else:
-                        self.error("initializer mismatch")
+                        self.error("initializer mismatch" + str(node.coord))
 
         elif isinstance(node.type, ast.FuncDecl):
             if type == 'int':
@@ -139,12 +149,12 @@ class Visitor(NodeVisitor):
             elif type == 'void':
                 self.symtab.add(node.name.name, uctype.VoidType)
             else:
-                self.error("invalid type")
+                self.error("invalid type" + str(node.coord))
 
             init = self.visit(node.init)
             if init is not None:
                 if init != type:
-                    self.error("initializer mismatch")
+                    self.error("initializer mismatch" + str(node.coord))
         else:
             if type == 'int':
                 self.symtab.add(node.name.name, uctype.IntType)
@@ -155,12 +165,12 @@ class Visitor(NodeVisitor):
             elif type == 'void':
                 self.symtab.add(node.name.name, uctype.VoidType)
             else:
-                self.error("invalid type")
+                self.error("invalid type" + str(node.coord))
 
             init = self.visit(node.init)
             if init is not None:
                 if init != type:
-                    self.error("initializer mismatch")
+                    self.error("initializer mismatch" + str(node.coord))
 
 
     def visit_VarDecl(self, node):
@@ -175,7 +185,7 @@ class Visitor(NodeVisitor):
         elif node2 == "void":
             return 'void'
         else:
-            self.error("variable {} has an invalid type : ".format(node1.name))
+            self.error("variable {} has an invalid type : ".format(node1.name) + str(node.coord))
 
     def visit_Type(self, node):
         return node.names[0]
@@ -187,13 +197,16 @@ class Visitor(NodeVisitor):
         left_type = self.visit(node.left)
         right_type = self.visit(node.right)
 
-
-        if left_type == right_type:
-            if uctype.constant_type(left_type).binary_ops.__contains__(node.op) is False:
-                self.error("binary operation not supported")
-                return None
-        else:
-            self.error("type mismatch on binary operation")
+        if left_type is not None and right_type is not None:
+            if left_type == right_type:
+                if uctype.constant_type(left_type).binary_ops.__contains__(node.op) is False:
+                    if uctype.constant_type(left_type).rel_ops.__contains__(node.op):
+                        return "boolean"
+                    else:
+                        self.error("binary operation not supported" + str(node.coord))
+                        return None
+            else:
+                self.error("type mismatch on binary operation" + str(node.coord))
 
         return left_type
 
@@ -208,13 +221,13 @@ class Visitor(NodeVisitor):
         left_value = self.visit(node.lvalue)
         right_value = self.visit(node.rvalue)
         if left_value is None:
-            self.error("{} undeclared".format(node.lvalue.name))
+            self.error("{} undeclared".format(node.lvalue.name) + str(node.coord))
             return None
         if right_value is None:
-            self.error("{} undeclared".format(node.rvalue.name))
+            self.error("{} undeclared".format(node.rvalue.name) + str(node.coord))
             return None
         if left_value != right_value:
-            self.error("cannot assign {} to {}".format(right_value, left_value))
+            self.error("cannot assign {} to {}".format(right_value, left_value) + str(node.coord))
             return None
         else:
             return left_value
@@ -241,17 +254,21 @@ class Visitor(NodeVisitor):
         pass
 
     def visit_Assert(self, node):
-        self.visit(node.expr)
+        type = self.visit(node.expr)
+        # if type != None:
+        # #     return 'boolean'
+        # else:
+        #     return None
 
     def visit_Print(self, node):
         if isinstance(node.expr, ast.ArrayRef):
             name = self.visit(node.expr)
             if name is None:
-                self.error("variable {} not declared".format(node.expr.name))
+                self.error("variable {} not declared".format(node.expr.name) + str(node.coord))
                 return None
             index = self.visit(node.expr.subscript)
             if index is None:
-                self.error("variable {} not declared".format(node.expr.subscript.name))
+                self.error("variable {} not declared".format(node.expr.subscript.name) + str(node.coord))
                 return None
         pass
 
@@ -259,25 +276,34 @@ class Visitor(NodeVisitor):
         self.visit(node.expr)
 
     def visit_If(self, node):
-        self.symtab.begin_scope()
+        # self.symtab.begin_scope()
         self.visit(node.cond)
         self.visit(node.iftrue)
         self.visit(node.iffalse)
-        self.symtab.end_scope()
+        # self.symtab.end_scope()
 
     def visit_FuncDef(self, node):
+        self.symtab.begin_scope()
         # type = self.visit(node.spec)
+        if node.decl.type.args is not None:
+            self.functions[node.decl.name.name] = node.decl.type.args
         self.visit(node.decl)
-        self.visit(node.body)
         if node.decl is not None:
             for _decl in node.decl:
                 self.visit(_decl)
+            # self.functions[node.decl.name.name] = node.decl.type
+        self.visit(node.body)
+        func_name = node.decl.name.name
+
+        # else:
+        #     print("ENROLA")
+        self.symtab.end_scope()
 
     def visit_While(self, node):
-        self.symtab.begin_scope()
+        # self.symtab.begin_scope()
         self.visit(node.cond)
         self.visit(node.stmt)
-        self.symtab.end_scope()
+        # self.symtab.end_scope()
 
     def visit_Compound(self, node):
         self.symtab.begin_scope()
@@ -306,23 +332,28 @@ class Visitor(NodeVisitor):
     def visit_UnaryOp(self, node):
         type = self.visit(node.expr)
         if type is None:
-            self.error("variable {} not declared".format(node.expr.name))
+            self.error("variable {} not declared".format(node.expr.name) + str(node.coord))
             return None
         if uctype.constant_type(type).unary_ops.__contains__(node.op) is False:
-            self.error("unaryOp {} not supported".format(node.op))
+            self.error("unaryOp {} not supported".format(node.op) + str(node.coord))
             return None
         else:
             return type
 
-
-
     def visit_ExprList(self, node):
+        type = []
         for _decl in node.exprs:
-            self.visit(_decl)
+            type.append(self.visit(_decl))
+        return type
 
     def visit_FuncCall(self, node):
         func_type = self.visit(node.name)
         args = self.visit(node.args)
+        if node.name.name is not None:
+            check = self.check_params(self.functions[node.name.name], args)
+            if check is False:
+                self.error("wrong func call" + str(node.coord))
+
         return func_type
 
     def visit_InitList(self, node):
@@ -333,7 +364,8 @@ class Visitor(NodeVisitor):
                 type = init_type
             else:
                 if type != init_type:
-                    self.error("type mismatch on initializer list")
+                    # uc.error(node.coord, "teste")
+                    self.error("type mismatch on initializer list" + str(node.coord))
                     return None
         return type
 
@@ -349,14 +381,14 @@ class Visitor(NodeVisitor):
     def visit_ArrayRef(self, node):
         name = self.visit(node.name)
         if name is None:
-            self.error("variable {} not declared".format(node.expr.name))
+            self.error("variable {} not declared".format(node.name.name) + str(node.coord))
             return None
         subscript = self.visit(node.subscript)
         if subscript is None:
-            self.error("invalid array index")
+            self.error("invalid array index" + str(node.coord))
             return name
-        elif subscript is not 'int':
-            self.error("array index must be of type int")
+        elif subscript != 'int':
+            self.error("array index must be of type int" + str(node.coord))
 
         if name == 'float_array' or name == 'float':
             return 'float'

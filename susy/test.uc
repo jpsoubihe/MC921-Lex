@@ -1,11 +1,8 @@
 int main() {
-    int n0;
-    int n1 = 7;
-    float n2 = 9.4;
-    char n3 = 'c';
-
-    char c[] = "abc";
-    char a[] = "Hello" + "World";
-    char b[] = "Hello" * "World";
+    int i = 2;
+    char c[] = "xpto";
+    int v[] = {1, 2, 3, 4, 5};
+    char w[4];
+    assert w[i] == c[1] && v[i] == 9;
     return 0;
 }

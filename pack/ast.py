@@ -1,6 +1,7 @@
 import sys
 
-from Visitor import Visitor
+from pack.Visitor import Visitor
+
 
 visitor = Visitor()
 

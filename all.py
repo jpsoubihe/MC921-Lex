@@ -4,10 +4,9 @@ from ply.lex import lex
 
 # tokens
 from ply.yacc import yacc
-from ast import Program, FuncDef, Decl
-from ast import BinaryOp
-from ast import GlobalDecl
-from ast import EmptyStatement
+from pack.ast import Program, FuncDef, Decl
+from pack.ast import GlobalDecl
+from pack.ast import EmptyStatement
 
 
 # Reserved keywords
