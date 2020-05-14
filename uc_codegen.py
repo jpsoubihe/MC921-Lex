@@ -18,6 +18,8 @@ binary_ops = {
     "!": "not"
 }
 
+cast_types = {"int": "si", "float": "fp"}
+
 oper_ops = {"+=": "add", "-=": "sub", "/=": "div", "*=": "mult", "%/": "mod"}
 
 bool_ops = ["eq", "ne", "lt", "le", "gt", "ge", "and", "or", "not"]
@@ -156,6 +158,8 @@ class GenerateCode(NodeVisitor):
                     self.new_temp(node.lvalue.name))
         elif isinstance(node.rvalue, ast.Constant):
             inst = ('store_' + node.rvalue.type, node.rvalue.id, self.new_temp(node.lvalue.name))
+        elif isinstance(node.rvalue, ast.Cast):
+            inst = ('store_' + node.rvalue.to_type.names[0], node.rvalue.id, self.new_temp(node.lvalue.name))
         self.code.append(inst)
 
     def visit_BinaryOp(self, node):
@@ -202,6 +206,16 @@ class GenerateCode(NodeVisitor):
 
         # Store location of the result on the node
         node.gen_location = target
+
+    def visit_Cast(self, node):
+        self.visit(node.expr)
+        if isinstance(node.expr, ast.ID):
+            og_type = cast_types[self.func_and_var_types[node.expr.name]]
+        to_type = cast_types[node.to_type.names[0]]
+        inst = (og_type + 'to' + to_type, node.expr.id, self.new_temp('cast%d' % self.const_count))
+        self.code.append(inst)
+        node.id = self.new_temp('cast%d' % self.const_count)
+        self.const_count += 1
 
     def visit_Compound(self, node):
         for item in node.block_items:
