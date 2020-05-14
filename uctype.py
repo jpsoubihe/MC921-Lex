@@ -23,22 +23,22 @@ class uCType(object):
 
 IntType = uCType("int",
                  unary_ops   = {"-", "+", "--", "++", "p--", "p++", "*", "&"},
-                 binary_ops  = {"+", "-", "*", "/", "%", "<=", ">", "==", "<", "&&", "||", "!="},
-                 rel_ops     = {"==", "!=", "<", ">", "<=", ">="},
+                 binary_ops  = {"+", "-", "*", "/", "%"},
+                 rel_ops     = {"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
                  assign_ops  = {"=", "+=", "-=", "*=", "/=", "%="}
                  )
 
 FloatType = uCType("float",
                    unary_ops = {"-", "+", "++", "p--", "p++", "*", "&"},
-                   binary_ops={"+", "-", "*", "/", "&&", "||"},
-                   rel_ops     = {"==", "!=", "<", ">", "<=", ">="},
+                   binary_ops={"+", "-", "*", "/"},
+                   rel_ops     = {"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
                    assign_ops  = {"=", "+=", "-=", "*=", "/="}
     )
 
 CharType = uCType("char",
                   unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
-                  binary_ops={"+", "-", "*", "/", "%", "&&", "||", "=="},
-                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  binary_ops={"+", "-", "*", "/", "%"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
                   assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
     )
 
@@ -49,6 +49,14 @@ StringType = uCType("string",
                   rel_ops={"==", "!=", "<", ">", "<=", ">="},
                   assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
     )
+
+BooleanType = uCType("boolean",
+                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
 
 #ToDo: determine operations for arrays
 IntArrayType = uCType("int_array",
@@ -77,3 +85,11 @@ def constant_type(a):
         return FloatType
     elif a == 'char':
         return CharType
+    elif a == 'boolean':
+        return BooleanType
+    elif a == 'int_array':
+        return IntArrayType
+    elif a == 'float_array':
+        return FloatArrayType
+    elif a == 'char_array':
+        return CharArrayType

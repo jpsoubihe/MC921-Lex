@@ -8,45 +8,32 @@ is reliable reporting of error messages back to the user.  This file
 defines some generic functionality for dealing with errors throughout
 the compiler project. Error handling is based on a subscription/logging
 based approach.
-
 To report errors in uc compiler, we use the error() function. For example:
-
        error(lineno,"Some kind of compiler error message")
-
 where lineno is the line number on which the error occurred.
-
 Error handling is based on a subscription based model using context-managers
 and the subscribe_errors() function. For example, to route error messages to
 standard output, use this:
-
        with subscribe_errors(print):
             run_compiler()
-
 To send messages to standard error, you can do this:
-
        import sys
        from functools import partial
        with subscribe_errors(partial(print,file=sys.stderr)):
             run_compiler()
-
 To route messages to a logger, you can do this:
-
        import logging
        log = logging.getLogger("somelogger")
        with subscribe_errors(log.error):
             run_compiler()
-
 To collect error messages for the purpose of unit testing, do this:
-
        errs = []
        with subscribe_errors(errs.append):
             run_compiler()
        # Check errs for specific errors
-
 The utility function errors_reported() returns the total number of
 errors reported so far.  Different stages of the compiler might use
 this to decide whether or not to keep processing or not.
-
 Use clear_errors() to clear the total number of errors.
 """
 
@@ -82,7 +69,6 @@ def subscribe_errors(handler):
     """ Context manager that allows monitoring of compiler error messages.
         Use as follows where handler is a callable taking a single argument
         which is the error message string:
-
         with subscribe_errors(handler):
             ... do compiler ops ...
     """
