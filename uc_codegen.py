@@ -18,6 +18,10 @@ binary_ops = {
     "!": "not"
 }
 
+oper_ops = {"+=": "add", "-=": "sub", "/=": "div", "*=": "mult", "%/": "mod"}
+
+bool_ops = ["eq", "ne", "lt", "le", "gt", "ge", "and", "or", "not"]
+
 
 class ScopeStack:
     def __init__(self):
@@ -130,8 +134,18 @@ class GenerateCode(NodeVisitor):
     def visit_Assignment(self, node):
         self.visit(node.rvalue)
         if isinstance(node.rvalue, ast.BinaryOp):
-            inst = ('store_' + node.rvalue.left.type, self.new_temp('binop%d' % node.rvalue.id),
-                    self.new_temp(node.lvalue.name))
+            if isinstance(node.rvalue.left, ast.Constant):
+                type = node.rvalue.left.type
+            elif isinstance(node.rvalue.left, ast.ID):
+                type = self.func_and_var_types[node.rvalue.left.name]
+            if node.op in oper_ops:
+                self.visit_LoadLocation(node.lvalue)
+                inst = (oper_ops[node.op] + '_' + type, self.new_temp('binop%d' % node.rvalue.id),
+                        node.lvalue.id, self.new_temp('const%d' % self.const_count))
+                self.code.append(inst)
+                inst = ('store_' + type, self.new_temp('const%d' % self.const_count), self.new_temp(node.lvalue.name))
+            else:
+                inst = ('store_' + type, self.new_temp('binop%d' % node.rvalue.id), self.new_temp(node.lvalue.name))
         elif isinstance(node.rvalue, ast.FuncCall):
             inst = ('store_' + self.func_and_var_types[node.rvalue.name.name],
                     self.new_temp('call_%s_%d' % (node.rvalue.name.name, node.rvalue.id)),
@@ -140,6 +154,8 @@ class GenerateCode(NodeVisitor):
             inst = ('store_' + self.func_and_var_types[node.lvalue.name],
                     node.rvalue.id,
                     self.new_temp(node.lvalue.name))
+        elif isinstance(node.rvalue, ast.Constant):
+            inst = ('store_' + node.rvalue.type, node.rvalue.id, self.new_temp(node.lvalue.name))
         self.code.append(inst)
 
     def visit_BinaryOp(self, node):
@@ -156,23 +172,29 @@ class GenerateCode(NodeVisitor):
 
         if isinstance(node.left, ast.BinaryOp):
             left = self.new_temp('binop%d' % node.left.id)
-            self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.id.__str__()]
             opcode = binary_ops[node.op] + "_" + self.func_and_var_types[node.left.id.__str__()]
-        else:
-            if isinstance(node.left, ast.ID):
-                self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name]
+            if binary_ops[node.op] in bool_ops:
+                self.func_and_var_types[node.id.__str__()] = 'bool'
             else:
-                self.func_and_var_types[node.id.__str__()] = node.left.type
+                self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.id.__str__()]
+        else:
             opcode = binary_ops[node.op] + "_" + self.func_and_var_types[node.left.name]
+            if binary_ops[node.op] in bool_ops:
+                self.func_and_var_types[node.id.__str__()] = 'bool'
+            else:
+                if isinstance(node.left, ast.ID):
+                    self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name]
+                else:
+                    self.func_and_var_types[node.id.__str__()] = node.left.type
             left = node.left.id
 
         if isinstance(node.right, ast.BinaryOp):
             right = self.new_temp('binop%d' % node.right.id)
         else:
-            if isinstance(node.right, ast.ID):
-                self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.right.name]
-            else:
-                self.func_and_var_types[node.id.__str__()] = node.right.type
+            # if isinstance(node.right, ast.ID):
+            #     self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.right.name]
+            # else:
+            #     self.func_and_var_types[node.id.__str__()] = node.right.type
             right = node.right.id
 
         inst = (opcode, right, left, target)
@@ -248,6 +270,39 @@ class GenerateCode(NodeVisitor):
                 self.visit(node.init)
                 inst = ('store_' + self.func_and_var_types[node.init.name], node.init.id, target)
                 self.code.append(inst)
+
+    def visit_For(self, node):
+        for_count = self.const_count
+        self.new_temp('for%d_label1' % for_count)
+        self.new_temp('for%d_label2' % (for_count + 1))
+        self.new_temp('for%d_label3' % (for_count + 2))
+        self.const_count += 3
+
+        if node.init is not None:
+            for decl in node.init.decls:
+                self.visit(decl)
+        inst = (self.new_temp('for%d_label1' % for_count)[1:], )
+        self.code.append(inst)
+
+        if node.cond is not None:
+            self.visit(node.cond)
+
+        inst = ('cbranch', self.new_temp('binop%d' % node.cond.id),
+                self.new_temp('for%d_label2' % (for_count + 1)),
+                self.new_temp('for%d_label3' % (for_count + 2)))
+        self.code.append(inst)
+        inst = (self.new_temp('for%d_label2' % (for_count + 1))[1:],)
+        self.code.append(inst)
+
+        print(node.stmt)
+        self.visit(node.stmt)
+        if node.next is not None:
+            self.visit(node.next)
+        inst = ('jump', self.new_temp('for%d_label1' % for_count))
+        self.code.append(inst)
+
+        inst = (self.new_temp('for%d_label3' % (for_count + 2))[1:],)
+        self.code.append(inst)
 
     def visit_FuncCall(self, node):
         for arg in node.args.exprs:
