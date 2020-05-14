@@ -2,6 +2,8 @@ import sys
 
 from Visitor import Visitor
 from IR import GenerateCode
+from uc_semantic import Visitor
+
 
 visitor = Visitor()
 generateCode = GenerateCode()
@@ -682,9 +684,9 @@ class Program(Node):
         self.gdecls = gdecls
         self.coord = coord
         visitor.visit(self)
-        visitor.print_error()
+        if visitor.error_vector.__len__() != 0:
+            visitor.print_error()
         generateCode.visit(self)
-
 
     def children(self):
         nodelist = []
