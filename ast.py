@@ -1,7 +1,6 @@
 import sys
 
-from Visitor import Visitor
-from IR import GenerateCode
+from uc_codegen import GenerateCode
 from uc_semantic import Visitor
 
 
@@ -686,7 +685,8 @@ class Program(Node):
         visitor.visit(self)
         if visitor.error_vector.__len__() != 0:
             visitor.print_error()
-        generateCode.visit(self)
+        else:
+            generateCode.visit(self)
 
     def children(self):
         nodelist = []

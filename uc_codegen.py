@@ -1,12 +1,21 @@
 import ast
-from Visitor import NodeVisitor
+from uc_semantic import NodeVisitor
 
 binary_ops = {
     "+": "add",
     "-": "sub",
     "*": "mul",
     "/": "div",
-    "%": "mod"
+    "%": "mod",
+    "==": "eq",
+    "!=": "ne",
+    "<": "lt",
+    ">": "gt",
+    "<=": "le",
+    ">=": "ge",
+    "&&": "and",
+    "||": "or",
+    "!": "not"
 }
 
 
@@ -88,22 +97,55 @@ class GenerateCode(NodeVisitor):
 
     def visit_ArrayDecl(self, node):
         str_info = self.func_and_var_types['.str.%d' % (self.str_count - 1)]
-        inst = ('alloc_' + node.type.type.names[0], node.id)
+        inst = ('alloc_' + str_info['type'] + str_info['size'], node.id)
         self.code.append(inst)
         inst = ('store_' + str_info['type'] + str_info['size'], self.new_global('.str.%d' % (self.str_count - 1)), node.id)
         self.code.append(inst)
+
+    def visit_Assert(self, node):
+        if isinstance(node.expr, ast.BinaryOp):
+            self.visit(node.expr)
+        inst = ('cbranch', self.new_temp('binop%d' % node.expr.id), self.new_temp('assert%d_label_1' % self.const_count), self.new_temp('assert%d_label_2' % (self.const_count + 1)))
+        self.code.append(inst)
+
+        inst = (self.new_temp('assert%d_label_1' % self.const_count)[1:],)
+        self.code.append(inst)
+        inst = ('jump', self.new_temp('assert%d_label_1' % (self.const_count + 2)))
+        self.code.append(inst)
+
+        inst = (self.new_temp('assert%d_label_2' % (self.const_count + 1))[1:],)
+        self.code.append(inst)
+        inst = ('global_string', self.new_global('.str.%d' % self.str_count), 'assertion_fail on %s:%s' % (node.coord.line, node.coord.column))
+        self.global_code.append(inst)
+        inst = ('print_string', self.new_global('.str.%d' % self.str_count))
+        self.code.append(inst)
+        inst = ('jump', self.new_temp(self.fname.peek() + '_label'))
+        self.code.append(inst)
+
+        inst = (self.new_temp('assert%d_label_1' % (self.const_count + 2))[1:],)
+        self.code.append(inst)
+
+        self.const_count += 3
 
     def visit_Assignment(self, node):
         self.visit(node.rvalue)
         if isinstance(node.rvalue, ast.BinaryOp):
             inst = ('store_' + node.rvalue.left.type, self.new_temp('binop%d' % node.rvalue.id),
                     self.new_temp(node.lvalue.name))
+        elif isinstance(node.rvalue, ast.FuncCall):
+            inst = ('store_' + self.func_and_var_types[node.rvalue.name.name],
+                    self.new_temp('call_%s_%d' % (node.rvalue.name.name, node.rvalue.id)),
+                    self.new_temp(node.lvalue.name))
+        elif isinstance(node.rvalue, ast.UnaryOp):
+            inst = ('store_' + self.func_and_var_types[node.lvalue.name],
+                    node.rvalue.id,
+                    self.new_temp(node.lvalue.name))
         self.code.append(inst)
 
     def visit_BinaryOp(self, node):
         # Visit the left and right expressions
-        self.visit(node.left)
         self.visit(node.right)
+        self.visit(node.left)
 
         # Make a new temporary for storing the result
         target = self.new_temp('binop%d' % self.const_count)
@@ -111,18 +153,29 @@ class GenerateCode(NodeVisitor):
         self.const_count += 1
 
         # Create the opcode and append to list
-        opcode = binary_ops[node.op] + "_" + self.func_and_var_types[node.left.name]
 
         if isinstance(node.left, ast.BinaryOp):
             left = self.new_temp('binop%d' % node.left.id)
+            self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.id.__str__()]
+            opcode = binary_ops[node.op] + "_" + self.func_and_var_types[node.left.id.__str__()]
         else:
+            if isinstance(node.left, ast.ID):
+                self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name]
+            else:
+                self.func_and_var_types[node.id.__str__()] = node.left.type
+            opcode = binary_ops[node.op] + "_" + self.func_and_var_types[node.left.name]
             left = node.left.id
 
         if isinstance(node.right, ast.BinaryOp):
             right = self.new_temp('binop%d' % node.right.id)
         else:
+            if isinstance(node.right, ast.ID):
+                self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.right.name]
+            else:
+                self.func_and_var_types[node.id.__str__()] = node.right.type
             right = node.right.id
-        inst = (opcode, left, right, target)
+
+        inst = (opcode, right, left, target)
         self.code.append(inst)
 
         # Store location of the result on the node
@@ -191,10 +244,20 @@ class GenerateCode(NodeVisitor):
                 self.visit(node.init)
                 inst = ('store_' + self.func_and_var_types[node.init.name.name], self.new_temp('call_%s_%d' % (node.init.name.name, node.init.id)), target)
                 self.code.append(inst)
+            elif isinstance(node.init, ast.ID):
+                self.visit(node.init)
+                inst = ('store_' + self.func_and_var_types[node.init.name], node.init.id, target)
+                self.code.append(inst)
 
     def visit_FuncCall(self, node):
         for arg in node.args.exprs:
             self.visit_LoadLocation(arg)
+            if isinstance(arg, ast.ID):
+                inst = ('param_' + self.func_and_var_types[arg.name], arg.id)
+                self.code.append(inst)
+            elif isinstance(arg, ast.Constant):
+                inst = ('param_' + arg.type, arg.id)
+                self.code.append(inst)
         target = self.new_temp('call_%s_%d' % (node.name.name, self.const_count))
         node.id = self.const_count
         self.const_count += 1
@@ -261,10 +324,13 @@ class GenerateCode(NodeVisitor):
                 inst = ('load_' + self.func_and_var_types[self.fname.peek()], return_place, target)
                 self.code.append(inst)
         elif isinstance(node, ast.ID):
-            node.id = self.new_temp('load_' + node.name)
+            node.id = self.new_temp('load_' + node.name + '_%d' % self.const_count)
+            self.const_count +=1
             origin = self.new_temp(node.name)
             inst = ('load_' + self.func_and_var_types[node.name], origin, node.id)
             self.code.append(inst)
+        elif isinstance(node, ast.Constant):
+            self.visit(node)
 
     # def visit_ParamList(self, node):
     #
@@ -313,6 +379,27 @@ class GenerateCode(NodeVisitor):
         else:
             inst = ('return_void',)
         self.code.append(inst)
+
+    def visit_UnaryOp(self, node):
+        if isinstance(node.expr, ast.ID):
+            self.visit_LoadLocation(node.expr)
+            if node.op == '++' or node.op == 'p++':
+                inst = ('literal_' + self.func_and_var_types[node.expr.name],
+                        1, self.new_temp('const%d' % self.const_count))
+                self.code.append(inst)
+                inst = ('add_' + self.func_and_var_types[node.expr.name],
+                        node.expr.id, self.new_temp('const%d' % self.const_count),
+                        self.new_temp('const%d' % (self.const_count + 1)))
+                self.code.append(inst)
+                inst = ('store_' + self.func_and_var_types[node.expr.name],
+                        self.new_temp('const%d' % (self.const_count + 1)),
+                        self.new_temp(node.expr.name))
+                self.code.append(inst)
+                if node.op == '++':
+                    node.id = self.new_temp('const%d' % (self.const_count + 1))
+                else:
+                    node.id = node.expr.id
+                self.const_count += 2
 
     def visit_VarDecl(self, node):
         # allocate on stack memory

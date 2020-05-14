@@ -61,11 +61,7 @@ class NodeVisitor(object):
     #     print("entrou")
 
 
-
-
-
 class Visitor(NodeVisitor):
-
 
     def extract_types(self, param_list):
         type = []
