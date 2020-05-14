@@ -1,6 +1,7 @@
 import sys
 
-from pack.Visitor import Visitor
+from Visitor import Visitor
+from uc import errors_reported
 
 
 visitor = Visitor()
@@ -648,7 +649,8 @@ class Program(Node):
         self.gdecls = gdecls
         self.coord = coord
         visitor.visit(self)
-        visitor.print_error()
+        if visitor.error_vector.__len__() != 0:
+            visitor.print_error()
 
     def children(self):
         nodelist = []

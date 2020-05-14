@@ -1,7 +1,8 @@
-from pack.symbolTable import SymbolTable
+from symbolTable import SymbolTable
 
-from pack import uctype, ast
-
+import ast
+import uctype
+from uc import subscribe_errors
 
 
 class NodeVisitor(object):
@@ -67,18 +68,11 @@ class NodeVisitor(object):
     #     print("entrou")
 
 
-error_vector = []
+
 
 
 class Visitor(NodeVisitor):
 
-    def print_error(self):
-        if len(error_vector) > 0:
-            for i in error_vector:
-                print(i)
-
-    def error(self, message):
-        error_vector.append("Error: " + message)
 
     def extract_types(self, param_list):
         type = []
@@ -100,11 +94,22 @@ class Visitor(NodeVisitor):
         # Initialize the symbol table
         self.symtab = SymbolTable()
         self.functions = {}
+        self.error_vector = []
 
         # Add built-in type names (int, float, char) to the symbol table
         # self.symtab.add("int", uctype.IntType)
         # self.symtab.add("float",uctype.float_type)
         # self.symtab.add("char",uctype.char_type)
+
+    def print_error(self):
+        if len(self.error_vector) > 0:
+            for i in self.error_vector:
+                print(i)
+
+    def error(self, message):
+        self.error_vector.append("Error: " + message)
+        subscribe_errors(message)
+
 
     def visit_Program(self, node):
         # 1. Visit all of the global declarations
@@ -122,7 +127,10 @@ class Visitor(NodeVisitor):
         if isinstance(node.type, ast.ArrayDecl):
             if node.type.dim is not None and node.init is not None:
                 if node.type.dim.value != str(len(node.init.exprs)):
-                    self.error("size mismatch on initialization" + str(node.coord))
+                    if node.coord is not None:
+                        self.error("size mismatch on initialization" + str(node.coord))
+                    else:
+                        self.error("size mismatch on initialization")
 
             if type == 'int':
                 self.symtab.add(node.name.name, uctype.IntArrayType)
@@ -211,7 +219,6 @@ class Visitor(NodeVisitor):
         return left_type
 
     def visit_Assignment(self, node):
-        # ToDo: TYPECHECKING
         # ## 1. Make sure the location of the assignment is defined
         # sym = self.symtab.lookup(node.location)
         # assert sym, "Assigning to unknown sym"
@@ -230,7 +237,10 @@ class Visitor(NodeVisitor):
             self.error("cannot assign {} to {}".format(right_value, left_value) + str(node.coord))
             return None
         else:
-            return left_value
+            if uctype.constant_type(left_value).assign_ops.__contains__(node.op):
+                return left_value
+            else:
+                return None
 
     def visit_ID(self, node):
         type = self.symtab.lookup(node.name)
