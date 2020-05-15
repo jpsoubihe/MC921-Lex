@@ -108,6 +108,19 @@ class GenerateCode(NodeVisitor):
         inst = ('store_' + str_info['type'] + str_info['size'], self.new_global('.str.%d' % (self.str_count - 1)), node.id)
         self.code.append(inst)
 
+    def visit_ArrayRef(self, node):
+        self.visit(node.subscript)
+        if isinstance(node.subscript, ast.BinaryOp):
+            bin_id = self.new_temp('binop%d' % node.subscript.id)
+            type = self.func_and_var_types[node.subscript.id.__str__()]
+            inst = ('elem_' + type, self.new_temp(node.name.name), bin_id, self.new_temp('array_ref_%d' % self.const_count))
+            self.code.append(inst)
+            array_access = self.new_temp('array_access_%d' % self.const_count)
+            inst = ('load_' + type + '_*', self.new_temp('array_ref_%d' % self.const_count), array_access)
+            self.code.append(inst)
+            self.const_count += 1
+            node.id = array_access
+
     def visit_Assert(self, node):
         if isinstance(node.expr, ast.BinaryOp):
             self.visit(node.expr)
@@ -204,9 +217,6 @@ class GenerateCode(NodeVisitor):
         inst = (opcode, right, left, target)
         self.code.append(inst)
 
-        # Store location of the result on the node
-        node.gen_location = target
-
     def visit_Cast(self, node):
         self.visit(node.expr)
         if isinstance(node.expr, ast.ID):
@@ -223,34 +233,42 @@ class GenerateCode(NodeVisitor):
 
     def visit_Constant(self, node):
         # Create a new temporary variable name
-        target = self.new_temp('const%d' % self.const_count)
-        self.const_count += 1
+        if node.type != 'string':
+            target = self.new_temp('const%d' % self.const_count)
+            self.const_count += 1
 
-        # Make the SSA opcode and append to list of generated instructions
-        type = node.type
-        if type == 'int':
-            inst = ('literal_int', int(node.value), target)
-        elif type == 'float':
-            inst = ('literal_float', float(node.value), target)
+            # Make the SSA opcode and append to list of generated instructions
+            type = node.type
+            if type == 'int':
+                inst = ('literal_int', int(node.value), target)
+            elif type == 'float':
+                inst = ('literal_float', float(node.value), target)
+            else:
+                inst = ('literal_char', node.value[1:-1], target)
+            self.code.append(inst)
+
+            # Save the name of the temporary variable where the value was placed
+            node.id = target
         else:
-            inst = ('literal_char', node.value[1:-1], target)
-        self.code.append(inst)
-
-        # Save the name of the temporary variable where the value was placed
-        node.id = target
+            type = 'string'
+            self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char',
+                                                                   'size': '_' + str(len(node.value))}
+            inst = ('global_' + type, self.new_global('.str.%d' % self.str_count), node.value)
+            self.global_code.append(inst)
+            node.id = self.new_global('.str.%d' % self.str_count)
+            self.str_count += 1
 
     def visit_Decl(self, node):
         if isinstance(node.type, ast.FuncDecl):
             self.visit(node.type)
         elif isinstance(node.type, ast.ArrayDecl):
             if node.init is not None:
-                type = node.type.type.type.names[0]
-                if type == 'char':
+                if isinstance(node.init, ast.Constant):
                     type = 'string'
                     self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char', 'size': '_' + str(len(node.init.value))}
                     inst = ('global_' + type, self.new_global('.str.%d' % self.str_count), node.init.value)
                 else:
-                    init = self.visit(node.init)
+                    init, type = self.visit(node.init)
                     full_size = len(init)
                     size = ''
                     next = init[0]
@@ -264,6 +282,8 @@ class GenerateCode(NodeVisitor):
                 node.type.id = self.new_temp(node.name.name)
                 self.str_count += 1
                 self.global_code.append(inst)
+
+                self.func_and_var_types[node.name.name] = type
             self.visit(node.type)
         else:
             target = self.new_temp(node.name.name)
@@ -284,6 +304,10 @@ class GenerateCode(NodeVisitor):
                 self.visit(node.init)
                 inst = ('store_' + self.func_and_var_types[node.init.name], node.init.id, target)
                 self.code.append(inst)
+
+    def visit_ExprList(self, node):
+        for expr in node.exprs:
+            self.visit(expr)
 
     def visit_For(self, node):
         for_count = self.const_count
@@ -308,7 +332,6 @@ class GenerateCode(NodeVisitor):
         inst = (self.new_temp('for%d_label2' % (for_count + 1))[1:],)
         self.code.append(inst)
 
-        print(node.stmt)
         self.visit(node.stmt)
         if node.next is not None:
             self.visit(node.next)
@@ -368,13 +391,15 @@ class GenerateCode(NodeVisitor):
 
     def visit_InitList(self, node):
         initlist = []
+        type = None
         for expr in node.exprs:
             if isinstance(expr, ast.InitList):
-                initlist.append(self.visit(expr))
+                init, type = self.visit(expr)
+                initlist.append(init)
             else:
                 type = node.exprs[0].type
                 initlist.append(eval(type)(expr.value))
-        return initlist
+        return initlist, type
 
     def visit_LoadLocation(self, node):
         if isinstance(node, ast.Return):
@@ -404,13 +429,17 @@ class GenerateCode(NodeVisitor):
     # def visit_ParamList(self, node):
     #
 
-    def visit_PrintStatement(self, node):
+    def visit_Print(self, node):
         # Visit the expression
+        print(node)
         self.visit(node.expr)
-
-        # Create the opcode and append to list
-        inst = ('print_' + node.expr.type.name, node.expr.gen_location)
-        self.code.append(inst)
+        for expr in node.expr.exprs:
+            if isinstance(expr, ast.Constant):
+                inst = ('print_' + expr.type, expr.id)
+                self.code.append(inst)
+            elif isinstance(expr, ast.ArrayRef):
+                inst = ('print_' + self.func_and_var_types[expr.name.name], expr.id)
+                self.code.append(inst)
 
     def visit_Program(self, node):
         # 1. Visit all of the global declarations
@@ -423,10 +452,8 @@ class GenerateCode(NodeVisitor):
             else:
                 self.visit(decl)
 
-        for line in self.global_code:
-            print(line)
-        for line in self.code:
-            print(line)
+        self.global_code.append(self.code)
+        return self.global_code
 
     def visit_Return(self, node):
         if isinstance(node.expr, ast.Constant):
