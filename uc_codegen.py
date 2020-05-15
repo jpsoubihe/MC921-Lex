@@ -109,17 +109,56 @@ class GenerateCode(NodeVisitor):
         self.code.append(inst)
 
     def visit_ArrayRef(self, node):
-        self.visit(node.subscript)
-        if isinstance(node.subscript, ast.BinaryOp):
-            bin_id = self.new_temp('binop%d' % node.subscript.id)
-            type = self.func_and_var_types[node.subscript.id.__str__()]
-            inst = ('elem_' + type, self.new_temp(node.name.name), bin_id, self.new_temp('array_ref_%d' % self.const_count))
-            self.code.append(inst)
-            array_access = self.new_temp('array_access_%d' % self.const_count)
-            inst = ('load_' + type + '_*', self.new_temp('array_ref_%d' % self.const_count), array_access)
-            self.code.append(inst)
-            self.const_count += 1
-            node.id = array_access
+        name = node.name
+        while isinstance(name, ast.ArrayRef):
+            name = name.name
+        name = name.name
+        sizes = self.func_and_var_types[name]['size'].split('_')[1:]
+        type = self.func_and_var_types[name]['type']
+        if len(sizes) != 1 and type != 'string':
+            next = node
+            mults = []
+            for size in sizes[1:]:
+                lit = self.const_count
+                self.const_count += 1
+                inst = ('literal_int', size, self.new_temp('const%d' % lit))
+                self.code.append(inst)
+                self.visit(next.subscript)
+                if isinstance(next.subscript, ast.BinaryOp):
+                    sub_id = self.new_temp('binop%d' % next.subscript.id)
+                else:
+                    sub_id = next.subscript.id
+                inst = ('mult_int', self.new_temp('const%d' % lit), sub_id, self.new_temp(self.const_count))
+                self.code.append(inst)
+                mults.append(self.const_count)
+                self.const_count += 1
+                next = node.name
+            self.visit(next.subscript)
+            if isinstance(next.subscript, ast.BinaryOp):
+                next_id = self.new_temp('binop%d' % next.id)
+            else:
+                next_id = next.subscript.id
+            for mult in mults[-1:]:
+                inst = ('add_int', next_id, self.new_temp(mult), self.new_temp(self.const_count))
+                self.code.append(inst)
+                next_id = self.new_temp(self.const_count)
+                self.const_count += 1
+            sub_id = next_id
+        else:
+            self.visit(node.subscript)
+            if isinstance(node.subscript, ast.BinaryOp):
+                sub_id = self.new_temp('binop%d' % node.subscript.id)
+            else:
+                sub_id = node.subscript.id
+        if type == 'string':
+            type = 'char'
+        inst = ('elem_' + type, self.new_temp(name), sub_id, self.new_temp('array_ref_%d' % self.const_count))
+        self.code.append(inst)
+        array_access = self.new_temp('array_access_%d' % self.const_count)
+        inst = ('load_' + type + '_*', self.new_temp('array_ref_%d' % self.const_count), array_access)
+        self.code.append(inst)
+        self.const_count += 1
+        node.id = array_access
 
     def visit_Assert(self, node):
         if isinstance(node.expr, ast.BinaryOp):
@@ -265,7 +304,8 @@ class GenerateCode(NodeVisitor):
             if node.init is not None:
                 if isinstance(node.init, ast.Constant):
                     type = 'string'
-                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char', 'size': '_' + str(len(node.init.value))}
+                    size = str(len(node.init.value))
+                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char', 'size': '_' + size}
                     inst = ('global_' + type, self.new_global('.str.%d' % self.str_count), node.init.value)
                 else:
                     init, type = self.visit(node.init)
@@ -283,7 +323,7 @@ class GenerateCode(NodeVisitor):
                 self.str_count += 1
                 self.global_code.append(inst)
 
-                self.func_and_var_types[node.name.name] = type
+                self.func_and_var_types[node.name.name] = {'type': type, 'size': size}
             self.visit(node.type)
         else:
             target = self.new_temp(node.name.name)
@@ -419,9 +459,12 @@ class GenerateCode(NodeVisitor):
                 self.code.append(inst)
         elif isinstance(node, ast.ID):
             node.id = self.new_temp('load_' + node.name + '_%d' % self.const_count)
-            self.const_count +=1
+            self.const_count += 1
             origin = self.new_temp(node.name)
-            inst = ('load_' + self.func_and_var_types[node.name], origin, node.id)
+            type = self.func_and_var_types[node.name]
+            if isinstance(type, dict):
+                type = type['type']
+            inst = ('load_' + type, origin, node.id)
             self.code.append(inst)
         elif isinstance(node, ast.Constant):
             self.visit(node)
@@ -431,14 +474,23 @@ class GenerateCode(NodeVisitor):
 
     def visit_Print(self, node):
         # Visit the expression
-        print(node)
         self.visit(node.expr)
         for expr in node.expr.exprs:
             if isinstance(expr, ast.Constant):
                 inst = ('print_' + expr.type, expr.id)
                 self.code.append(inst)
             elif isinstance(expr, ast.ArrayRef):
-                inst = ('print_' + self.func_and_var_types[expr.name.name], expr.id)
+                if isinstance(expr.name, ast.ArrayRef):
+                    name = expr.name
+                    while isinstance(name, ast.ArrayRef):
+                        name = name.name
+                    name = name.name
+                    type = self.func_and_var_types[name]['type']
+                else:
+                    type = self.func_and_var_types[expr.name.name]['type']
+                if type == 'string':
+                    type = 'char'
+                inst = ('print_' + type, expr.id)
                 self.code.append(inst)
 
     def visit_Program(self, node):
@@ -452,7 +504,9 @@ class GenerateCode(NodeVisitor):
             else:
                 self.visit(decl)
 
-        self.global_code.append(self.code)
+        self.global_code.extend(self.code)
+        for line in self.global_code:
+            print(line)
         return self.global_code
 
     def visit_Return(self, node):
