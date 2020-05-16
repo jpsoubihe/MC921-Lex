@@ -682,11 +682,11 @@ class Program(Node):
         super().__init__()
         self.gdecls = gdecls
         self.coord = coord
-        visitor.visit(self)
-        if visitor.error_vector.__len__() != 0:
-            visitor.print_error()
-        else:
-            generateCode.visit(self)
+        # visitor.visit(self)
+        # if visitor.error_vector.__len__() != 0:
+        #     visitor.print_error()
+        # else:
+        #     generateCode.visit(self)
 
     def children(self):
         nodelist = []

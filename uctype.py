@@ -44,7 +44,7 @@ CharType = uCType("char",
 
 #ToDo: determine how we'll treat strings
 StringType = uCType("string",
-                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  unary_ops={"*", "&"},
                   binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
                   rel_ops={"==", "!=", "<", ">", "<=", ">="},
                   assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
