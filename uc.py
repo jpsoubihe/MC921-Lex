@@ -157,8 +157,8 @@ class Compiler:
         self._parse(susy, ast_file, debug)
         if not errors_reported():
             self._sema(susy, ast_file)
-        # if not errors_reported():
-        #     self._gencode(susy, ir_file)
+        if not errors_reported():
+            self._gencode(susy, ir_file)
 
     def compile(self, code, susy, ast_file, ir_file, run_ir, debug):
         """ Compiles the given code string """
