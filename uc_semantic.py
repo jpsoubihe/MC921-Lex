@@ -423,11 +423,17 @@ class Visitor(NodeVisitor):
         if node.decl is not None:
             for _decl in node.decl:
                 self.visit(_decl)
-            # self.function_type[node.decl.name.name] = self.extract_func_type(node.decl.type)
         self.visit(node.body)
-        # func_type = self.symtab.lookup(node.decl.name.name)
-        # if func_type != uctype.VoidType:
-        #     assert func_type.typename == self.search_return(node.body), "wrong return type on function {}".format(node.decl.name.name)
+
+        return_type = None
+        for b in node.body.block_items:
+            if isinstance(b, ast.Return):
+                return_type = self.visit(b)
+        if return_type is None:
+            assert node.decl.type.type.type.names[0] == 'void', node.decl.type.type.type.names[0] + " function does not accept this type of return"
+        else:
+            assert node.decl.type.type.type.names[0] == return_type, "wrong return type of function " +  node.decl.type.type.type.names[0]
+
         self.symtab.end_scope()
 
     def visit_NoneType(self, node):
@@ -460,8 +466,7 @@ class Visitor(NodeVisitor):
         pass
 
     def visit_Return(self, node):
-        type = self.visit(node.expr)
-        print()
+        return self.visit(node.expr)
 
     def visit_UnaryOp(self, node):
         type = self.visit(node.expr)
