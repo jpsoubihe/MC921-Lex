@@ -219,10 +219,6 @@ class NodeVisitor(object):
             # (c)
             self.visit(c)
 
-    # def visit_NoneType(self, node):
-    #     print("entrou")
-
-
 class Visitor(NodeVisitor):
 
     def extract_func_type(self, node):
@@ -352,6 +348,19 @@ class Visitor(NodeVisitor):
         # ## 2. Check that the types match
         # self.visit(node.value)
         # assert sym.type == node.value.type, "Type mismatch in assignment"
+        if isinstance(node.lvalue, ast.ArrayRef):
+            dimension = 0
+            name = node.lvalue
+            while isinstance(name, ast.ArrayRef):
+                dimension += 1
+                name = name.name
+            right_name = node.rvalue
+            if isinstance(right_name, ast.ArrayRef):
+                while dimension > 0 and isinstance(right_name, ast.ArrayRef):
+                    assert right_name.name is not None, "dimension mismatch between the arrays" + str(node.coord)
+                    right_name = right_name.name
+                    dimension -= 1
+                assert dimension == 0, "dimension mismatch between the arrays" + str(node.coord)
         left_value = self.visit(node.lvalue)
         right_value = self.visit(node.rvalue)
         assert left_value != None, "{} undeclared".format(node.lvalue.name) + str(node.coord)
