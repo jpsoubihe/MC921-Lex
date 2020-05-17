@@ -192,6 +192,8 @@ class GenerateCode(NodeVisitor):
                 type = node.rvalue.left.type
             elif isinstance(node.rvalue.left, ast.ID):
                 type = self.func_and_var_types[node.rvalue.left.name]
+            elif isinstance(node.rvalue.left, ast.BinaryOp):
+                type = self.func_and_var_types[node.rvalue.left.left.name]
             if node.op in oper_ops:
                 self.visit_LoadLocation(node.lvalue)
                 inst = (oper_ops[node.op] + '_' + type, self.new_temp('binop%d' % node.rvalue.id),
@@ -393,7 +395,7 @@ class GenerateCode(NodeVisitor):
         target = self.new_temp('call_%s_%d' % (node.name.name, self.const_count))
         node.id = self.const_count
         self.const_count += 1
-        inst = ('call', node.name.name, target)
+        inst = ('call', '@'+node.name.name, target)
         self.code.append(inst)
 
     def visit_FuncDecl(self, node):
@@ -425,6 +427,7 @@ class GenerateCode(NodeVisitor):
         target = self.new_global(node.decl.name.name)
         inst = ('global_' + node.decl.type.type.names[0], target, node.decl.init.value)
         self.global_code.append(inst)
+        self.code.append(inst)
 
     def visit_ID(self, node):
         self.visit_LoadLocation(node)
@@ -475,23 +478,35 @@ class GenerateCode(NodeVisitor):
     def visit_Print(self, node):
         # Visit the expression
         self.visit(node.expr)
-        for expr in node.expr.exprs:
-            if isinstance(expr, ast.Constant):
-                inst = ('print_' + expr.type, expr.id)
-                self.code.append(inst)
-            elif isinstance(expr, ast.ArrayRef):
-                if isinstance(expr.name, ast.ArrayRef):
-                    name = expr.name
-                    while isinstance(name, ast.ArrayRef):
+        # if isinstance(node, ast.ID):
+        if isinstance(node.expr, ast.Constant):
+            inst = ('print_' + node.expr.type, node.expr.id)
+            self.code.append(inst)
+        elif isinstance(node.expr, ast.ID):
+            inst = ('print_' + node.expr.type, node.expr.id)
+            self.code.append(inst)
+
+        else:
+            for expr in node.expr:
+                # if isinstance(expr, ast.Constant):
+                #     inst = ('print_' + expr.type, expr.id)
+                #     self.code.append(inst)
+                if isinstance(expr.exprs, ast.Constant):
+                    inst = ('print_' + expr.exprs.type, expr.exprs.id)
+                    self.code.append(inst)
+                elif isinstance(expr.exprs, ast.ArrayRef):
+                    if isinstance(expr.exprs.name, ast.ArrayRef):
+                        name = expr.exprs.name
+                        while isinstance(name, ast.ArrayRef):
+                            name = name.name
                         name = name.name
-                    name = name.name
-                    type = self.func_and_var_types[name]['type']
-                else:
-                    type = self.func_and_var_types[expr.name.name]['type']
-                if type == 'string':
-                    type = 'char'
-                inst = ('print_' + type, expr.id)
-                self.code.append(inst)
+                        type = self.func_and_var_types[name]['type']
+                    else:
+                        type = self.func_and_var_types[expr.exprs.name.name]['type']
+                    if type == 'string':
+                        type = 'char'
+                    inst = ('print_' + type, expr.exprs.id)
+                    self.code.append(inst)
 
     def visit_Program(self, node):
         # 1. Visit all of the global declarations
@@ -505,8 +520,8 @@ class GenerateCode(NodeVisitor):
                 self.visit(decl)
 
         self.global_code.extend(self.code)
-        for line in self.global_code:
-            print(line)
+        # for line in self.global_code:
+        #     print(line)
         return self.global_code
 
     def visit_Return(self, node):
@@ -525,7 +540,10 @@ class GenerateCode(NodeVisitor):
         self.code.append(inst)
         if node.expr is not None:
             self.visit_LoadLocation(node)
-            inst = ('return_' + self.func_and_var_types[self.fname.peek()], self.new_temp('const%d' % node.expr.id))
+            if self.func_and_var_types[self.fname.peek()] == 'void':
+                inst = ('return_' + self.func_and_var_types[self.fname.peek()],)
+            else:
+                inst = ('return_' + self.func_and_var_types[self.fname.peek()], self.new_temp('const%d' % node.expr.id))
         else:
             inst = ('return_void',)
         self.code.append(inst)

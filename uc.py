@@ -181,8 +181,8 @@ def run_compiler():
         sys.exit(1)
 
     emit_ast = True
-    emit_ir = False
-    run_ir = False
+    emit_ir = True
+    run_ir = True
     susy = False
     debug = False
 
@@ -198,7 +198,7 @@ def run_compiler():
             elif param == '-at-susy':
                 susy = True
             elif param == '-no-run':
-                run_ir = False
+                run_ir = True
             elif param == '-debug':
                 debug = True
             else:

@@ -477,7 +477,9 @@ class Interpreter(object):
 
     def run_mul_int(self, left, right, target):
         self._alloc_reg(target)
-        M[self.vars[target]] = M[self.vars[left]] * M[self.vars[right]]
+        t1 = M[self.vars[left]]
+        t2 = M[self.vars[right]]
+        M[self.vars[target]] = int(M[self.vars[left]]) * int(M[self.vars[right]])
 
     def run_mod_int(self, left, right, target):
         self._alloc_reg(target)
