@@ -1,9 +1,171 @@
-from symbolTable import SymbolTable
-
 import ast
-import uctype
-# from uc import subscribe_errors
 
+
+class UndoStack:
+    def __init__(self):
+        self.items = []
+
+    def isEmpty(self):
+        return self.items == []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        return self.items.pop()
+
+    def peek(self):
+        return self.items[len(self.items) - 1]
+
+    def size(self):
+        return len(self.items)
+
+    def __str__(self):
+        for i in self.items:
+            print(i)
+
+
+class SymbolTable(object):
+    """
+    Class representing a symbol table.  It should provide functionality
+    for adding and looking up nodes associated with identifiers.
+    """
+    def __init__(self):
+        self.symtab = {}
+        self.undo = UndoStack()
+        self.scope_ind = 0
+
+    def lookup(self, a):
+        return self.symtab.get(a)
+
+    def check_scope(self, key):
+        for a in self.undo.items:
+            if a[0] == key:
+                return False
+            if a == '*':
+                return True
+        return True
+
+    def add(self, k, v):
+        if k in self.symtab.keys():
+            self.undo.push((k, self.symtab.get(k)))
+        self.symtab[k] = v
+        self.undo.push((k, self.symtab.get(k)))
+        return True
+
+    def begin_scope(self):
+        scope_ind = self.symtab.__sizeof__()
+        self.undo.push('*')
+        return self.undo.size()
+
+    def end_scope(self):
+        if self.undo.isEmpty() is False:
+            # var = self.undo.pop()
+            while self.undo.isEmpty() is False:
+                var = self.undo.pop()
+                if var == '*':
+                    break
+                self.symtab[var[0]] = var[1]
+
+    def __str__(self):
+        return str(self.symtab)
+
+
+class uCType(object):
+    '''
+    Class that represents a type in the uC language.  Types
+    are declared as singleton instances of this type.
+    '''
+    def __init__(self, typename, rel_ops=set(), binary_ops=set(), unary_ops=set(), assign_ops=set()):
+        '''
+        You must implement yourself and figure out what to store.
+        '''
+        self.typename = typename
+        self.unary_ops = unary_ops or set()
+        self.binary_ops = binary_ops or set()
+        self.rel_ops = rel_ops or set()
+        self.assign_ops = assign_ops or set()
+
+    def __str__(self):
+        return str(self.typename)
+
+
+
+    # Create specific instances of types. You will need to add
+    # appropriate arguments depending on your definition of uCType
+
+IntType = uCType("int",
+                 unary_ops   = {"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                 binary_ops  = {"+", "-", "*", "/", "%"},
+                 rel_ops     = {"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
+                 assign_ops  = {"=", "+=", "-=", "*=", "/=", "%="}
+                 )
+
+FloatType = uCType("float",
+                   unary_ops = {"-", "+", "++", "p--", "p++", "*", "&"},
+                   binary_ops={"+", "-", "*", "/"},
+                   rel_ops     = {"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
+                   assign_ops  = {"=", "+=", "-=", "*=", "/="}
+    )
+
+CharType = uCType("char",
+                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">=", "&&", "||"},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
+#ToDo: determine how we'll treat strings
+StringType = uCType("string",
+                  unary_ops={"*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
+BooleanType = uCType("boolean",
+                  unary_ops={"-", "+", "--", "++", "p--", "p++", "*", "&"},
+                  binary_ops={"+", "-", "*", "/", "%", "&&", "||"},
+                  rel_ops={"==", "!=", "<", ">", "<=", ">="},
+                  assign_ops={"=", "+=", "-=", "*=", "/=", "%="}
+    )
+
+
+#ToDo: determine operations for arrays
+IntArrayType = uCType("int_array",
+                   binary_ops  = {"+"},
+                   unary_ops   = {"*", "&"},
+                   rel_ops     = {"==", "!="}
+                   )
+FloatArrayType = uCType("float_array",
+                   binary_ops  = {"+"},
+                   unary_ops   = {"*", "&"},
+                   rel_ops     = {"==", "!="}
+                   )
+CharArrayType = uCType("char_array",
+                   binary_ops  = {"+"},
+                   unary_ops   = {"*", "&"},
+                   rel_ops     = {"==", "!="}
+                   )
+
+VoidType = uCType("void")
+
+
+def constant_type(a):
+    if a == 'int':
+        return IntType
+    elif a == 'float':
+        return FloatType
+    elif a == 'char':
+        return CharType
+    elif a == 'boolean':
+        return BooleanType
+    elif a == 'int_array':
+        return IntArrayType
+    elif a == 'float_array':
+        return FloatArrayType
+    elif a == 'char_array':
+        return CharArrayType
 
 class NodeVisitor(object):
     """ A base NodeVisitor class for visiting uc_ast nodes.
@@ -137,14 +299,14 @@ class Visitor(NodeVisitor):
     def visit_VarDecl(self, node):
         type = node.type.names[0]
 
-        if type == uctype.IntType.typename:
-            self.symtab.add(node.declname.name, uctype.IntType)
-        elif type == uctype.FloatType.typename:
-            self.symtab.add(node.declname.name, uctype.FloatType)
-        elif type == uctype.CharType.typename:
-            self.symtab.add(node.declname.name, uctype.CharType)
-        elif type == uctype.VoidType.typename:
-            self.symtab.add(node.declname.name, uctype.VoidType)
+        if type == IntType.typename:
+            self.symtab.add(node.declname.name, IntType)
+        elif type == FloatType.typename:
+            self.symtab.add(node.declname.name, FloatType)
+        elif type == CharType.typename:
+            self.symtab.add(node.declname.name, CharType)
+        elif type == VoidType.typename:
+            self.symtab.add(node.declname.name, VoidType)
         else:
             assert False, "invalid type" + str(node.coord)
 
@@ -175,10 +337,10 @@ class Visitor(NodeVisitor):
         assert right_type is not None, "{} undeclared".format(node.right.name) + str(node.coord)
         assert left_type == right_type, "type mismatch on binary operation" + str(node.coord)
 
-        assert uctype.constant_type(left_type).binary_ops.__contains__(node.op) or \
-               uctype.constant_type(left_type).rel_ops.__contains__(node.op), "binary operation not supported" + str(node.coord)
+        assert constant_type(left_type).binary_ops.__contains__(node.op) or \
+               constant_type(left_type).rel_ops.__contains__(node.op), "binary operation not supported" + str(node.coord)
 
-        if uctype.constant_type(left_type). rel_ops.__contains__(node.op):
+        if constant_type(left_type). rel_ops.__contains__(node.op):
             return "boolean"
 
         return left_type
@@ -195,7 +357,7 @@ class Visitor(NodeVisitor):
         assert left_value != None, "{} undeclared".format(node.lvalue.name) + str(node.coord)
         assert right_value != None, "{} undeclared".format(node.rvalue.name) + str(node.coord)
         assert left_value == right_value, "cannot assign {} to {}".format(right_value, left_value) + str(node.coord)
-        assert uctype.constant_type(left_value).assign_ops.__contains__(node.op),\
+        assert constant_type(left_value).assign_ops.__contains__(node.op),\
             "assignment operation not supported for variables {}".format(left_value) + str(node.coord)
         return left_value
 
@@ -293,7 +455,7 @@ class Visitor(NodeVisitor):
         type = self.visit(node.expr)
 
         assert type is not None, "variable {} not declared".format(node.expr.name) + str(node.coord)
-        assert uctype.constant_type(type).unary_ops.__contains__(node.op) is True, "unaryOp {} not supported".format(node.op) + str(node.coord)
+        assert constant_type(type).unary_ops.__contains__(node.op) is True, "unaryOp {} not supported".format(node.op) + str(node.coord)
 
         return type
 
@@ -336,7 +498,7 @@ class Visitor(NodeVisitor):
         assert name is not None, "variable {} not declared".format(node.name.name) + str(node.coord)
         subscript = self.visit(node.subscript)
         assert subscript is not None, "invalid array index" + str(node.coord)
-        assert subscript == uctype.IntType.typename, "array index must be of type int" + str(node.coord)
+        assert subscript == IntType.typename, "array index must be of type int" + str(node.coord)
 
         if name == 'float_array' or name == 'float':
             return 'float'
