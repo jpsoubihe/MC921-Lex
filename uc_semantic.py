@@ -415,6 +415,7 @@ class Visitor(NodeVisitor):
     def visit_FuncDef(self, node):
         self.symtab.begin_scope()
         # type = self.visit(node.spec)
+        self.function_type[node.decl.name.name] = node.decl.type.type.type
         if node.decl.type.args is not None:
             self.functions[node.decl.name.name] = node.decl.type.args
         self.visit(node.decl)
@@ -432,7 +433,8 @@ class Visitor(NodeVisitor):
         pass
 
     def visit_While(self, node):
-        self.visit(node.cond)
+        type = self.visit(node.cond)
+        assert type == 'boolean', "conditional statement must be boolean" + str(node.coord)
         self.visit(node.stmt)
 
     def visit_Compound(self, node):
