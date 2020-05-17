@@ -537,22 +537,22 @@ class FuncDef(Node):
 
 
 class GlobalDecl(Node):
-    __slots__ = ('decl', 'coord')
+    __slots__ = ('decls', 'coord')
 
-    def __init__(self, decl, coord=None):
+    def __init__(self, decls, coord=None):
         super().__init__()
-        self.decl = decl
+        self.decls = decls
         self.coord = coord
 
     def children(self):
         nodelist = []
-        if self.decl is not None:
-            nodelist.append(("decl", self.decl))
+        for i, child in enumerate(self.decls or []):
+            nodelist.append(("decls[%d]" % i, child))
         return tuple(nodelist)
 
     def __iter__(self):
-        if self.decl is not None:
-            yield self.decl
+        for child in enumerate(self.decls or []):
+            yield child
 
     attr_names = ()
 

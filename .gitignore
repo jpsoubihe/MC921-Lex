@@ -6,3 +6,5 @@
 *.ir
 *.ast
 venv/
+parsetab.py
+

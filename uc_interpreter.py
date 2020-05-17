@@ -301,6 +301,7 @@ class Interpreter(object):
             self.pc = M[self.vars[source]]
 
     def run_cbranch(self, expr_test, true_target, false_target):
+        cond = M[self.vars[expr_test]]
         if M[self.vars[expr_test]]:
             self.pc = self.vars[true_target]
         else:
@@ -389,6 +390,9 @@ class Interpreter(object):
 
     def run_print_int(self, source):
         print(self._get_value(source), end="", flush=True)
+
+    def run_print_void(self):
+        pass
 
     run_print_float = run_print_int
     run_print_char = run_print_int

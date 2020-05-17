@@ -275,7 +275,8 @@ class Visitor(NodeVisitor):
         self.symtab.end_scope()
 
     def visit_GlobalDecl(self, node):
-        type = self.visit(node.decl)
+        for decl in node.decls:
+            self.visit(decl)
 
     def visit_Decl(self, node):
         type = self.visit(node.type)

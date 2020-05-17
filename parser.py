@@ -192,7 +192,11 @@ class UCParser:
         """
         global_declaration : declaration
         """
-        p[0] = ast.GlobalDecl(decl=p[1][0])
+        # decls = []
+        # for decl in p[1]:
+        #     decls.append(ast.GlobalDecl(decl))
+        # p[0] = decls
+        p[0] = ast.GlobalDecl(p[1])
 
     def p_type_specifier_opt(self, p):
         """
@@ -579,6 +583,12 @@ class UCParser:
         """
         p[0] = p[1]
 
+    def p_init_declarator_list_0(self, p):
+        """
+        init_declarator_list : init_declarator_list COMMA init_declarator
+        """
+        p[0] = p[1] + [p[3]]
+
     def p_init_declarator_list_1(self, p):
         # <init_declarator_list> ::= <init_declarator>
         #                          | <init_declarator_list> , <init_declarator>
@@ -586,12 +596,6 @@ class UCParser:
         init_declarator_list : init_declarator
         """
         p[0] = [p[1]]
-
-    def p_init_declarator_list_2(self, p):
-        """
-        init_declarator_list : init_declarator_list COMMA init_declarator
-        """
-        p[0] = p[1] + [p[3]]
 
     def p_init_declarator(self, p):
         # <init_declarator> ::= <declarator>
