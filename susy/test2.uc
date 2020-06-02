@@ -7,6 +7,4 @@ int doubleMe (int x) {
 void main () {
     int v = n;
     v = doubleMe (v);
-    assert v == n * n;
-    return 0;
 }

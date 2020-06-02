@@ -10,7 +10,10 @@
 
 import sys
 from contextlib import contextmanager
+
+from graphics import CFG
 from parser import UCParser
+from uc_block import Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
@@ -146,10 +149,17 @@ class Compiler:
         self.gen = GenerateCode()
         self.gencode = self.gen.visit(self.ast)
         _str = ''
+        # ToDo: check a better place for this instruction
+        block_const = Block_Visitor(self.gencode)
+        blocks = block_const.divide()
+        dot = CFG('name')
+        dot.view(blocks)
+
         if not susy and ir_file is not None:
             for _code in self.gencode:
                 _str += f"{_code}\n"
             ir_file.write(_str)
+
 
     def _do_compile(self, susy, ast_file, ir_file, debug):
         """ Compiles the code to the given file object. """
@@ -162,6 +172,7 @@ class Compiler:
     def compile(self, code, susy, ast_file, ir_file, run_ir, debug):
         """ Compiles the given code string """
         self.code = code
+
         with subscribe_errors(lambda msg: sys.stderr.write(msg + "\n")):
             self._do_compile(susy, ast_file, ir_file, debug)
             if errors_reported():
@@ -169,6 +180,7 @@ class Compiler:
             elif run_ir:
                 self.vm = Interpreter()
                 self.vm.run(self.gencode)
+
         return 0
 
 
@@ -230,6 +242,8 @@ def run_compiler():
         source = open(source_filename, 'r')
         code = source.read()
         source.close()
+
+
 
         retval = Compiler().compile(code, susy, ast_file, ir_file, run_ir, debug)
         for f in open_files:
