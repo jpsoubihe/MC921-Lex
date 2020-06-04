@@ -90,6 +90,7 @@ class Block_Visitor(BlockVisitor):
     def find_block(self, label):
         for block in self.blocks_global:
 
+            # ToDo: problems with nested loops (Examle testesP2/t10.uc)
             if block.label.endswith(label):
                     return block
             # else:
@@ -126,12 +127,14 @@ class Block_Visitor(BlockVisitor):
             # BASIC BLOCK [BEGGINING LABEL]
             elif len(i) is 1:
                 target_block = self.find_block(i[0])
-                if target_block is None:
+                if target_block == None:
                     target_block = BasicBlock(i[0])
                     target_block.predecessors.append(self.current_block)
                 if self.current_block.instructions[len(self.current_block.instructions) - 1][0] != 'jump':
                     self.current_block.next_block = target_block
                 self.current_block = self.add_to_global(target_block)
+                if self.current_block == None:
+                    self.current_block = target_block
 
 
             # BASIC BLOCK [UNCONDITIONAL JUMP]
