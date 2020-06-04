@@ -1,4 +1,5 @@
 import ast
+from graphics import CFG
 from uc_semantic import NodeVisitor
 
 binary_ops = {
@@ -91,7 +92,7 @@ class GenerateCode(NodeVisitor):
         name = self.versions[self.fname.peek()]['vars'][varname]
         if isinstance(name, int):
             name = '%' + name.__str__()
-        return name
+        return '%'+varname
 
     def new_global(self, varname):
         if varname not in self.versions['global']['vars']:
@@ -212,6 +213,7 @@ class GenerateCode(NodeVisitor):
         else:
             lvalue_name = node.lvalue.name
             target = self.new_temp(lvalue_name)
+            # target = '%' + lvalue_name
         if isinstance(node.rvalue, ast.BinaryOp):
             if isinstance(node.rvalue.left, ast.Constant):
                 type = node.rvalue.left.type
@@ -646,8 +648,14 @@ class GenerateCode(NodeVisitor):
                 self.fname.push(decl.decl.name.name)
                 self.visit(decl)
                 self.versions[self.fname.pop()] = {}
+                # dot = CFG(decl.decl.name.name)
+                # dot.view(decl.cfg)
             else:
                 self.visit(decl)
+
+            # if isinstance(_decl, FuncDef):
+            #     dot = CFG(_decl.decl.name.name)
+            #     dot.view(_decl.cfg)
 
         self.global_code.extend(self.code)
         # for line in self.global_code:

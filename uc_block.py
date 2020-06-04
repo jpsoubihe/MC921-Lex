@@ -8,9 +8,9 @@ def format_instruction(t):
     op = t[0]
     if len(t) > 1:
         if op == "define":
-            return f"\n{op} {t[1]}"
+            return f"{op} {t[1]}"
         else:
-            _str = "" if op.startswith('global') else "  "
+            _str = ""
             if op == 'jump':
                 _str += f"{op} label {t[1]}"
             elif op == 'cbranch':
@@ -24,7 +24,7 @@ def format_instruction(t):
                     _str += f"{_el} "
             return _str
     elif op == 'print_void' or op == 'return_void':
-        return f"  {op}"
+        return f"{op}"
     else:
         return f"{op}"
 
@@ -107,10 +107,9 @@ class Block_Visitor(BlockVisitor):
     def migrate_to_cond(self, label):
         block = ConditionBlock(label)
         self.current_block.next_block = block
-        block.predecessors = self.current_block
-        # block.instructions = self.current_block.instructions
-        # block.predecessors = self.current_block.predecessors
-        # self.blocks_global.pop(self.blocks_global.index(self.current_block))
+        block.instructions = self.current_block.instructions
+        block.predecessors = self.current_block.predecessors
+        self.blocks_global.pop(self.blocks_global.index(self.current_block))
         self.current_block = block
         self.blocks_global.append(self.current_block)
 
@@ -147,7 +146,7 @@ class Block_Visitor(BlockVisitor):
                 # self.current_block = next_block
 
             elif i[0] == 'cbranch':
-                self.migrate_to_cond(i[1])
+                self.migrate_to_cond(self.current_block.label)
                 c_block = self.current_block
 
                 c_block.taken = self.find_block(i[2])
@@ -176,6 +175,7 @@ class Block_Visitor(BlockVisitor):
             # if isinstance(blcks,ConditionBlock):
             #      = blcks.fall_through.next_block blcks.taken.next_block
             #     blcks.fall_through.next_block.predecessors.append(blcks.taken)
+            blcks.predecessors = list(dict.fromkeys(blcks.predecessors))
             for instructions in range(len(blcks.instructions)):
                 blcks.instructions[instructions] = format_instruction(blcks.instructions[instructions])
             print(blcks.instructions)

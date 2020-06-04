@@ -1,7 +1,7 @@
 import graphviz
 from graphviz import Digraph
 
-from uc_block import Block
+from uc_block import Block, ConditionBlock
 
 
 def format_instruction(t):
@@ -67,15 +67,14 @@ class CFG(object):
     def view(self, blocks):
         block = blocks[0]
         count = 0
-        while isinstance(block, Block) and count < 10:
+        while isinstance(block, Block):
             name = "visit_%s" % type(block).__name__
             if hasattr(self, name):
                 getattr(self, name)(block)
-            if isinstance(block.next_block, list):
-                for i in block.next_block:
-                    name = "visit_%s" % type(i).__name__
-                    if hasattr(self, name):
-                        getattr(self, name)(i)
+            if isinstance(block, ConditionBlock):
+                name = "visit_%s" % type(block.fall_through).__name__
+                if hasattr(self, name):
+                    getattr(self, name)(block.fall_through)
             block = block.next_block
             if block is None and len(blocks) - 1 > count:
                 block = blocks[count]

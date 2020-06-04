@@ -13,6 +13,7 @@ from contextlib import contextmanager
 
 from graphics import CFG
 from parser import UCParser
+from reaching_definitions import Analyzer
 from uc_block import Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
@@ -150,10 +151,7 @@ class Compiler:
         self.gencode = self.gen.visit(self.ast)
         _str = ''
         # ToDo: check a better place for this instruction
-        block_const = Block_Visitor(self.gencode)
-        blocks = block_const.divide()
-        dot = CFG('name')
-        dot.view(blocks)
+
 
         if not susy and ir_file is not None:
             for _code in self.gencode:
@@ -169,6 +167,7 @@ class Compiler:
         if not errors_reported():
             self._gencode(susy, ir_file)
 
+
     def compile(self, code, susy, ast_file, ir_file, run_ir, debug):
         """ Compiles the given code string """
         self.code = code
@@ -179,7 +178,22 @@ class Compiler:
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
             elif run_ir:
                 self.vm = Interpreter()
-                self.vm.run(self.gencode)
+                # self.vm.run(self.gencode)
+            if errors_reported() == 0:
+                block_const = Block_Visitor(self.gencode)
+                blocks = block_const.divide()
+                definitions = {}
+                dot = CFG('name')
+                dot.view(blocks)
+                dataflow = Analyzer(blocks)
+                # print(dataflow.reaching_definitions())
+
+
+
+
+
+
+
 
         return 0
 
