@@ -183,10 +183,11 @@ class Compiler:
                 block_const = Block_Visitor(self.gencode)
                 blocks = block_const.divide()
                 definitions = {}
-                for function_block in blocks:
-                    dot = CFG(function_block[0].label)
-                    dot.view(function_block)
+                # for function_block in blocks:
+                #     dot = CFG(function_block[0].label)
+                #     dot.view(function_block)
                 dataflow = Analyzer(blocks)
+                print(dataflow.reaching_definitions())
                 # print(dataflow.reaching_definitions())
 
 
