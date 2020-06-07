@@ -64,6 +64,8 @@ class ConditionBlock(Block):
         super(ConditionBlock, self).__init__(label)
         self.taken = None
         self.fall_through = None
+        self.taken_visited = False
+        self.fall_through_visited = False
 
 
 class BlockVisitor(object):
@@ -87,11 +89,16 @@ class Block_Visitor(BlockVisitor):
         self.current_block = None
         self.blocks_global = []
 
+    def beautify_label(self, label):
+        if label.startswith('%') or label.startswith('@'):
+            return label[1:]
+        return label
+
     def find_block(self, label):
         for block in self.blocks_global:
 
             # ToDo: problems with nested loops (Examle testesP2/t10.uc)
-            if block.label.endswith(label):
+            if block.label.endswith(label) or block.label == label:
                     return block
             # else:
             #     if block.label is label:
@@ -106,12 +113,16 @@ class Block_Visitor(BlockVisitor):
         self.blocks_global.append(block)
 
     def migrate_to_cond(self, label):
-        block = ConditionBlock(label)
+        temp_block = self.find_block(label)
+        # if block == None:
+        block = ConditionBlock(self.beautify_label(label))
         self.current_block.next_block = block
         block.instructions = self.current_block.instructions
         block.predecessors = self.current_block.predecessors
         self.blocks_global.pop(self.blocks_global.index(self.current_block))
         self.current_block = block
+        # if temp_block != None:
+        #     self.blocks_global.pop(self.blocks_global.index(temp_block))
         self.blocks_global.append(self.current_block)
 
 
@@ -120,15 +131,15 @@ class Block_Visitor(BlockVisitor):
             # BASIC BLOCK [BEGGINING FUNCTION]
             if i[0] == 'define':
 
-                function_block = BasicBlock(i[1])
+                function_block = BasicBlock(self.beautify_label(i[1]))
                 self.current_block = function_block
                 self.add_to_global(function_block)
 
             # BASIC BLOCK [BEGGINING LABEL]
             elif len(i) is 1:
-                target_block = self.find_block(i[0])
+                target_block = self.find_block(self.beautify_label(i[0]))
                 if target_block == None:
-                    target_block = BasicBlock(i[0])
+                    target_block = BasicBlock(self.beautify_label(i[0]))
                     target_block.predecessors.append(self.current_block)
                 if self.current_block.instructions[len(self.current_block.instructions) - 1][0] != 'jump':
                     self.current_block.next_block = target_block
@@ -139,9 +150,9 @@ class Block_Visitor(BlockVisitor):
 
             # BASIC BLOCK [UNCONDITIONAL JUMP]
             elif i[0] is 'jump':
-                next_block = self.find_block(i[1])
+                next_block = self.find_block(self.beautify_label(i[1]))
                 if next_block is None:
-                    next_block = BasicBlock(i[1])
+                    next_block = BasicBlock(self.beautify_label(i[1]))
                     self.add_to_global(next_block)
                     # blocks_global.append(self.current_block)
                 self.current_block.next_block = next_block
@@ -152,9 +163,9 @@ class Block_Visitor(BlockVisitor):
                 self.migrate_to_cond(self.current_block.label)
                 c_block = self.current_block
 
-                c_block.taken = self.find_block(i[2])
+                c_block.taken = self.find_block(self.beautify_label(i[2]))
                 if c_block.taken is None:
-                    c_block.taken = BasicBlock(i[2])
+                    c_block.taken = BasicBlock(self.beautify_label(i[2]))
                     self.blocks_global.append(c_block.taken)
                 if c_block.taken.predecessors.__contains__(c_block) is False:
                     c_block.taken.predecessors.append(c_block)
