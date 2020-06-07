@@ -1,8 +1,5 @@
 # An example of how to create basic blocks
 
-
-
-
 def format_instruction(t):
     # Auxiliary method to pretty print the instructions
     op = t[0]
@@ -35,6 +32,7 @@ class Block(object):
         self.instructions = []  # Instructions in the block
         self.predecessors = []  # List of predecessors
         self.next_block = None  # Link to the next block
+        self.visited = False
 
     def append(self, instr):
         self.instructions.append(instr)
@@ -82,6 +80,7 @@ class BlockVisitor(object):
                 getattr(self, name)(block)
             block = block.next_block
 
+
 class Block_Visitor(BlockVisitor):
     def __init__(self, instructions):
         self.instructions = instructions
@@ -108,7 +107,6 @@ class Block_Visitor(BlockVisitor):
     def add_to_global(self, block):
         for b in self.blocks_global:
             if b.label == block.label:
-                b = block
                 return block
         self.blocks_global.append(block)
 
@@ -124,7 +122,6 @@ class Block_Visitor(BlockVisitor):
         # if temp_block != None:
         #     self.blocks_global.pop(self.blocks_global.index(temp_block))
         self.blocks_global.append(self.current_block)
-
 
     def divide(self):
         for i in self.instructions:
@@ -183,8 +180,6 @@ class Block_Visitor(BlockVisitor):
                 self.current_block.instructions.append(i)
         self.current_block.next_block = None
 
-
-
         for blcks in self.blocks_global:
             # if isinstance(blcks,ConditionBlock):
             #      = blcks.fall_through.next_block blcks.taken.next_block
@@ -193,4 +188,20 @@ class Block_Visitor(BlockVisitor):
             for instructions in range(len(blcks.instructions)):
                 blcks.instructions[instructions] = format_instruction(blcks.instructions[instructions])
             print(blcks.instructions)
-        return self.blocks_global
+
+        function_blocks = []
+        return_blocks = []
+
+        for block in self.blocks_global:
+            first_instruction = block.instructions[0]
+            isFunction = False
+            if isinstance(first_instruction, str):
+                isFunction = first_instruction.find('define') != -1
+            if not isFunction:
+                function_blocks.append(block)
+            else:
+                if len(function_blocks) > 0:
+                    return_blocks.append(function_blocks)
+                function_blocks = [block]
+        return_blocks.append(function_blocks)
+        return return_blocks

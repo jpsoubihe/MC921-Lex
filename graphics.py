@@ -29,6 +29,7 @@ def format_instruction(t):
     else:
         return f"{op}"
 
+
 class CFG(object):
 
     def __init__(self, fname):
@@ -60,97 +61,38 @@ class CFG(object):
         _label = "{" + _name + ":\l\t"
         for _inst in block.instructions:
             _label += format_instruction(_inst) + "\l\t"
-        _label +="|{<f0>T|<f1>F}}"
+        _label += "|{<f0>T|<f1>F}}"
         self.g.node(_name, label=_label)
         self.g.edge(_name + ":f0", block.taken.label)
         self.g.edge(_name + ":f1", block.fall_through.label)
 
-    # def view(self, blocks):
-    #     block = blocks[0]
-    #     count = 0
-    #     # for block in blocks:
-    #     while isinstance(block, Block) and count < 100:
-    #         name = "visit_%s" % type(block).__name__
-    #         if hasattr(self, name):
-    #             getattr(self, name)(block)
-    #         if isinstance(block, ConditionBlock):
-    #             # name = "visit_%s" % type(block.fall_through).__name__
-    #             if block.taken_visited is False:
-    #                 block.taken_visited = True
-    #                 block.next_block = block.fall_through
-    #                 block = block.taken
-    #             else:
-    #                 block = block.fall_through
-    #         else:
-    #             block = block.next_block
-    #         if block is None and len(blocks) - 1 > count:
-    #             block = blocks[count]
-    #         count += 1
-    #     # You can use the next stmt to see the dot file
-    #     # print(self.g.source)
-    #     self.g.view()
-
-
-    # def view(self, blocks):
-    #     block = blocks[0]
-    #     count = 0
-    #     # for block in blocks:
-    #     while isinstance(block, Block):
-    #     #     name = "visit_BasicBlock"
-    #         name = "visit_%s" % type(block).__name__
-    #         if hasattr(self, name):
-    #             getattr(self, name)(block)
-    #         # block = block.next_block
-    #     # You can use the next stmt to see the dot file
-    #     # print(self.g.source)
-    #     self.g.view()
-
-    # def view(self, block):
-    #     while isinstance(block, Block):
-    #         name = "visit_%s" % type(block).__name__
-    #         if hasattr(self, name):
-    #             getattr(self, name)(block)
-    #         block = block.next_block
-    #     # You can use the next stmt to see the dot file
-    #     # print(self.g.source)
-    #     self.g.view()
-
     def view(self, blocks):
         block = blocks[0]
-        count = 0
         while isinstance(block, Block):
-            name = "visit_%s" % type(block).__name__
-            if hasattr(self, name):
-                getattr(self, name)(block)
-            if isinstance(block, ConditionBlock):
-                name = "visit_%s" % type(block.fall_through).__name__
-                if hasattr(self, name):
-                    getattr(self, name)(block.fall_through)
-            block = block.next_block
-            if block is None and len(blocks) - 1 > count:
-                block = blocks[count]
-            count += 1
+            if not block.visited:
+                if isinstance(block, ConditionBlock):
+                    if not block.taken_visited:
+                        name = "visit_%s" % type(block).__name__
+                        if hasattr(self, name):
+                            getattr(self, name)(block)
+                        block.taken_visited = True
+                        self.view([block.taken])
+                    if not block.fall_through_visited:
+                        block.fall_through_visited = True
+                        self.view([block.fall_through])
+                    block.visited = True
+                    block = block.next_block
+                    # name = "visit_%s" % type(block.fall_through).__name__
+                    # getattr(self, name)(block.fall_through)
+                else:
+                    name = "visit_%s" % type(block).__name__
+                    if hasattr(self, name):
+                        getattr(self, name)(block)
+                    block.visited = True
+                    block = block.next_block
+            else:
+                block = block.next_block
         # You can use the next stmt to see the dot file
         # print(self.g.source)
         self.g.view()
 
-    # def view(self, blocks):
-    #     block = blocks[0]
-    #     count = 0
-    #     # for block in blocks:
-    #     while isinstance(block, Block):
-    #         name = "visit_%s" % type(block).__name__
-    #         if hasattr(self, name):
-    #             getattr(self, name)(block)
-    #         if isinstance(block, ConditionBlock):
-    #             if block.taken_visited:
-    #                 block = block.fall_through
-    #             else:
-    #                 block.taken_visited = True
-    #                 block = block.taken
-    #
-    #         else:
-    #             block = block.next_block
-    #     # You can use the next stmt to see the dot file
-    #     # print(self.g.source)
-    #     self.g.view()
