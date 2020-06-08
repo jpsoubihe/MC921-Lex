@@ -33,6 +33,14 @@ class Analyzer():
         if len(kills) > 0:
             return kills
 
+    def generate_in_out(self):
+        '''
+        Applies the values of in and out sets of each sentence of the block - single iteration. Returns a boolean indicating if the sets changed or not.
+        in[n] = U out[p] (p -> predecessors)
+        out[n] = gen[n] U (in[n] - kill[n])
+        '''
+        return False
+
     def parse(self, block):
         '''
         Parses the vector of instructions of a block into a tuple. ToDo: Check if structure of the sets for analysis shoould really be made here.
@@ -56,6 +64,11 @@ class Analyzer():
             gen_set[index] = self.gen(instruction)
             kill_set[index] = self.kill(instruction, kill_set, v)
             index += 1
+
+        modified = True
+
+        while modified is True:
+            modified = self.generate_in_out()
 
         return v
 
