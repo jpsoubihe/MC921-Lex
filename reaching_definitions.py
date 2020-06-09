@@ -9,7 +9,7 @@ class Analyzer():
         self.definitions = {}
         self.gen_set = {}
         self.out_set = {}
-        self.gen_set = {}
+        self.in_set = {}
         self.kill_set = {}
 
     def gen(self, instruction):
@@ -33,12 +33,48 @@ class Analyzer():
         if len(kills) > 0:
             return kills
 
+    def generate_in(self, in_set, out_set, index):
+        set = []
+        for predecessor in range(index):
+            if out_set.__contains__(predecessor):
+                set.append(out_set[predecessor])
+        in_set[index] = set
+        return in_set
+
+    def generate_out(self, in_set, out_set, index):
+        if self.gen_set[index] is not None:
+            if self.kill_set[index] is not None:
+                return self.gen_set[index] + (in_set[index] - self.kill_set[index])
+            else:
+                return self.gen_set[index] + in_set[index]
+        else:
+            if self.kill_set[index] is not None:
+                return in_set[index] - self.kill_set[index]
+            else:
+                return in_set[index]
+
     def generate_in_out(self):
         '''
         Applies the values of in and out sets of each sentence of the block - single iteration. Returns a boolean indicating if the sets changed or not.
         in[n] = U out[p] (p -> predecessors)
         out[n] = gen[n] U (in[n] - kill[n])
         '''
+        index = 0
+        in_set = self.in_set
+        out_set = self.out_set
+        while index < len(self.kill_set):
+            in_set[index] = self.generate_in(in_set, out_set, index)
+            out_set[index] = self.generate_out(in_set, out_set, index)
+            index += 1
+        '''
+                Applies the values of in and out sets of each sentence of the block - single iteration. Returns a boolean indicating if the sets changed or not.
+                in[n] = U out[p] (p -> predecessors)
+                out[n] = gen[n] U (in[n] - kill[n])
+        '''
+        if in_set == self.in_set and out_set == self.out_set:
+            return True
+        self.in_set = in_set
+        self.out_set = out_set
         return False
 
     def parse(self, block):
@@ -61,8 +97,8 @@ class Analyzer():
 
         index = 0
         for instruction in v:
-            gen_set[index] = self.gen(instruction)
-            kill_set[index] = self.kill(instruction, kill_set, v)
+            self.gen_set[index] = self.gen(instruction)
+            self.kill_set[index] = self.kill(instruction, kill_set, v)
             index += 1
 
         modified = True
