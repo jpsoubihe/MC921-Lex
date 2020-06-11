@@ -11,9 +11,10 @@
 import sys
 from contextlib import contextmanager
 
+from available_expressions import Available_Expressions
 from graphics import CFG
 from parser import UCParser
-from reaching_definitions import Analyzer
+from reaching_definitions import Reaching_Definition
 from uc_block import Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
@@ -182,13 +183,19 @@ class Compiler:
             if errors_reported() == 0:
                 block_const = Block_Visitor(self.gencode)
                 blocks = block_const.divide()
-                definitions = {}
-                # for function_block in blocks:
-                #     dot = CFG(function_block[0].label)
-                #     dot.view(function_block)
-                dataflow = Analyzer(blocks)
-                print(dataflow.reaching_definitions())
-                # print(dataflow.reaching_definitions())
+                gen_block_rd = {}
+                kill_block_rd = {}
+                in_block_rd = {}
+                out_block_rd = {}
+                for function in blocks:
+                    reaching = Reaching_Definition(function)
+                    available = Available_Expressions()
+                    for block in function:
+                        gen_block_rd[block.label], kill_block_rd[block.label], in_block_rd[block.label], out_block_rd[block.label] = reaching.analyze_block(block)
+                        available.analyze_block(block)
+
+
+                print('end')
 
 
 

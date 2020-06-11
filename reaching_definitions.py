@@ -3,8 +3,8 @@
 
 
 
-class Analyzer():
-    def __init__(self, blocks):
+class Reaching_Definition():
+    def __init__(self, blocks=None):
         self.blocks = blocks
         self.definitions = {}
         self.gen_set = {}
@@ -45,10 +45,9 @@ class Analyzer():
 
     def generate_in(self,  out_set, index):
         in_set = set()
-        for predecessor in range(index):
-            if out_set.__contains__(predecessor) and out_set[predecessor] is not None:
-                out_set_set = set(out_set[predecessor])
-                in_set = in_set | out_set_set
+        if index > 0 and out_set[index - 1] is not None:
+            out_set_set = set(out_set[index - 1])
+            in_set = in_set | out_set_set
         return in_set
 
     def generate_out(self, in_set, index):
@@ -116,8 +115,6 @@ class Analyzer():
         while modified is True:
             modified = self.generate_in_out()
 
-        return v
-
     def fix_label_name(self, instruction):
         '''
         Removes the '@' from each label, just for better view.
@@ -126,34 +123,14 @@ class Analyzer():
         label = instruction[index:]
         return label + '.1'
 
+    def initialize(self):
+        self.__init__()
 
-    def find_definitions(self, label, b):
-        '''
-        Finds all the definitions present in a block. ToDo: we're going to use it?
-        '''
-        definitions = []
-        for instruction in b.instructions:
-            if instruction.startswith('store_'):
-                definitions.append(instruction)
-        return definitions
-
-    def reaching_definitions(self):
+    def analyze_block(self, block):
         '''
         Executes the reaching definitions analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
         '''
-        for block_list in self.blocks:
-            self.scope = block_list[0].label
-            for block in block_list:
-                block_set = self.parse(block)
-                # gen(block_set)
-
-
-                # print("instructions = " + str(b.instructions[0]))
-                if block.instructions is not None and block.instructions[0].startswith('def'):
-                    label = self.fix_label_name(block.instructions[0])
-                    # label = label[:-1] + str(int(label[-1]) + 1)
-
-                print(label)
-                self.definitions[label] = self.find_definitions(label, block)
-                label = label[:-1] + str(int(label[-1]) + 1)
-        return self.definitions
+        self.initialize()
+        self.scope = block.label
+        self.parse(block)
+        return self.gen_set, self.kill_set, self.in_set, self.out_set
