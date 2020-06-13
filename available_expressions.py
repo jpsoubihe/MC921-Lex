@@ -106,7 +106,7 @@ class Available_Expressions():
     def generate_in_out(self):
         '''
            Applies the values of in and out sets of each sentence of the block - single iteration. Returns a boolean indicating if the sets changed or not.
-           in[n] = U out[p] (p -> predecessors)
+           in[n] = intersec out[p] (p -> predecessors)
            out[n] = gen[n] U (in[n] - kill[n])
        '''
         index = 0
@@ -122,9 +122,6 @@ class Available_Expressions():
         self.in_set = in_set
         self.out_set = out_set
         return False
-
-    # def initialize(self):
-    #     self.__init__()
 
     def merge_dict(self, vars, ops):
         m = {}
@@ -186,27 +183,27 @@ class Available_Expressions():
         var_map = self.prepare_var(v)
         ops_map = self.prepare_ops(v)
         self.temp = self.merge_dict(var_map, ops_map)
-        modified = True
-        # while modified:
-            # self.find_operations(v)
         for index, instruction in enumerate(v):
             self.kill_set[index] = self.kill(index, instruction, v)
             self.gen_set[index] = self.gen(index, instruction)
 
-        modified = True
+
         for ind, instruction in enumerate(v):
             self.in_set[ind] = instruction
             self.out_set[ind] = instruction
-        # self.in_set = set(v)
-        # self.out_set = set(v)
+
+        modified = True
         while modified is True:
             modified = self.generate_in_out()
 
+    def initialize(self, block):
+        self.__init__(block)
+
     def analyze_block(self, block):
         '''
-            Executes the reaching definitions analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
+            Executes the Available Expressions analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
         '''
-        # self.initialize()
+        self.initialize(block)
         self.scope = block.label
         self.parse(block)
         return self.gen_set, self.kill_set, self.in_set, self.out_set
