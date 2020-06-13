@@ -189,8 +189,8 @@ class Compiler:
                 out_block_rd = {}
                 for function in blocks:
                     reaching = Reaching_Definition(function)
-                    available = Available_Expressions()
                     for block in function:
+                        available = Available_Expressions(block)
                         gen_block_rd[block.label], kill_block_rd[block.label], in_block_rd[block.label], out_block_rd[block.label] = reaching.analyze_block(block)
                         available.analyze_block(block)
 
