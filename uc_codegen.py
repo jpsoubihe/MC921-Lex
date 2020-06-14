@@ -92,7 +92,7 @@ class GenerateCode(NodeVisitor):
         name = self.versions[self.fname.peek()]['vars'][varname]
         if isinstance(name, int):
             name = '%' + name.__str__()
-        return '%'+varname
+        return name
 
     def new_global(self, varname):
         if varname not in self.versions['global']['vars']:
@@ -221,6 +221,8 @@ class GenerateCode(NodeVisitor):
                 type = self.func_and_var_types[node.rvalue.left.name]
             elif isinstance(node.rvalue.left, ast.BinaryOp):
                 type = self.func_and_var_types[node.rvalue.left.left.name]
+            elif isinstance(node.rvalue.left, ast.ArrayRef):
+                type = self.func_and_var_types[node.rvalue.left.name.name.name]['type']
             if node.op in oper_ops:
                 self.visit_LoadLocation(node.lvalue)
                 inst = (oper_ops[node.op] + '_' + type, self.new_temp('binop%d' % node.rvalue.id),
@@ -302,6 +304,8 @@ class GenerateCode(NodeVisitor):
                     self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name]
                 elif isinstance(node.left, ast.FuncCall):
                     self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name.name]
+                elif isinstance(node.left, ast.ArrayRef):
+                    self.func_and_var_types[node.id.__str__()] = self.func_and_var_types[node.left.name.name.name]['type']
                 else:
                     self.func_and_var_types[node.id.__str__()] = node.left.type
             if isinstance(node.left, ast.FuncCall):
@@ -440,6 +444,9 @@ class GenerateCode(NodeVisitor):
         if isinstance(node.init, ast.ExprList):
             for expr in node.init.exprs:
                 self.visit(expr)
+        elif isinstance(node.init, ast.DeclList):
+            for decl in node.init.decls:
+                self.visit(decl)
         else:
             self.visit(node.init)
         inst = (self.new_temp('for%d_label1' % for_count)[1:],)
@@ -488,7 +495,7 @@ class GenerateCode(NodeVisitor):
     def visit_FuncDecl(self, node):
         if node.args is not None:
             for arg in node.args.params:
-                self.new_temp(self.fname.peek() + '_' + arg.name.name)
+                self.new_temp(self.fname.peek() + '_' + arg.name.name, True)
             self.new_temp(self.fname.peek() + '_return')
             self.visit(node.args)
             for arg in node.args.params:
@@ -510,17 +517,41 @@ class GenerateCode(NodeVisitor):
 
     def visit_GlobalDecl(self, node):
         for decl in node.decls:
-            type = decl.type.type.names[0]
-            self.func_and_var_types[decl.name.name] = type
-            if type == 'int':
-                value = int(decl.init.value)
-            elif type == 'float':
-                value = float(decl.init.value)
+            if isinstance(decl.type, ast.ArrayDecl):
+                if isinstance(decl.init, ast.Constant):
+                    type = 'string'
+                    size = str(len(decl.init.value))
+                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char', 'size': '_' + size}
+                    inst = ('global_' + type, self.new_global('.str.%d' % self.str_count), decl.init.value)
+                else:
+                    init, type = self.visit(decl.init)
+                    full_size = len(init)
+                    size = ''
+                    next = init[0]
+                    while hasattr(next, '__len__'):
+                        full_size *= len(next)
+                        size = size + '_' + str(len(next))
+                        next = next[0]
+                    size = '_' + str(full_size) + size
+                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': type, 'size': size}
+                    inst = ('global_' + type + size, self.new_global('.str.%d' % self.str_count), init)
+                self.str_count += 1
+                self.global_code.append(inst)
+
+                self.func_and_var_types[decl.name.name] = {'type': type, 'size': size}
+                self.visit(decl.type)
             else:
-                value = decl.init.value
-            target = self.new_global(decl.name.name)
-            inst = ('global_' + type, target, value)
-            self.global_code.append(inst)
+                type = decl.type.type.names[0]
+                self.func_and_var_types[decl.name.name] = type
+                if type == 'int':
+                    value = int(decl.init.value)
+                elif type == 'float':
+                    value = float(decl.init.value)
+                else:
+                    value = decl.init.value
+                target = self.new_global(decl.name.name)
+                inst = ('global_' + type, target, value)
+                self.global_code.append(inst)
 
     def visit_ID(self, node):
         self.visit_LoadLocation(node)

@@ -154,12 +154,10 @@ class Compiler:
         _str = ''
         # ToDo: check a better place for this instruction
 
-
         if not susy and ir_file is not None:
             for _code in self.gencode:
                 _str += f"{_code}\n"
             ir_file.write(_str)
-
 
     def _do_compile(self, susy, ast_file, ir_file, debug):
         """ Compiles the code to the given file object. """
@@ -169,8 +167,7 @@ class Compiler:
         if not errors_reported():
             self._gencode(susy, ir_file)
 
-
-    def compile(self, code, susy, ast_file, ir_file, run_ir, debug):
+    def compile(self, code, susy, ast_file, ir_file, run_ir, optimize, debug):
         """ Compiles the given code string """
         self.code = code
 
@@ -180,8 +177,8 @@ class Compiler:
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
             elif run_ir:
                 self.vm = Interpreter()
-                # self.vm.run(self.gencode)
-            if errors_reported() == 0:
+                self.vm.run(self.gencode)
+            if errors_reported() == 0 and optimize:
                 block_const = Block_Visitor(self.gencode)
                 blocks = block_const.divide()
 
@@ -211,18 +208,7 @@ class Compiler:
                         gen_block_rd[block.label], kill_block_rd[block.label], in_block_rd[block.label], out_block_rd[block.label] = reaching.analyze_block(block)
                         gen_block_ae[block.label], kill_block_ae[block.label], in_block_ae[block.label], out_block_ae[block.label] = available.analyze_block(block)
                         gen_block_lv[block.label], kill_block_lv[block.label], in_block_lv[block.label], out_block_lv[block.label] = liveness.analyze_block(block)
-
-
-
                 print('end')
-
-
-
-
-
-
-
-
         return 0
 
 
@@ -238,6 +224,7 @@ def run_compiler():
     run_ir = True
     susy = False
     debug = False
+    optimize = True
 
     params = sys.argv[1:]
     files = sys.argv[1:]
@@ -251,7 +238,9 @@ def run_compiler():
             elif param == '-at-susy':
                 susy = True
             elif param == '-no-run':
-                run_ir = True
+                run_ir = False
+            elif param == '-no-opt':
+                optimize = False
             elif param == '-debug':
                 debug = True
             else:
@@ -287,7 +276,7 @@ def run_compiler():
 
 
 
-        retval = Compiler().compile(code, susy, ast_file, ir_file, run_ir, debug)
+        retval = Compiler().compile(code, susy, ast_file, ir_file, run_ir, optimize, debug)
         for f in open_files:
             f.close()
         if retval != 0:
