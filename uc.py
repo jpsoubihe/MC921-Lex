@@ -11,12 +11,8 @@
 import sys
 from contextlib import contextmanager
 
-from available_expressions import Available_Expressions
-from graphics import CFG
-from liveness import Liveness
+from dataflow import DataFlow
 from parser import UCParser
-from reaching_definitions import Reaching_Definition
-from uc_block import Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
@@ -159,56 +155,46 @@ class Compiler:
                 _str += f"{_code}\n"
             ir_file.write(_str)
 
-    def _do_compile(self, susy, ast_file, ir_file, debug):
+    def _opt(self, susy, opt_file, debug):
+        self.opt = DataFlow(self.gencode)
+        # self.opt.visit(self.ast)
+        # self.optcode = self.opt.code
+        if not susy and opt_file is not None:
+            pass
+
+    def _do_compile(self, susy, ast_file, ir_file, opt_file, opt, debug):
         """ Compiles the code to the given file object. """
         self._parse(susy, ast_file, debug)
         if not errors_reported():
             self._sema(susy, ast_file)
         if not errors_reported():
             self._gencode(susy, ir_file)
+            if opt:
+                self._opt(susy, opt_file, debug)
 
-    def compile(self, code, susy, ast_file, ir_file, run_ir, optimize, debug):
+    def compile(self, code, susy, ast_file, ir_file, opt_file, run_ir, optimize, debug):
         """ Compiles the given code string """
         self.code = code
+        # self.optcode = self.gencode
 
         with subscribe_errors(lambda msg: sys.stderr.write(msg + "\n")):
-            self._do_compile(susy, ast_file, ir_file, debug)
+            self._do_compile(susy, ast_file, ir_file, opt_file, optimize, debug)
             if errors_reported():
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
-            elif run_ir:
-                self.vm = Interpreter()
-                self.vm.run(self.gencode)
+            # elif run_ir:
+            #     self.vm = Interpreter()
+            #     self.vm.run(self.gencode)
             if errors_reported() == 0 and optimize:
-                block_const = Block_Visitor(self.gencode)
-                blocks = block_const.divide()
-
-                # sets of reaching definitions analysis
-                gen_block_rd = {}
-                kill_block_rd = {}
-                in_block_rd = {}
-                out_block_rd = {}
-
-                # sets of available expressions analysis
-                gen_block_ae = {}
-                kill_block_ae = {}
-                in_block_ae = {}
-                out_block_ae = {}
-
-                # sets of liveness analysis
-                gen_block_lv = {}
-                kill_block_lv = {}
-                in_block_lv = {}
-                out_block_lv = {}
-
-                for function in blocks:
-                    reaching = Reaching_Definition(function)
-                    for block in function:
-                        available = Available_Expressions(block)
-                        liveness = Liveness(block)
-                        gen_block_rd[block.label], kill_block_rd[block.label], in_block_rd[block.label], out_block_rd[block.label] = reaching.analyze_block(block)
-                        gen_block_ae[block.label], kill_block_ae[block.label], in_block_ae[block.label], out_block_ae[block.label] = available.analyze_block(block)
-                        gen_block_lv[block.label], kill_block_lv[block.label], in_block_lv[block.label], out_block_lv[block.label] = liveness.analyze_block(block)
-                print('end')
+                self.speedup = len(self.gencode) / len(self.gencode)
+                sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
+                                 (len(self.gencode), len(self.gencode), self.speedup))
+            if run_ir:
+                self.vm = Interpreter()
+                if optimize:
+                    self.vm.run(self.gencode)
+                else:
+                    self.vm.run(self.gencode)
+            return 0
         return 0
 
 
@@ -223,11 +209,11 @@ def run_compiler():
     emit_ir = True
     run_ir = True
     susy = False
+    opt = True
     debug = False
-    optimize = True
-
     params = sys.argv[1:]
     files = sys.argv[1:]
+
 
     for param in params:
         if param[0] == '-':
@@ -239,8 +225,10 @@ def run_compiler():
                 susy = True
             elif param == '-no-run':
                 run_ir = False
-            elif param == '-no-opt':
-                optimize = False
+            elif param == '-cfg':
+                cfg = True
+            elif param == '-opt':
+                opt = True
             elif param == '-debug':
                 debug = True
             else:
@@ -270,13 +258,20 @@ def run_compiler():
             ir_file = open(ir_filename, 'w')
             open_files.append(ir_file)
 
+        opt_file = None
+        if opt and not susy:
+            opt_filename = source_filename[:-3] + '.opt'
+            print("Outputting the optimized uCIR to %s." % opt_filename)
+            opt_file = open(opt_filename, 'w')
+            open_files.append(opt_file)
+
         source = open(source_filename, 'r')
         code = source.read()
         source.close()
 
 
 
-        retval = Compiler().compile(code, susy, ast_file, ir_file, run_ir, optimize, debug)
+        retval = Compiler().compile(code, susy, ast_file, ir_file, opt_file, run_ir, opt, debug)
         for f in open_files:
             f.close()
         if retval != 0:
