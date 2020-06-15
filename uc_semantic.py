@@ -407,11 +407,13 @@ class Visitor(NodeVisitor):
         self.visit(node.expr)
 
     def visit_If(self, node):
-        # self.symtab.begin_scope()
+        assert isinstance(node.cond, ast.Assignment) is False, "invalid If condition" + str(node.coord)
         self.visit(node.cond)
-        self.visit(node.iftrue)
-        self.visit(node.iffalse)
-        # self.symtab.end_scope()
+        type2 = self.visit(node.iftrue)
+        type3 = self.visit(node.iffalse)
+        if type2 is None:
+            return type3
+        return type2
 
     def visit_FuncDef(self, node):
         self.symtab.begin_scope()
@@ -427,7 +429,11 @@ class Visitor(NodeVisitor):
 
         return_type = None
         for b in node.body.block_items:
-            if isinstance(b, ast.Return):
+            if isinstance(b, ast.If):
+                true_return = self.visit(b.iftrue)
+                false_return = self.visit(b.iffalse)
+                return_type = true_return
+            elif isinstance(b, ast.Return):
                 return_type = self.visit(b)
         if return_type is None:
             assert node.decl.type.type.type.names[0] == 'void', node.decl.type.type.type.names[0] + " function does not accept this type of return"
@@ -447,8 +453,9 @@ class Visitor(NodeVisitor):
     def visit_Compound(self, node):
         self.symtab.begin_scope()
         for _decl in node.block_items:
-            self.visit(_decl)
+            type = self.visit(_decl)
         self.symtab.end_scope()
+        return type
 
     def visit_DeclList(self, node):
         for _decl in node.decls:
@@ -507,6 +514,7 @@ class Visitor(NodeVisitor):
 
     def visit_FuncDecl(self, node):
         self.visit(node.args)
+        self.functions[node.type.declname.name] = node.args
         type = self.visit(node.type)
         return type
 

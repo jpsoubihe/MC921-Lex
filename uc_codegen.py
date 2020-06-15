@@ -60,7 +60,7 @@ class GenerateCode(NodeVisitor):
 
     def __init__(self):
         super(GenerateCode, self).__init__()
-
+        self.waiting_for_label = []
         # version dictionary for temporaries
         self.fname = ScopeStack()  # We use the function name as a key
         self.fname.push('global')
@@ -93,6 +93,14 @@ class GenerateCode(NodeVisitor):
         if isinstance(name, int):
             name = '%' + name.__str__()
         return name
+
+    def break_label(self):
+        v = self.versions[self.fname.peek()]['vars']
+        c = None
+        for i in v.keys():
+            if i.startswith('for') or i.startswith('while'):
+                c = v[i]
+        return c
 
     def new_global(self, varname):
         if varname not in self.versions['global']['vars']:
@@ -231,6 +239,8 @@ class GenerateCode(NodeVisitor):
                 inst = ('store_' + type + pointer_modifier, self.new_temp('const%d' % self.const_count), target)
                 self.const_count += 1
             else:
+                # ToDo: Total despair! This could end very badly
+                type = 'int'
                 inst = ('store_' + type + pointer_modifier, self.new_temp('binop%d' % node.rvalue.id), target)
         elif isinstance(node.rvalue, ast.FuncCall):
             inst = ('store_' + self.func_and_var_types[node.rvalue.name.name] + pointer_modifier,
@@ -246,7 +256,7 @@ class GenerateCode(NodeVisitor):
                         node.rvalue.id, self.new_temp('const%d' % self.const_count))
                 self.code.append(inst)
                 inst = (
-                'store_' + node.rvalue.type + pointer_modifier, self.new_temp('const%d' % self.const_count), target)
+                    'store_' + node.rvalue.type + pointer_modifier, self.new_temp('const%d' % self.const_count), target)
                 self.const_count += 1
             else:
                 inst = ('store_' + node.rvalue.type + pointer_modifier, node.rvalue.id, target)
@@ -434,6 +444,11 @@ class GenerateCode(NodeVisitor):
         for expr in node.exprs:
             self.visit(expr)
 
+    def visit_Break(self, node):
+        # self.waiting_for_label.append(len(self.code))
+        inst = ('jump', '%' + str(self.break_label()))
+        self.code.append(inst)
+
     def visit_For(self, node):
         for_count = self.const_count
         self.new_temp('for%d_label1' % for_count)
@@ -443,10 +458,14 @@ class GenerateCode(NodeVisitor):
 
         if isinstance(node.init, ast.ExprList):
             for expr in node.init.exprs:
-                self.visit(expr)
+                t = self.visit(expr)
+                if t == 'break':
+                    return
         elif isinstance(node.init, ast.DeclList):
             for decl in node.init.decls:
-                self.visit(decl)
+                t = self.visit(decl)
+                if t == 'break':
+                    return
         else:
             self.visit(node.init)
         inst = (self.new_temp('for%d_label1' % for_count)[1:],)
@@ -513,11 +532,20 @@ class GenerateCode(NodeVisitor):
         self.visit(node.body)
         if not isinstance(node.body.block_items[-1], ast.Return):
             inst = (self.new_temp(self.fname.peek() + '_label')[1:],)
-            self.code.append(inst)
+            if self.code.__contains__(inst) is False:
+                self.code.append(inst)
+            # self.code.append(inst)
 
     def visit_GlobalDecl(self, node):
         for decl in node.decls:
-            if isinstance(decl.type, ast.ArrayDecl):
+            if isinstance(decl.type, ast.FuncDecl):
+                type = decl.type.type.type.names[0]
+                self.func_and_var_types[decl.name.name] = type
+                value = decl.name.name
+                target = self.new_global(decl.name.name)
+                inst = ('global_' + type, target, value)
+                self.global_code.append(inst)
+            elif isinstance(decl.type, ast.ArrayDecl):
                 if isinstance(decl.init, ast.Constant):
                     type = 'string'
                     size = str(len(decl.init.value))
@@ -569,13 +597,17 @@ class GenerateCode(NodeVisitor):
         inst = (self.new_temp('if%d_label1' % if_count)[1:],)
         self.code.append(inst)
 
-        self.visit(node.iftrue)
+        t = self.visit(node.iftrue)
+        if t == 'break':
+            return 'break'
 
         inst = (self.new_temp('if%d_label2' % (if_count + 1))[1:],)
         self.code.append(inst)
 
         if node.iffalse is not None:
-            self.visit(node.iffalse)
+            t = self.visit(node.iffalse)
+            if t == 'break':
+                return 'break'
 
     def visit_InitList(self, node):
         initlist = []
@@ -733,7 +765,8 @@ class GenerateCode(NodeVisitor):
         inst = ('jump', self.new_temp(self.fname.peek() + '_label'))
         self.code.append(inst)
         inst = (self.new_temp(self.fname.peek() + '_label')[1:],)
-        self.code.append(inst)
+        if self.code.__contains__(inst) is False:
+            self.code.append(inst)
         if node.expr is not None:
             self.visit_LoadLocation(node)
             if self.func_and_var_types[self.fname.peek()] == 'void':
