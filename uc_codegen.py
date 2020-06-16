@@ -131,7 +131,14 @@ class GenerateCode(NodeVisitor):
         if len(sizes) != 1 and type != 'string':
             next = node
             mults = []
-            for size in sizes[1:]:
+            self.visit(next.subscript)
+            if isinstance(next.subscript, ast.BinaryOp):
+                sub_id = self.new_temp('binop%d' % next.subscript.id)
+            else:
+                sub_id = next.subscript.id
+            mults.append(sub_id)
+            next = node.name
+            for size in sizes[:-(len(sizes)):-1]:
                 lit = self.const_count
                 self.const_count += 1
                 inst = ('literal_int', size, self.new_temp('const%d' % lit))
@@ -146,12 +153,8 @@ class GenerateCode(NodeVisitor):
                 mults.append(self.const_count)
                 self.const_count += 1
                 next = node.name
-            self.visit(next)
-            if isinstance(next, ast.BinaryOp):
-                next_id = self.new_temp('binop%d' % next.id)
-            else:
-                next_id = next.id
-            for mult in mults[-1:]:
+            next_id = mults[0]
+            for mult in mults[1:]:
                 inst = ('add_int', next_id, self.new_temp(mult), self.new_temp(self.const_count))
                 self.code.append(inst)
                 next_id = self.new_temp(self.const_count)

@@ -184,16 +184,14 @@ class Compiler:
             # elif run_ir:
             #     self.vm = Interpreter()
             #     self.vm.run(self.gencode)
-            elif errors_reported() == 0 and optimize:
-                self.speedup = len(self.gencode) / len(self.gencode)
-                sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
-                                 (len(self.gencode), len(self.gencode), self.speedup))
+            else:
+                if optimize:
+                    self.speedup = len(self.gencode) / len(self.gencode)
+                    sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
+                                     (len(self.gencode), len(self.gencode), self.speedup))
                 if run_ir:
                     self.vm = Interpreter()
-                    if optimize:
-                        self.vm.run(self.gencode)
-                    else:
-                        self.vm.run(self.gencode)
+                    self.vm.run(self.gencode)
                 return 0
         return 0
 

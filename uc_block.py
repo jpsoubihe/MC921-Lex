@@ -187,7 +187,7 @@ class Block_Visitor(BlockVisitor):
             blcks.predecessors = list(dict.fromkeys(blcks.predecessors))
             for instructions in range(len(blcks.instructions)):
                 blcks.instructions[instructions] = format_instruction(blcks.instructions[instructions])
-            print(blcks.instructions)
+            # print(blcks.instructions)
 
         function_blocks = []
         return_blocks = []
