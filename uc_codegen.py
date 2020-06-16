@@ -180,13 +180,34 @@ class GenerateCode(NodeVisitor):
         self.const_count += 1
 
     def visit_Assert(self, node):
+        self.visit(node.expr)
         if isinstance(node.expr, ast.BinaryOp):
-            self.visit(node.expr)
-        inst = ('cbranch',
-                self.new_temp('binop%d' % node.expr.id),
-                self.new_temp('assert%d_label_1' % self.const_count),
-                self.new_temp('assert%d_label_2' % (self.const_count + 1)))
-        self.code.append(inst)
+            inst = ('cbranch',
+                    self.new_temp('binop%d' % node.expr.id),
+                    self.new_temp('assert%d_label_1' % self.const_count),
+                    self.new_temp('assert%d_label_2' % (self.const_count + 1)))
+            self.code.append(inst)
+        elif isinstance(node.expr, ast.ID):
+            literal = self.const_count
+            self.const_count += 1
+            type = self.func_and_var_types[node.expr.name]
+            if type == 'int':
+                check = 0
+            elif type == 'float':
+                check = 0.0
+            else:
+                check = ''
+            inst = ('literal_' + type, check, self.new_temp('assert_const_%d' % literal))
+            self.code.append(inst)
+            bool_id = self.const_count
+            self.const_count += 1
+            inst = ('ne_' + type, node.expr.id, self.new_temp('assert_const_%d' % literal), self.new_temp('assert_bool_%d' % bool_id))
+            self.code.append(inst)
+            inst = ('cbranch',
+                    self.new_temp('assert_bool_%d' % bool_id),
+                    self.new_temp('assert%d_label_1' % self.const_count),
+                    self.new_temp('assert%d_label_2' % (self.const_count + 1)))
+            self.code.append(inst)
 
         inst = (self.new_temp('assert%d_label_1' % self.const_count)[1:],)
         self.code.append(inst)
