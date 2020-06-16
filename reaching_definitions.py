@@ -1,3 +1,20 @@
+
+
+
+def parse_code(code):
+    if isinstance(code[0], tuple):
+        return code
+    instructions = []
+    for block in code:
+        for inst in block.instructions:
+            line = inst.split(' ')
+            for elem in line:
+                if elem == '':
+                    line.remove(elem)
+            instructions.append(tuple(line))
+    return instructions
+
+
 class Reaching_Definition():
     def __init__(self, blocks=None):
         self.blocks = blocks

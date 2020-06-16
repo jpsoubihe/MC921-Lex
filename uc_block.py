@@ -193,15 +193,18 @@ class Block_Visitor(BlockVisitor):
         return_blocks = []
 
         for block in self.blocks_global:
-            first_instruction = block.instructions[0]
-            isFunction = False
-            if isinstance(first_instruction, str):
-                isFunction = first_instruction.find('define') != -1
-            if not isFunction:
-                function_blocks.append(block)
+            if len(block.instructions) == 0:
+                pass
             else:
-                if len(function_blocks) > 0:
-                    return_blocks.append(function_blocks)
-                function_blocks = [block]
+                first_instruction = block.instructions[0]
+                isFunction = False
+                if isinstance(first_instruction, str):
+                    isFunction = first_instruction.find('define') != -1
+                if not isFunction:
+                    function_blocks.append(block)
+                else:
+                    if len(function_blocks) > 0:
+                        return_blocks.append(function_blocks)
+                    function_blocks = [block]
         return_blocks.append(function_blocks)
         return return_blocks

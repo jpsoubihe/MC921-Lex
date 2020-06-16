@@ -1,9 +1,12 @@
+import copy
+
 operations = ['and_', 'or_', 'eq_', 'add_', 'mul_', 'div_', 'ne_', 'mod_', 'store_']
 
 
 class Liveness():
 
-    def __init__(self, block):
+    def __init__(self, complete_code, block):
+        self.code = complete_code
         self.definitions = {}
         self.gen_set = {}
         self.out_set = {}
@@ -120,7 +123,7 @@ class Liveness():
             modified = self.generate_in_out()
 
     def initialize(self, block):
-        self.__init__(block)
+        self.__init__(self.code, block)
 
     def analyze_block(self, block):
         '''
