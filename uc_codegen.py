@@ -1,5 +1,4 @@
 import ast
-from graphics import CFG
 from uc_semantic import NodeVisitor
 
 binary_ops = {
@@ -549,8 +548,8 @@ class GenerateCode(NodeVisitor):
                 if isinstance(decl.init, ast.Constant):
                     type = 'string'
                     size = str(len(decl.init.value))
-                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': 'char', 'size': '_' + size}
-                    inst = ('global_' + type, self.new_global('.str.%d' % self.str_count), decl.init.value)
+                    self.func_and_var_types[decl.name.name] = {'type': 'char', 'size': '_' + size}
+                    inst = ('global_' + type, self.new_global(decl.name.name), decl.init.value)
                 else:
                     init, type = self.visit(decl.init)
                     full_size = len(init)
@@ -561,13 +560,10 @@ class GenerateCode(NodeVisitor):
                         size = size + '_' + str(len(next))
                         next = next[0]
                     size = '_' + str(full_size) + size
-                    self.func_and_var_types['.str.%d' % self.str_count] = {'type': type, 'size': size}
-                    inst = ('global_' + type + size, self.new_global('.str.%d' % self.str_count), init)
+                    self.func_and_var_types[decl.name.name] = {'type': type, 'size': size}
+                    inst = ('global_' + type + size, self.new_global(decl.name.name), init)
                 self.str_count += 1
                 self.global_code.append(inst)
-
-                self.func_and_var_types[decl.name.name] = {'type': type, 'size': size}
-                self.visit(decl.type)
             else:
                 type = decl.type.type.names[0]
                 self.func_and_var_types[decl.name.name] = type
@@ -671,7 +667,10 @@ class GenerateCode(NodeVisitor):
             inst = ('print_' + node.expr.type, node.expr.id)
             self.code.append(inst)
         elif isinstance(node.expr, ast.ID):
-            inst = ('print_' + self.func_and_var_types[node.expr.name], node.expr.id)
+            type = self.func_and_var_types[node.expr.name]
+            if isinstance(type, dict):
+                type = type['type']
+            inst = ('print_' + type, node.expr.id)
             self.code.append(inst)
         elif isinstance(node.expr, ast.ExprList):
             for expr in node.expr:

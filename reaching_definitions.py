@@ -1,8 +1,3 @@
-
-
-
-
-
 class Reaching_Definition():
     def __init__(self, blocks=None):
         self.blocks = blocks

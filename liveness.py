@@ -1,6 +1,5 @@
-import copy
-
 operations = ['and_', 'or_', 'eq_', 'add_', 'mul_', 'div_', 'ne_', 'mod_', 'store_']
+
 
 class Liveness():
 
@@ -101,7 +100,7 @@ class Liveness():
 
     def parse(self, block):
         # do the steps to prepare our backward analysis
-        v = copy.deepcopy(block.instructions)
+        v = list(block.instructions)
         v.reverse()
         instructions = []
         for instruction in v:

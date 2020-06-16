@@ -1,6 +1,5 @@
 import ast
 
-
 class UndoStack:
     def __init__(self):
         self.items = []

@@ -5,7 +5,9 @@
 *.swp
 *.ir
 *.ast
+*.opt
 venv/
 parsetab.py
 *.gv
 *.pdf
+submission/
