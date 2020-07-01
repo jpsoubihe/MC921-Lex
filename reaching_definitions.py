@@ -16,8 +16,10 @@ def parse_code(code):
 
 
 class Reaching_Definition():
-    def __init__(self, blocks=None):
+    def __init__(self, complete_code, blocks=None):
+        self.code = parse_code(complete_code)
         self.blocks = blocks
+        self.index = 0
         self.definitions = {}
         self.gen_set = {}
         self.out_set = {}
@@ -48,7 +50,7 @@ class Reaching_Definition():
         '''
         kills = []
         if sentence[0].startswith('store'):
-            for index, definition in enumerate(block):
+            for index, definition in enumerate(self.code):
                 if definition[0].startswith('store') and definition != sentence:
                     if definition[2] == sentence[2]:
                         kills.append(self.store_kill(index, definition))
@@ -57,7 +59,7 @@ class Reaching_Definition():
 
     def generate_in(self,  out_set, index):
         in_set = set()
-        if index > 0 and out_set[index - 1] is not None:
+        if len(out_set) > 0 and out_set[index - 1] is not None:
             out_set_set = set(out_set[index - 1])
             in_set = in_set | out_set_set
         return in_set
@@ -84,7 +86,7 @@ class Reaching_Definition():
         in[n] = U out[p] (p -> predecessors)
         out[n] = gen[n] U (in[n] - kill[n])
         '''
-        index = 0
+        index = self.index
         in_set = self.in_set
         out_set = self.out_set
         while index < len(self.kill_set):
@@ -116,7 +118,7 @@ class Reaching_Definition():
                     temp_vector.remove(elem)
             v.append(tuple(temp_vector))
 
-        index = 0
+        index = self.index
         for instruction in v:
             self.gen_set[index] = self.gen(index, instruction)
             self.kill_set[index] = self.kill(instruction, v)
@@ -136,13 +138,14 @@ class Reaching_Definition():
         return label + '.1'
 
     def initialize(self):
-        self.__init__()
+        self.__init__(self.code)
 
-    def analyze_block(self, block):
+    def analyze_block(self, block, index):
         '''
         Executes the reaching definitions analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
         '''
         self.initialize()
+        self.index = index
         self.scope = block.label
         self.parse(block)
         return self.gen_set, self.kill_set, self.in_set, self.out_set

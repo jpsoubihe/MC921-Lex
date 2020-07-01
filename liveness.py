@@ -8,6 +8,7 @@ class Liveness():
     def __init__(self, complete_code, block):
         self.code = complete_code
         self.definitions = {}
+        self.index = 0
         self.gen_set = {}
         self.out_set = {}
         self.in_set = {}
@@ -125,10 +126,11 @@ class Liveness():
     def initialize(self, block):
         self.__init__(self.code, block)
 
-    def analyze_block(self, block):
+    def analyze_block(self, block, index):
         '''
             Executes the Liveness analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
         '''
+        self.index = index
         self.initialize(block)
         self.scope = block.label
         self.parse(block)

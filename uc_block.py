@@ -1,13 +1,16 @@
 # An example of how to create basic blocks
 
+
+
 def format_instruction(t):
     # Auxiliary method to pretty print the instructions
+    # t is the tuple that contains one instruction
     op = t[0]
     if len(t) > 1:
-        if op == "define":
-            return f"{op} {t[1]}"
+        if op.startswith("define"):
+            return f"\n{op} {t[1]} " + ', '.join(list(' '.join(el) for el in t[2]))
         else:
-            _str = ""
+            _str = "" if op.startswith('global') else "  "
             if op == 'jump':
                 _str += f"{op} label {t[1]}"
             elif op == 'cbranch':
@@ -21,9 +24,11 @@ def format_instruction(t):
                     _str += f"{_el} "
             return _str
     elif op == 'print_void' or op == 'return_void':
-        return f"{op}"
+        return f"  {op}"
     else:
         return f"{op}"
+
+
 
 
 class Block(object):

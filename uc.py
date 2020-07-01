@@ -169,8 +169,8 @@ class Compiler:
             self._sema(susy, ast_file)
         if not errors_reported():
             self._gencode(susy, ir_file)
-            if opt:
-                self._opt(susy, opt_file, debug)
+            # if opt:
+            #     self._opt(susy, opt_file, debug)
 
     def compile(self, code, susy, ast_file, ir_file, opt_file, run_ir, optimize, debug):
         """ Compiles the given code string """

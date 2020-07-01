@@ -3,8 +3,10 @@ class Available_Expressions():
 
     def __init__(self, complete_code, block):
         self.code = complete_code
+        self.index = 0
         self.definitions = {}
         self.gen_set = {}
+        # ToDo: sets starts full
         self.out_set = {}
         self.in_set = {}
         self.kill_set = {}
@@ -70,17 +72,18 @@ class Available_Expressions():
 
         # need to check where the operands values are being changed
         operand_changes = []
-        for index, instruction in enumerate(block):
-            s = instruction[0].split('_')[0] + '_'
-            if operations.__contains__(s):
-                if instruction[0].startswith('store_'):
-                    if instruction[2] == operand:
-                        if index != inst_index:
-                            operand_changes.append((index, instruction[2][1:]))
-                else:
-                    if instruction[3] == operand:
-                        if index != inst_index:
-                            operand_changes.append((index, instruction[3][1:]))
+        for b in self.code:
+            for index, instruction in enumerate(b.instructions):
+                s = instruction[0].split('_')[0] + '_'
+                if operations.__contains__(s):
+                    if instruction[0].startswith('store_'):
+                        if instruction[2] == operand:
+                            if index != inst_index:
+                                operand_changes.append((index, instruction[2][1:]))
+                    else:
+                        if instruction[3] == operand:
+                            if index != inst_index:
+                                operand_changes.append((index, instruction[3][1:]))
         return operand_changes
 
         # kill_expressions = []
@@ -110,7 +113,7 @@ class Available_Expressions():
            in[n] = intersec out[p] (p -> predecessors)
            out[n] = gen[n] U (in[n] - kill[n])
        '''
-        index = 0
+        index = self.index
 
         in_set = self.in_set
         out_set = self.out_set
@@ -200,11 +203,12 @@ class Available_Expressions():
     def initialize(self, block):
         self.__init__(self.code, block)
 
-    def analyze_block(self, block):
+    def analyze_block(self, block, index):
         '''
             Executes the Available Expressions analysis. ToDo: Maybe it will be refactored (see Parse function for more infos)
         '''
         self.initialize(block)
+        self.index = index
         self.scope = block.label
         self.parse(block)
         return self.gen_set, self.kill_set, self.in_set, self.out_set

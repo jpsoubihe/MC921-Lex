@@ -491,6 +491,8 @@ class GenerateCode(NodeVisitor):
                     return
         else:
             self.visit(node.init)
+        inst = ('jump', self.new_temp('for%d_label1' % for_count),)
+        self.code.append(inst)
         inst = (self.new_temp('for%d_label1' % for_count)[1:],)
         self.code.append(inst)
 
@@ -535,21 +537,41 @@ class GenerateCode(NodeVisitor):
         self.code.append(inst)
 
     def visit_FuncDecl(self, node):
+        param_list = []
         if node.args is not None:
             for arg in node.args.params:
                 self.new_temp(self.fname.peek() + '_' + arg.name.name, True)
-            self.new_temp(self.fname.peek() + '_return')
+            implicit = self.new_temp(self.fname.peek() + '_return')
+            self.code.append(('alloc_' + node.type.type.names[0], implicit))
             self.visit(node.args)
+            # param_list will be the parameter list of the function
             for arg in node.args.params:
-                inst = ('store_' + arg.type.type.names[0], self.new_temp(self.fname.peek() + '_' + arg.name.name), arg.id)
+                var = self.new_temp(self.fname.peek() + '_' + arg.name.name)
+                inst = ('store_' + arg.type.type.names[0], var, arg.id)
                 self.code.append(inst)
+                # storing a tuple with type and register alocating the respective parameter
+                param_list.append((arg.type.type.names[0], var))
         else:
-            self.new_temp(self.fname.peek() + '_return')
+            implicit = self.new_temp(self.fname.peek() + '_return')
+            self.code.append(('alloc_' + node.type.type.names[0], implicit))
         self.new_temp(self.fname.peek() + '_label')
+        return param_list
+
 
     def visit_FuncDef(self, node):
         self.func_and_var_types[node.decl.name.name] = node.decl.type.type.type.names[0]
-        inst = ('define', '@' + node.decl.name.name)
+        parameters_list = []
+        if node.decl.type.args != None:
+            for param in node.decl.type.args.params:
+                var = self.new_temp(self.fname.peek() + '_' + param.name.name)
+                parameters_list.append((param.type.type.names[0], var))
+            # parameters_list = self.visit(node.decl.type)
+            # while index < len(parameters):
+            #     index += 1
+        # if len(parameters_list) > 0:
+        inst = ('define', '@' + node.decl.name.name, parameters_list)
+        # else:
+        #     inst = ('define', '@' + node.decl.name.name)
         self.code.append(inst)
         self.visit(node.decl)
         self.visit(node.body)
@@ -753,9 +775,9 @@ class GenerateCode(NodeVisitor):
             if isinstance(expr, ast.ID):
                 inst = ('read_' + self.func_and_var_types[expr.name], self.new_temp('const%d' % self.const_count))
                 self.code.append(inst)
-                inst = ('store_' + self.func_and_var_types[expr.name], self.new_temp('const%d' % self.const_count),
-                        self.new_temp(expr.name))
-                self.code.append(inst)
+                # inst = ('store_' + self.func_and_var_types[expr.name], self.new_temp('const%d' % self.const_count),
+                #         self.new_temp(expr.name))
+                # self.code.append(inst)
                 self.const_count += 1
             elif isinstance(expr, ast.ArrayRef):
                 self.visit(expr)
@@ -841,7 +863,10 @@ class GenerateCode(NodeVisitor):
         self.new_temp('while%d_label3' % (while_count + 2))
         self.const_count += 3
 
-        inst = (self.new_temp('while%d_label1' % while_count)[1:],)
+        w = self.new_temp('while%d_label1' % while_count)
+        inst = ('jump', w)
+        self.code.append(inst)
+        inst = (w[1:],)
         self.code.append(inst)
 
         if node.cond is not None:
