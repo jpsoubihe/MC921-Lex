@@ -533,7 +533,7 @@ class GenerateCode(NodeVisitor):
         target = self.new_temp('call_%s_%d' % (node.name.name, self.const_count))
         node.id = self.const_count
         self.const_count += 1
-        inst = ('call', '@' + node.name.name, target)
+        inst = ('call_'+self.func_and_var_types[node.name.name], '@' + node.name.name, target)
         self.code.append(inst)
 
     def visit_FuncDecl(self, node):
