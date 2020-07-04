@@ -569,7 +569,7 @@ class GenerateCode(NodeVisitor):
             # while index < len(parameters):
             #     index += 1
         # if len(parameters_list) > 0:
-        inst = ('define', '@' + node.decl.name.name + '_' + node.type.names[0], parameters_list)
+        inst = ('define_' + node.type.names[0], '@' + node.decl.name.name, parameters_list)
         # else:
         #     inst = ('define', '@' + node.decl.name.name)
         self.code.append(inst)

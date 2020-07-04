@@ -120,11 +120,10 @@ class Interpreter(object):
                             self._copy_data(self.offset, _len, op[2])
                         self.offset += _len
                 elif opcode.startswith('define'):
-                        i = op[1].rfind('_')
-                        self.globals[op[1][:i]] = self.offset
+                        self.globals[op[1]] = self.offset
                         M[self.offset] = self.pc
                         self.offset += 1
-                        if op[1].startswith('@main'):
+                        if op[1] == '@main':
                             self.start = self.pc
             self.pc += 1
 
@@ -334,7 +333,6 @@ class Interpreter(object):
         self.returns.append(self.pc)
         # jump to the calle function
         if source.startswith('@'):
-            alt_source = source[:source.rfind('_')]
             self.pc = M[self.globals[source]]
         else:
             self.pc = M[self.vars[source]]
@@ -348,8 +346,7 @@ class Interpreter(object):
 
     # Enter the function
     def run_define(self, source, args=None):
-        # source = source.rfind('_')
-        if source.startswith('@main'):
+        if source == '@main':
             # alloc register to the return value but not initialize it.
             # We use the "None" value to check if main function returns void.
             self._alloc_reg('%0')

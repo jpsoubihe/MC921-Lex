@@ -131,7 +131,7 @@ class Block_Visitor(BlockVisitor):
     def divide(self):
         for i in self.instructions:
             # BASIC BLOCK [BEGGINING FUNCTION]
-            if i[0] == 'define':
+            if i[0].startswith('define'):
 
                 function_block = BasicBlock(self.beautify_label(i[1]))
                 self.current_block = function_block

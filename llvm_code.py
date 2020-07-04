@@ -23,9 +23,15 @@ class LLVM_builder():
         Receives the list of blocks from the same function, and initialize them regarding their LLVM function and IRBuilder
         '''
 
-        function = function_blocks[0].instructions[0].split(' ')[1][1:]
-
-        fnty = ir.FunctionType(ir.IntType(32), [ir.IntType(32)])
+        function_decl = function_blocks[0].instructions[0].split(' ')
+        function = function_decl[1][1:]
+        func_type = function_decl[0].split('_')[1]
+        func_args = function_decl[2:]
+        args = []
+        if len(func_args) > 2:
+            for arg_type in range(0, len(func_args) - 1, 2):
+                args.append(to_type(func_args[arg_type]))
+        fnty = ir.FunctionType(to_type(func_type), args)
         ir.Function(self.module, fnty, function)
         self.functions.append(function_blocks[0].instructions[0].split(' ')[1])
 
