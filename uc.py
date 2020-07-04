@@ -11,8 +11,11 @@
 import sys
 from contextlib import contextmanager
 
+from CodeGen import CodeGen
 from dataflow import DataFlow
+from llvm_code import LLVM_builder
 from parser import UCParser
+from uc_block import Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
@@ -155,6 +158,26 @@ class Compiler:
                 _str += f"{_code}\n"
             ir_file.write(_str)
 
+    def _llvm(self, susy, llvm_file):
+        self.gen = CodeGen()
+
+        self.blocks = Block_Visitor(self.gencode)
+        functions = self.blocks.divide()
+
+
+        # self.llvm_code = self.gen.visit(self.ast)
+
+        # ToDo: check a better place for this instruction
+        if not susy and llvm_file is not None:
+            self.llvm_vis = LLVM_builder(self.gen.module)
+            self.llvm_vis.generate_code(functions)
+            for blocks in functions:
+                for block in blocks:
+                    _str = ''
+                    for _code in block.instructions:
+                        _str += f"{_code}\n"
+            self.gen.save_ir(llvm_file)
+
     def _opt(self, susy, opt_file, debug):
         self.opt = DataFlow(self.gencode)
         # self.opt.visit(self.ast)
@@ -162,23 +185,26 @@ class Compiler:
         if not susy and opt_file is not None:
             pass
 
-    def _do_compile(self, susy, ast_file, ir_file, opt_file, opt, debug):
+    def _do_compile(self, susy, ast_file, ir_file, opt_file, llvm_file, opt, debug):
         """ Compiles the code to the given file object. """
         self._parse(susy, ast_file, debug)
         if not errors_reported():
             self._sema(susy, ast_file)
         if not errors_reported():
             self._gencode(susy, ir_file)
+        if not errors_reported():
+            self._llvm(susy, llvm_file)
+
             # if opt:
             #     self._opt(susy, opt_file, debug)
 
-    def compile(self, code, susy, ast_file, ir_file, opt_file, run_ir, optimize, debug):
+    def compile(self, code, susy, ast_file, ir_file, opt_file, llvm_file, run_ir, optimize, debug):
         """ Compiles the given code string """
         self.code = code
         # self.optcode = self.gencode
 
         with subscribe_errors(lambda msg: sys.stderr.write(msg + "\n")):
-            self._do_compile(susy, ast_file, ir_file, opt_file, optimize, debug)
+            self._do_compile(susy, ast_file, ir_file, opt_file, llvm_file, optimize, debug)
             if errors_reported():
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
             # elif run_ir:
@@ -207,8 +233,9 @@ def run_compiler():
     emit_ir = True
     run_ir = True
     susy = False
-    opt = True
+    opt = False
     debug = False
+    llvm = True
     params = sys.argv[1:]
     files = sys.argv[1:]
 
@@ -229,6 +256,8 @@ def run_compiler():
                 opt = True
             elif param == '-debug':
                 debug = True
+            elif llvm == '-llvm':
+                llvm = True
             else:
                 print("Unknown option: %s" % param)
                 sys.exit(1)
@@ -256,6 +285,13 @@ def run_compiler():
             ir_file = open(ir_filename, 'w')
             open_files.append(ir_file)
 
+        llvm_file = None
+        if llvm and not susy:
+            llvm_filename = source_filename[:-3] + '.llvm'
+            print("Outputting the llvmIR to %s." % llvm_filename)
+            llvm_file = open(llvm_filename, 'w')
+            open_files.append(llvm_file)
+
         opt_file = None
         if opt and not susy:
             opt_filename = source_filename[:-3] + '.opt'
@@ -269,7 +305,7 @@ def run_compiler():
 
 
 
-        retval = Compiler().compile(code, susy, ast_file, ir_file, opt_file, run_ir, opt, debug)
+        retval = Compiler().compile(code, susy, ast_file, ir_file, opt_file, llvm_file, run_ir, opt, debug)
         for f in open_files:
             f.close()
         if retval != 0:
