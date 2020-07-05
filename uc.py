@@ -177,6 +177,7 @@ class Compiler:
                     for _code in block.instructions:
                         _str += f"{_code}\n"
             self.gen.save_ir(llvm_file)
+            # self.gen.execute_ir()
 
     def _opt(self, susy, opt_file, debug):
         self.opt = DataFlow(self.gencode)

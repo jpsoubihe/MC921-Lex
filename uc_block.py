@@ -10,7 +10,7 @@ def format_instruction(t):
         if op.startswith("define"):
             return f"\n{op} {t[1]} " + ', '.join(list(' '.join(el) for el in t[2]))
         else:
-            _str = "" if op.startswith('global') else "  "
+            _str = "" #if op.startswith('global') else "  "
             if op == 'jump':
                 _str += f"{op} label {t[1]}"
             elif op == 'cbranch':
@@ -101,7 +101,6 @@ class Block_Visitor(BlockVisitor):
     def find_block(self, label):
         for block in self.blocks_global:
 
-            # ToDo: problems with nested loops (Examle testesP2/t10.uc)
             if block.label.endswith(label) or block.label == label:
                     return block
             # else:
