@@ -103,9 +103,6 @@ class Block_Visitor(BlockVisitor):
 
             if block.label.endswith(label) or block.label == label:
                     return block
-            # else:
-            #     if block.label is label:
-            #         return block
         return None
 
     def add_to_global(self, block):
@@ -128,7 +125,10 @@ class Block_Visitor(BlockVisitor):
         self.blocks_global.append(self.current_block)
 
     def divide(self):
+        repeat = False
         for i in self.instructions:
+            if repeat is True:
+                break
             # BASIC BLOCK [BEGGINING FUNCTION]
             if i[0].startswith('define'):
 
@@ -142,6 +142,9 @@ class Block_Visitor(BlockVisitor):
                 if target_block == None:
                     target_block = BasicBlock(self.beautify_label(i[0]))
                     target_block.predecessors.append(self.current_block)
+                else:
+                    if len(target_block.instructions) > 0:
+                        repeat = True
                 if self.current_block.instructions[len(self.current_block.instructions) - 1][0] != 'jump':
                     self.current_block.next_block = target_block
                 self.current_block = self.add_to_global(target_block)
@@ -156,9 +159,13 @@ class Block_Visitor(BlockVisitor):
                     next_block = BasicBlock(self.beautify_label(i[1]))
                     self.add_to_global(next_block)
                     # blocks_global.append(self.current_block)
+                else:
+                    if len(target_block.instructions) > 0:
+                        repeat = True
                 self.current_block.next_block = next_block
                 next_block.predecessors.append(self.current_block)
                 # self.current_block = next_block
+
 
             elif i[0] == 'cbranch':
                 self.migrate_to_cond(self.current_block.label)

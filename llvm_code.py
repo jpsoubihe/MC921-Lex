@@ -82,6 +82,7 @@ class LLVM_builder():
         inst = instruction.split(' ')
         an = self.find_block(inst[2][1:])
         self.builder.branch(an)
+        a = 2
         # self.builder.position_at_end(an)
 
     def build_cbranch(self, instruction):
@@ -120,8 +121,8 @@ class LLVM_builder():
                 getattr(self, 'build_' + inst[:4])(inst)
             elif inst.startswith('gt_'):
                 getattr(self, 'build_' + inst[:2])(inst)
-            # elif inst.startswith('cbranch'):
-            #     getattr(self, 'build_' + inst[:7])(inst)
+            elif inst.startswith('cbranch'):
+                getattr(self, 'build_' + inst[:7])(inst)
 
     def append_block(self, function, block):
         # if isinstance(block, uc_block.BasicBlock):
