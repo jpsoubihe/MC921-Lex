@@ -1,7 +1,7 @@
 # An example of how to create basic blocks
 
 
-
+terminators = ['jump', 'cbranch', 'return_int', 'return_void', 'return_float', 'return_char']
 def format_instruction(t):
     # Auxiliary method to pretty print the instructions
     # t is the tuple that contains one instruction
@@ -124,11 +124,15 @@ class Block_Visitor(BlockVisitor):
         #     self.blocks_global.pop(self.blocks_global.index(temp_block))
         self.blocks_global.append(self.current_block)
 
+    def resolve(self):
+        pass
+
     def divide(self):
         repeat = False
+        self.resolve()
         for i in self.instructions:
-            if repeat is True:
-                break
+            # if repeat is True:
+            #     break
             # BASIC BLOCK [BEGGINING FUNCTION]
             if i[0].startswith('define'):
 
@@ -158,13 +162,11 @@ class Block_Visitor(BlockVisitor):
                 if next_block is None:
                     next_block = BasicBlock(self.beautify_label(i[1]))
                     self.add_to_global(next_block)
-                    # blocks_global.append(self.current_block)
                 else:
                     if len(target_block.instructions) > 0:
                         repeat = True
                 self.current_block.next_block = next_block
                 next_block.predecessors.append(self.current_block)
-                # self.current_block = next_block
 
 
             elif i[0] == 'cbranch':
@@ -184,7 +186,6 @@ class Block_Visitor(BlockVisitor):
                     self.blocks_global.append(c_block.fall_through)
                 if c_block.fall_through.predecessors.__contains__(c_block) is False:
                     c_block.fall_through.predecessors.append(c_block)
-                # c_block.next_block = [c_block.taken, c_block.fall_through]
                 self.current_block = c_block
 
             if self.current_block is not None:
@@ -192,16 +193,14 @@ class Block_Visitor(BlockVisitor):
         self.current_block.next_block = None
 
         for blcks in self.blocks_global:
-            # if isinstance(blcks,ConditionBlock):
-            #      = blcks.fall_through.next_block blcks.taken.next_block
-            #     blcks.fall_through.next_block.predecessors.append(blcks.taken)
             blcks.predecessors = list(dict.fromkeys(blcks.predecessors))
             for instructions in range(len(blcks.instructions)):
                 blcks.instructions[instructions] = format_instruction(blcks.instructions[instructions])
-            # print(blcks.instructions)
-
         function_blocks = []
         return_blocks = []
+
+        for block in self.blocks_global:
+            self.sanitize_block(block)
 
         for block in self.blocks_global:
             if len(block.instructions) == 0:
@@ -219,3 +218,43 @@ class Block_Visitor(BlockVisitor):
                     function_blocks = [block]
         return_blocks.append(function_blocks)
         return return_blocks
+
+
+    def sanitize_block(self, block):
+        index = 0
+        while index < len(block.instructions):
+            if block.instructions[index].startswith('jump'):
+                if block.instructions[len(block.instructions) - 1] != block.instructions[index]:
+                    lis = []
+                    while index < len(block.instructions):
+                        lis.append(block.instructions.pop())
+                        index += 1
+                    lis.append(block.instructions.pop())
+                    lis.reverse()
+                    block.instructions.append(lis[0])
+                    function_block = BasicBlock(self.beautify_label(lis[0]))
+                    function_block.instructions = lis
+                    self.add_to_global(function_block)
+            elif block.instructions[index].startswith('cbranch'):
+                if block.instructions[len(block.instructions) - 1] != block.instructions[index]:
+                    lis = []
+                    while index < len(block.instructions):
+                        lis.append(block.instructions.pop())
+                        index += 1
+                    lis.append(block.instructions.pop())
+                    lis.reverse()
+                    function_block = BasicBlock(self.beautify_label(lis[0]))
+                    function_block.instructions = lis
+                    self.add_to_global(function_block)
+            if terminators.__contains__(block.instructions[len(block.instructions) - 1].split(' ')[0]) is False:
+
+                if block.next_block is None:
+                    if block.predecessors[0] is not None:
+                        if isinstance(block.predecessors[0], ConditionBlock):
+                            next_block_label = block.predecessors[0].next_block.label
+                else:
+                    next_block_label = block.next_block.label
+                    # if next_block_label.startswith('%') is False:
+                    #     next_block_label = '%' + next_block_label
+                block.instructions.append('jump '+ next_block_label)
+            index += 1

@@ -1,0 +1,39 @@
+; ModuleID = "/home/joao/PycharmProjects/MC921-Lex/CodeGen.py"
+target triple = "x86_64-unknown-linux-gnu"
+target datalayout = ""
+
+declare i32 @"printf"(i8* %".1", ...) 
+
+declare i32 @"scanf"(i8* %".1", ...) 
+
+define i32 @"main"() 
+{
+main:
+  %"0" = alloca i32
+  %"2" = alloca i32
+  store i32 0, i32* %"2"
+  %"4" = alloca i32
+  store i32 0, i32* %"4"
+  %"9" = alloca i32
+  store i32 0, i32* %"9"
+  br label %"6"
+"6":
+  %".6" = icmp slt i32 1, 6
+  br i1 %".6", label %"7", label %"8"
+"8":
+  store i32 0, i32* %"0"
+  br label %"1"
+"1":
+  ret i32 0
+"7":
+  %".10" = icmp sge i32 3, 6
+  br i1 %".10", label %"14", label %"15"
+"14":
+  br label %"8"
+"15":
+  %".13" = add i32 3, 1
+  store i32 0, i32* %"2"
+  %".15" = add i32 1, 1
+  store i32 0, i32* %"9"
+  br label %"6"
+}

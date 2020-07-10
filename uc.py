@@ -16,6 +16,7 @@ from dataflow import DataFlow
 from llvm_code import LLVM_builder
 from parser import UCParser
 from uc_block import Block_Visitor
+from uc_new_block import New_Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
@@ -161,8 +162,10 @@ class Compiler:
     def _llvm(self, susy, llvm_file):
         self.gen = CodeGen()
 
-        self.blocks = Block_Visitor(self.gencode)
-        functions = self.blocks.divide()
+        self.new_blocks = New_Block_Visitor(self.gencode)
+        functions = self.new_blocks.divide()
+        # self.blocks = Block_Visitor(self.gencode)
+        # functions = self.blocks.divide()
 
 
         # self.llvm_code = self.gen.visit(self.ast)

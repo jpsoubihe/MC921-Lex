@@ -145,7 +145,7 @@ class Interpreter(object):
                                 getattr(self, "run_" + opcode)(*op[1:-2], op[2], op[3])
                             elif opcode == 'lt_int':
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
-                            elif opcode == 'add_int':
+                            elif opcode.startswith('add_'):
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
                             elif opcode == 'sub_int':
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
@@ -166,6 +166,8 @@ class Interpreter(object):
                             elif opcode == 'ge_int':
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
                             elif opcode == 'gt_int':
+                                getattr(self, "run_" + opcode)(op[1], op[2], op[3])
+                            elif opcode.startswith('mul_'):
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
                             else:
                                 getattr(self, "run_" + opcode)(op[1], op[2])
