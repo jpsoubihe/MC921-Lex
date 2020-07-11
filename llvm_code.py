@@ -37,36 +37,42 @@ class LLVM_builder():
 
     def build_alloc(self, instruction):
         memory_space = instruction.split(' ')[1]
-        val = self.builder.alloca(ir.IntType(32), name=instruction.split(' ')[1][1:])
+        val = self.builder.alloca(to_type(instruction.split(' ')[0].split('_')[1]), name=instruction.split(' ')[1][1:])
         self.stack[memory_space] = val
-        self.values[memory_space] = val
+        # self.values[memory_space] = val
 
     def build_load(self, instruction):
         i = instruction.split(' ')
-        ptr = self.values.get(i[1])
-        if isinstance(ptr, ir.Constant):
-            self.values[i[2]] = ptr
-        else:
-            self.builder.load(ptr, i[2][1:])
-            self.values[i[2]] = self.values[i[1]]
+        ptr = self.stack.get(i[1])
+        # if isinstance(ptr, ir.Constant):
+        #     self.values[i[2]] = ptr
+        # else:
+        self.builder.load(ptr, i[2][1:])
+        self.values[i[2]] = self.values[i[1]]
+        self.stack[i[2]] = self.stack[i[1]]
+
 
     def build_store(self, instruction):
         i = instruction.split(' ')
         value = self.values.get(i[1])
         ptr = self.stack.get(i[2])
-        self.builder.store(ptr.type.pointee(0), ptr)
+        self.builder.store(value, ptr)
+        self.stack[i[1]] = ptr
         self.values[i[2]] = value
 
     def build_literal(self, instruction):
         inst = instruction.split(' ')
-        const = ir.Constant(to_type(inst[0].split('_')[1]), inst[1])
+        type = to_type(inst[0].split('_')[1])
+        const = ir.Constant(type, inst[1])
+        # supposed to store a pointer to the register... think it's useless for us
+        self.stack[inst[2]] = self.builder.alloca(type, inst[2][1:])
         self.values[inst[2]] = const
 
     def build_add(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
-        self.values[inst[3]] = self.builder.add(lhs, rhs)
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.values[inst[3]] = self.builder.add(self.builder.load(lhs), self.builder.load(rhs))
 
     def build_return(self, instruction):
         i = instruction.split(' ')
@@ -94,17 +100,17 @@ class LLVM_builder():
 
     def build_ge(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
-        self.values[inst[3]] = self.builder.icmp_signed('>=', lhs, rhs)
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.values[inst[3]] = self.builder.icmp_signed('>=', self.builder.load(lhs), self.builder.load(rhs))
 
     def build_lt(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
         # a = self.builder.load(lhs)
         # b = self.builder.load(rhs)
-        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
+        self.values[inst[3]] = self.builder.icmp_signed('<', self.builder.load(lhs), self.builder.load(rhs))
 
     def build_global_int(self, instruction):
         pass
