@@ -47,9 +47,9 @@ class LLVM_builder():
         # if isinstance(ptr, ir.Constant):
         #     self.values[i[2]] = ptr
         # else:
-        self.builder.load(ptr, i[2][1:])
-        self.values[i[2]] = self.values[i[1]]
-        self.stack[i[2]] = self.stack[i[1]]
+        self.stack[i[2]] = self.builder.load(ptr)
+        # self.values[i[2]] = self.values[i[1]]
+        # self.stack[i[2]] = self.stack[i[1]]
 
 
     def build_store(self, instruction):
@@ -65,18 +65,18 @@ class LLVM_builder():
         type = to_type(inst[0].split('_')[1])
         const = ir.Constant(type, inst[1])
         # supposed to store a pointer to the register... think it's useless for us
-        self.stack[inst[2]] = self.builder.alloca(type, inst[2][1:])
+        self.stack[inst[2]] = const
         self.values[inst[2]] = const
 
     def build_add(self, instruction):
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
-        self.values[inst[3]] = self.builder.add(self.builder.load(lhs), self.builder.load(rhs))
+        self.values[inst[3]] = self.builder.add(lhs, rhs)
 
     def build_return(self, instruction):
         i = instruction.split(' ')
-        position = self.values.get(i[1])
+        position = self.stack.get(i[1])
         self.builder.ret(position)
 
     def build_jump(self, instruction):
@@ -102,7 +102,7 @@ class LLVM_builder():
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
-        self.values[inst[3]] = self.builder.icmp_signed('>=', self.builder.load(lhs), self.builder.load(rhs))
+        self.values[inst[3]] = self.builder.icmp_signed('>=', lhs, rhs)
 
     def build_lt(self, instruction):
         inst = instruction.split(' ')
@@ -110,7 +110,7 @@ class LLVM_builder():
         rhs = self.stack.get(inst[2])
         # a = self.builder.load(lhs)
         # b = self.builder.load(rhs)
-        self.values[inst[3]] = self.builder.icmp_signed('<', self.builder.load(lhs), self.builder.load(rhs))
+        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
 
     def build_global_int(self, instruction):
         pass
@@ -189,7 +189,7 @@ class LLVM_builder():
         func_type = function_decl[0].split('_')[1]
         func_args = function_decl[2:]
         args = []
-        if len(func_args) > 2:
+        if len(func_args) >= 2:
             for arg_type in range(0, len(func_args) - 1, 2):
                 args.append(to_type(func_args[arg_type]))
         fnty = ir.FunctionType(to_type(func_type), args)

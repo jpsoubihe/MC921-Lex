@@ -186,7 +186,6 @@ class New_Block_Visitor(BlockVisitor):
                 i = block.instructions.pop()
                 while i != instruction:
                     i = block.instructions.pop()
-                # block.instructions.append(i)
             elif instruction.startswith('jump'):
                 if block.instructions.index(instruction) < len(block.instructions) - 1:
                     alrt = True
