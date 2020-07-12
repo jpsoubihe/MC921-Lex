@@ -63,7 +63,11 @@ class LLVMBuilder:
 
     def build_alloc(self, instruction):
         memory_space = instruction.split(' ')[1]
-        val = self.builder.alloca(to_type(instruction.split(' ')[0].split('_')[1]), name=instruction.split(' ')[1][1:])
+        arraySeparator = instruction.split(' ')[0].split('_')
+        type = to_type(arraySeparator[1])
+        if len(arraySeparator) >= 3:
+            type = ir.ArrayType(type, int(arraySeparator[2]))
+        val = self.builder.alloca(type, name=instruction.split(' ')[1][1:])
         self.stack[memory_space] = val
         # self.values[memory_space] = val
 
@@ -112,10 +116,46 @@ class LLVMBuilder:
 
     def build_global_int(self, instruction):
         # Get or create a (LLVM module-)global constant with *name* or *value*.
+        # if the first part of the instruction has more than two separators, i.e global_int_5, then it's an array
         linkage = 'internal'
         inst = instruction.split(' ')
         type = to_type(inst[0].split('_')[1])
-        val = ir.Constant(type, inst[2])
+        arraySeparator = instruction.split(' ')[0].split('_')
+        value = inst[2]
+        if len(arraySeparator) == 3:
+            type = ir.ArrayType(type, int(arraySeparator[2]))
+            value = []
+            for i in range(2, len(inst)-1):
+                curVal = inst[i].replace(',', '').replace('[', '').replace(']', '')
+                value.append(int(curVal))
+        elif len(arraySeparator) > 3:
+            numberOfArrays = 1
+            for i in range(3, len(arraySeparator)):
+                numberOfArrays *= int(arraySeparator[i])
+            arrayInitializator = list(filter(''.__ne__, instruction.split('[')[3:]))
+            for i, array in enumerate(arrayInitializator):
+                arrayInitializator[i] = array.replace(']', '').split(' ')[:-1]
+                for j, subarray in enumerate(arrayInitializator[i]):
+                    arrayInitializator[i][j] = int(subarray.replace(',', ''))
+            arrays = []
+            for array in arrayInitializator:
+                newArrayType = ir.ArrayType(to_type('int'), len(array))
+                newArray = ir.Constant(newArrayType, array)
+                arrays.append(newArray)
+            for i in reversed(range(3, len(arraySeparator) - 1)):
+                size = int(arraySeparator[i])
+                newArrays = []
+                for I in range(0, len(arrays), size):
+                    currentArrays = []
+                    for j in range(I, I+size):
+                        currentArrays.append(arrays[j])
+                    newArrayType = ir.ArrayType(arrays[0].type, len(currentArrays))
+                    newArray = ir.Constant(newArrayType, currentArrays)
+                    newArrays.append(newArray)
+                arrays = newArrays
+            type = ir.ArrayType(arrays[0].type, len(arrays))
+            value = arrays
+        val = ir.Constant(type, value)
         mod = self.module
         data = ir.GlobalVariable(mod, val.type, name=inst[1][1:])
         data.linkage = linkage
@@ -282,8 +322,9 @@ class LLVMBuilder:
                 getattr(self, "build_" + splitInst[0])(inst)
             else:
                 splitInst = inst.split('_')
-                if splitInst[0] == 'global' and splitInst[1].startswith('string'):
-                    self.build_global_string(inst)
+                if splitInst[0] == 'global':
+                    type = splitInst[1].split(' ')[0]
+                    getattr(self, "build_global_" + type)(inst)
                 else:
                     getattr(self, "build_" + splitInst[0])(inst)
 
