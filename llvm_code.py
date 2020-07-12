@@ -8,7 +8,6 @@ void_type = ir.VoidType
 bool_type = ir.IntType(1)
 char_type = ir.IntType(8)
 
-
 def make_bytearray(buf):
     # Make a byte array constant from *buf*.
     b = bytearray(buf)
@@ -28,8 +27,7 @@ def to_type(type):
     elif type == 'bool':
         return bool_type
 
-
-class LLVMBuilder:
+class LLVM_builder():
 
     def __init__(self, module):
         self.module = module
@@ -48,18 +46,7 @@ class LLVMBuilder:
                     return blck
         return None
 
-    #
-    # Start of method builders
-    #
 
-    def build_add(self, instruction):
-        inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
-        if isinstance(lhs.type, ir.IntType):
-            self.stack[inst[3]] = self.builder.add(lhs, rhs)
-        else:
-            self.stack[inst[3]] = self.builder.fadd(lhs, rhs)
 
     def build_alloc(self, instruction):
         memory_space = instruction.split(' ')[1]
@@ -67,27 +54,52 @@ class LLVMBuilder:
         self.stack[memory_space] = val
         # self.values[memory_space] = val
 
-    def build_and(self, instruction):
-        inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
-        self.stack[inst[3]] = self.builder.and_(lhs, rhs)
-
-    def build_cbranch(self, instruction):
-        inst = instruction.split(' ')
-        cond = self.values.get(inst[1])
-        ifTrue = self.find_block(inst[3][1:])
-        ifFalse = self.find_block(inst[5][1:])
-        self.builder.cbranch(cond, ifTrue, ifFalse)
-
-    def build_div(self, instruction):
-        inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
-        if isinstance(lhs.type, ir.IntType):
-            self.stack[inst[3]] = self.builder.sdiv(lhs, rhs)
+    def build_load(self, instruction):
+        i = instruction.split(' ')
+        if i[1].startswith('@'):
+            g_values = self.module.global_values
+            for variable in g_values:
+                if isinstance(variable, ir.GlobalVariable):
+                    if variable.name == i[1][1:]:
+                        ptr = variable
+                        self.values[i[2]] = variable
         else:
-            self.stack[inst[3]] = self.builder.fdiv(lhs, rhs)
+            ptr = self.stack.get(i[1])
+        # if isinstance(ptr, ir.Constant):
+        #     self.values[i[2]] = ptr
+        # else:
+        self.stack[i[2]] = self.builder.load(ptr)
+        # self.values[i[2]] = self.values[i[1]]
+        # self.stack[i[2]] = self.stack[i[1]]
+
+
+    def build_store(self, instruction):
+        i = instruction.split(' ')
+        value = self.stack.get(i[1])
+        ptr = self.stack.get(i[2])
+        '''
+            The intention here is to maintain the logic implemented even if the operation stores a global value, 
+            then, before we build the operation we check if value can be used in builder.store(value, pointer) 
+        '''
+        if isinstance(value, ir.GlobalVariable):
+            value = value.initializer
+        self.builder.store(value, ptr)
+        self.stack[i[1]] = ptr
+        self.values[i[2]] = value
+
+    def build_literal(self, instruction):
+        inst = instruction.split(' ')
+        type = to_type(inst[0].split('_')[1])
+        const = ir.Constant(type, inst[1])
+        # supposed to store a pointer to the register... think it's useless for us
+        self.stack[inst[2]] = const
+        self.values[inst[2]] = const
+
+    def build_add(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.values[inst[3]] = self.builder.add(lhs, rhs)
 
     def build_eq(self, instruction):
         inst = instruction.split(' ')
@@ -104,43 +116,57 @@ class LLVMBuilder:
         floatvar = self.builder.fptosi(value, ir.IntType(32))
         self.stack[i[2]] = floatvar
 
+
+    def build_div(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        if isinstance(lhs.type, ir.IntType):
+            self.stack[inst[3]] = self.builder.sdiv(lhs, rhs)
+        else:
+            self.stack[inst[3]] = self.builder.fdiv(lhs, rhs)
+
+    def build_and(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.stack[inst[3]] = self.builder.and_(lhs, rhs)
+
+    def build_return(self, instruction):
+        i = instruction.split(' ')
+        position = self.stack.get(i[1])
+        self.builder.ret(position)
+
+    def build_jump(self, instruction):
+        inst = instruction.split(' ')
+        an = self.find_block(inst[len(inst) - 1][1:])
+        self.builder.branch(an)
+
+    def build_cbranch(self, instruction):
+        inst = instruction.split(' ')
+        func = self.functions[len(self.functions) - 1]
+        pred = self.values.get(inst[1])
+        iftrue = self.find_block(inst[3][1:])
+        iffalse = self.find_block(inst[5][1:])
+        self.builder.cbranch(pred, iftrue, iffalse)
+
+    def build_gt(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.values.get(inst[1])
+        rhs = self.values.get(inst[2])
+        self.values[inst[3]] = self.builder.icmp_signed('>', lhs, rhs)
+
     def build_ge(self, instruction):
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
         self.values[inst[3]] = self.builder.icmp_signed('>=', lhs, rhs)
 
-    def build_global_int(self, instruction):
-        # Get or create a (LLVM module-)global constant with *name* or *value*.
-        linkage = 'internal'
-        inst = instruction.split(' ')
-        type = to_type(inst[0].split('_')[1])
-        val = ir.Constant(type, inst[2])
-        mod = self.module
-        data = ir.GlobalVariable(mod, val.type, name=inst[1][1:])
-        data.linkage = linkage
-        data.global_constant = True
-        data.initializer = val
-
-    def build_global_string(self, instruction):
-        inst = instruction.split(' ')
-        name = inst[1][1:]
-        st = inst[2]
-        char_array = make_bytearray((st + "\00").encode("utf-8"))
-        global_value = ir.GlobalVariable(self.module, char_array.type, name)
-        global_value.initializer = char_array
-        global_value.global_constant = True
-
-    def build_gt(self, instruction):
+    def build_lt(self, instruction):
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
-        self.values[inst[3]] = self.builder.icmp_signed('>', lhs, rhs)
-
-    def build_jump(self, instruction):
-        inst = instruction.split(' ')
-        an = self.find_block(inst[len(inst) - 1][1:])
-        self.builder.branch(an)
+        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
 
     def build_le(self, instruction):
         inst = instruction.split(' ')
@@ -151,34 +177,6 @@ class LLVMBuilder:
         else:
             self.values[inst[3]] = self.builder.fcmp_ordered('<=', lhs, rhs)
 
-    def build_literal(self, instruction):
-        inst = instruction.split(' ')
-        type = to_type(inst[0].split('_')[1])
-        const = ir.Constant(type, inst[1])
-        # supposed to store a pointer to the register... think it's useless for us
-        self.stack[inst[2]] = const
-        self.values[inst[2]] = const
-
-    def build_load(self, instruction):
-        i = instruction.split(' ')
-        ptr = None
-        if i[1].startswith('@'):
-            g_values = self.module.global_values
-            for variable in g_values:
-                if isinstance(variable, ir.GlobalVariable):
-                    if variable.name == i[1][1:]:
-                        ptr = variable
-                        self.values[i[2]] = variable
-        else:
-            ptr = self.stack.get(i[1])
-        self.stack[i[2]] = self.builder.load(ptr)
-
-    def build_lt(self, instruction):
-        inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
-        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
-
     def build_mod(self, instruction):
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
@@ -187,6 +185,7 @@ class LLVMBuilder:
             self.stack[inst[3]] = self.builder.srem(lhs, rhs)
         else:
             self.stack[inst[3]] = self.builder.frem(lhs, rhs)
+
 
     def build_mul(self, instruction):
         inst = instruction.split(' ')
@@ -218,33 +217,12 @@ class LLVMBuilder:
         rhs = self.stack.get(inst[2])
         self.stack[inst[3]] = self.builder.or_(lhs, rhs)
 
-    def build_print(self, instruction):
-        print('Not Defined', instruction, self.index)
-
-    def build_return(self, instruction):
-        i = instruction.split(' ')
-        position = self.stack.get(i[1])
-        self.builder.ret(position)
-
     def build_sitofp(self, instruction):
         i = instruction.split(' ')
         value = self.stack.get(i[1])
         floatvar = self.builder.sitofp(value, ir.DoubleType())
         self.stack[i[2]] = floatvar
 
-    def build_store(self, instruction):
-        i = instruction.split(' ')
-        value = self.stack.get(i[1])
-        ptr = self.stack.get(i[2])
-        '''
-            The intention here is to maintain the logic implemented even if the operation stores a global value, 
-            then, before we build the operation we check if value can be used in builder.store(value, pointer) 
-        '''
-        if isinstance(value, ir.GlobalVariable):
-            value = value.initializer
-        self.builder.store(value, ptr)
-        self.stack[i[1]] = ptr
-        self.values[i[2]] = value
 
     def build_sub(self, instruction):
         inst = instruction.split(' ')
@@ -255,9 +233,26 @@ class LLVMBuilder:
         else:
             self.stack[inst[3]] = self.builder.fsub(lhs, rhs)
 
-    #
-    # End of method builders
-    #
+    def build_global_int(self, instruction):
+        # Get or create a (LLVM module-)global constant with *name* or *value*.
+        linkage = 'internal'
+        inst = instruction.split(' ')
+        type = to_type(inst[0].split('_')[1])
+        val = ir.Constant(type, inst[2])
+        mod = self.module
+        data = ir.GlobalVariable(mod, val.type, name=inst[1][1:])
+        data.linkage = linkage
+        data.global_constant = True
+        data.initializer = val
+
+    def build_global_string(self, instruction):
+        inst = instruction.split(' ')
+        name = inst[1][1:]
+        st = inst[2]
+        char_array = make_bytearray((st + "\00").encode("utf-8"))
+        global_value = ir.GlobalVariable(self.module, char_array.type, name)
+        global_value.initializer = char_array
+        global_value.global_constant = True
 
     # maybe this function is unnecessary, let's see
     def _cio(self, fname, format, *target):
@@ -277,15 +272,56 @@ class LLVMBuilder:
                 self.builder = ir.IRBuilder(self.current_block)
             elif inst.startswith('\ndefine'):
                 self.builder = ir.IRBuilder(self.find_block(inst.split(' ')[1][1:]))
-            elif len(inst.split('_')) == 1:
-                splitInst = inst.split(' ')
-                getattr(self, "build_" + splitInst[0])(inst)
+            elif inst.startswith('alloc_'):
+                getattr(self, "build_"+inst[:5])(inst)
+            elif inst.startswith('global_string'):
+                getattr(self, "build_" + inst[:13])(inst)
+            elif inst.startswith('global_'):
+                getattr(self, "build_" + inst[:10])(inst)
+            elif inst.startswith('and_'):
+                getattr(self, "build_" + inst[:3])(inst)
+            elif inst.startswith('store_'):
+                getattr(self, "build_"+inst[:5])(inst)
+            elif inst.startswith('load_'):
+                getattr(self, "build_"+inst[:4])(inst)
+            elif inst.startswith('literal_'):
+                getattr(self, "build_" + inst[:7])(inst)
+            elif inst.startswith('return_'):
+                getattr(self, 'build_' + inst[:6])(inst)
+            elif inst.startswith('jump'):
+                getattr(self, 'build_' + inst[:4])(inst)
+            elif inst.startswith('gt_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('ge_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('lt_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('ne_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('or_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('not_'):
+                getattr(self, 'build_' + inst[:3])(inst)
+            elif inst.startswith('cbranch'):
+                getattr(self, 'build_' + inst[:7])(inst)
+            elif inst.startswith('fptosi_'):
+                getattr(self, 'build_' + inst[:6])(inst)
+            elif inst.startswith('sitofp_'):
+                getattr(self, 'build_' + inst[:6])(inst)
+            elif inst.startswith('add_'):
+                getattr(self, 'build_' + inst[:3])(inst)
+            elif inst.startswith('sub_'):
+                getattr(self, 'build_' + inst[:3])(inst)
+            elif inst.startswith('mod_'):
+                getattr(self, 'build_' + inst[:3])(inst)
+            elif inst.startswith('eq_'):
+                getattr(self, 'build_' + inst[:2])(inst)
+            elif inst.startswith('div_'):
+                getattr(self, 'build_' + inst[:3])(inst)
+            elif inst.startswith('mul_'):
+                getattr(self, 'build_' + inst[:3])(inst)
             else:
-                splitInst = inst.split('_')
-                if splitInst[0] == 'global' and splitInst[1].startswith('string'):
-                    self.build_global_string(inst)
-                else:
-                    getattr(self, "build_" + splitInst[0])(inst)
+                print("DEU RUIM")
 
     def append_block(self, function, block):
         b = self.find_block(block.label)
@@ -302,9 +338,9 @@ class LLVMBuilder:
         elif self.find_block(block.label) is not None:
             return
         elif isinstance(block, uc_new_block.ConditionBlock):
-            b = function.append_basic_block(block.label)
-            self.resolve_block(function, block.taken)
-            self.resolve_block(function, block.fall_through)
+           b = function.append_basic_block(block.label)
+           self.resolve_block(function, block.taken)
+           self.resolve_block(function, block.fall_through)
         else:
             b = function.append_basic_block(block.label)
             self.resolve_block(function, block.next_block)
@@ -312,19 +348,21 @@ class LLVMBuilder:
         self.builder = ir.IRBuilder(b)
 
     def preparation(self, function_blocks):
-        """
+        '''
         Receives the list of blocks from the same function, and initialize them regarding their LLVM function and IRBuilder
-        """
+        '''
 
         function_decl = function_blocks[0].instructions[0].split(' ')
         function = function_decl[1][1:]
         func_type = function_decl[0].split('_')[1]
         func_args = function_decl[2:]
+        args_ty = []
         args = []
         if len(func_args) >= 2:
             for arg_type in range(0, len(func_args) - 1, 2):
-                args.append(to_type(func_args[arg_type]))
-        fnty = ir.FunctionType(to_type(func_type), args)
+                args_ty.append(to_type(func_args[arg_type]))
+                args.append(func_args[arg_type + 1])
+        fnty = ir.FunctionType(to_type(func_type), args_ty)
         fn = ir.Function(self.module, fnty, function)
         self.functions.append(fn)
         return fn
@@ -341,10 +379,12 @@ class LLVMBuilder:
             self.builder = ir.IRBuilder(b)
             self.append_instructions(block.instructions)
 
+
+
     def generate_code(self, function_blocks):
-        """
+        '''
         Receive all blocks on a list of lists and convert the respective instructions to LLVM IR
-        """
+        '''
 
         if function_blocks[0][0].label == 'global':
             self.resolve_global(function_blocks[0])
@@ -373,3 +413,4 @@ class LLVMBuilder:
                     instructions.append(ins)
 
         self.append_instructions(instructions)
+

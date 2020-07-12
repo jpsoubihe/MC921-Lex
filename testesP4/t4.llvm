@@ -1,0 +1,64 @@
+; ModuleID = "/home/joao/PycharmProjects/MC921-Lex/CodeGen.py"
+target triple = "x86_64-unknown-linux-gnu"
+target datalayout = ""
+
+declare i32 @"printf"(i8* %".1", ...) 
+
+declare i32 @"scanf"(i8* %".1", ...) 
+
+@"b" = internal constant i32 3
+@"s" = constant [12 x i8] c"'TajMahal.'\00"
+define i32 @"main"() 
+{
+main:
+  %"0" = alloca i32
+  %"2" = alloca i32
+  store i32 3, i32* %"2"
+  %"4" = alloca i32
+  store i32 6, i32* %"4"
+  %"9" = alloca i32
+  store i32 1, i32* %"9"
+  br label %"6"
+"6":
+  %".6" = load i32, i32* %"4"
+  %".7" = load i32, i32* %"9"
+  %".8" = icmp slt i32 %".7", %".6"
+  br i1 %".8", label %"7", label %"8"
+"8":
+  %".10" = load i32, i32* @"b"
+  store i32 3, i32* %"2"
+  %".12" = load i32, i32* %"2"
+  %".13" = add i32 %".12", 1
+  store i32 %".13", i32* %"2"
+  br label %"29"
+"29":
+  %".28" = load i32, i32* %"2"
+  %".29" = icmp slt i32 %".28", 5
+  br i1 %".29", label %"30", label %"31"
+"7":
+  %".16" = load i32, i32* %"4"
+  %".17" = load i32, i32* %"2"
+  %".18" = icmp sge i32 %".17", %".16"
+  br i1 %".18", label %"14", label %"15"
+"14":
+  br label %"8"
+"15":
+  %".21" = load i32, i32* %"2"
+  %".22" = add i32 %".21", 1
+  store i32 %".22", i32* %"2"
+  %".24" = load i32, i32* %"9"
+  %".25" = add i32 %".24", 1
+  store i32 %".25", i32* %"9"
+  br label %"6"
+"30":
+  %".31" = load i32, i32* %"2"
+  %".32" = add i32 %".31", 1
+  store i32 %".32", i32* %"2"
+  br label %"29"
+"31":
+  store i32 0, i32* %"0"
+  br label %"1"
+"1":
+  %".37" = load i32, i32* %"0"
+  ret i32 %".37"
+}

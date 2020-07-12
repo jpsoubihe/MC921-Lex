@@ -11,9 +11,9 @@
 import sys
 from contextlib import contextmanager
 
+import llvm_code
 from CodeGen import CodeGen
 from dataflow import DataFlow
-from llvm_code import LLVMBuilder
 from parser import UCParser
 from uc_block import Block_Visitor
 from uc_new_block import New_Block_Visitor
@@ -172,7 +172,7 @@ class Compiler:
 
         # ToDo: check a better place for this instruction
         if not susy and llvm_file is not None:
-            self.llvm_vis = LLVMBuilder(self.gen.module)
+            self.llvm_vis = llvm_code.LLVM_builder(self.gen.module)
             self.llvm_vis.generate_code(functions)
             for blocks in functions:
                 for block in blocks:
