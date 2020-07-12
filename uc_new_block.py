@@ -38,6 +38,7 @@ class Block(object):
         self.predecessors = []  # List of predecessors
         self.next_block = None  # Link to the next block
         self.visited = False
+        self.function = None
 
     def append(self, instr):
         self.instructions.append(instr)
@@ -91,6 +92,7 @@ class New_Block_Visitor(BlockVisitor):
         self.index = 0
         self.instructions = instructions
         self.blocks = []
+        self.current_function = 'global'
         self.current_block = None
         self.blocks_global = []
         self.falls = {}
@@ -102,19 +104,20 @@ class New_Block_Visitor(BlockVisitor):
 
     def find_block(self, label):
         for block in self.blocks_global:
-            if block.label == label:
+            if block.label == label and block.function == self.current_function:
                 return block
         return None
 
     def add_to_global(self, block):
         for b in self.blocks_global:
-            if b.label == block.label:
+            if b.label == block.label and block.function == self.current_function:
                 return block
         self.blocks_global.append(block)
         return block
 
     def migrate_to_cond(self, block):
         b = ConditionBlock(self.beautify_label(block.label))
+        b.function = block.function
         self.blocks_global.pop(self.blocks_global.index(block))
         self.blocks_global.append(b)
         return b
@@ -129,11 +132,14 @@ class New_Block_Visitor(BlockVisitor):
 
             if inst[0].startswith('define'):
                 b = self.add_to_global(BasicBlock(inst[1][1:]))
+                b.function = inst[1][1:]
+                self.current_function = b.function
                 self.index += 1
                 block = self.resolve(b)
 
             elif inst[0].startswith('jump'):
                 b = self.add_to_global(BasicBlock(inst[1][1:]))
+                b.function = self.current_function
                 block.next_block = b
                 self.index += 1
                 block = self.resolve(b)
@@ -141,10 +147,13 @@ class New_Block_Visitor(BlockVisitor):
 
             elif inst[0].startswith('cbranch'):
                 b = self.migrate_to_cond(block)
+                b.function = self.current_function
                 block.next_block = b
                 self.index += 1
                 b.taken = self.add_to_global(BasicBlock(inst[2][1:]))
+                b.taken.function = self.current_function
                 b.fall_through = self.add_to_global(BasicBlock(inst[3][1:]))
+                b.fall_through.function = self.current_function
                 self.falls[b.fall_through.label] = b.fall_through.label
                 self.resolve(b.taken)
                 self.resolve(b.fall_through)
@@ -163,6 +172,7 @@ class New_Block_Visitor(BlockVisitor):
                 self.index += 1
 
             elif inst[0].startswith('define'):
+                self.current_function = inst[1][1:]
                 block = self.find_block(inst[1][1:])
                 block.instructions.append(inst)
                 self.index += 1
@@ -217,6 +227,7 @@ class New_Block_Visitor(BlockVisitor):
 
     def divide(self):
         b = self.add_to_global(BasicBlock('global'))
+        b.function = 'global'
         self.current_block = b
         while self.index < len(self.instructions):
             self.resolve(b)
@@ -224,12 +235,13 @@ class New_Block_Visitor(BlockVisitor):
                 b = self.add_to_global(BasicBlock(self.instructions[self.index][0]))
 
         self.index = 0
+        self.current_function = 'global'
         self.populate(self.find_block('global'))
         functions = self.segment_functions()
 
-        for function in functions:
-            for blcks in function:
-                self.sanitize_block(blcks)
+        # for function in functions:
+        #     for blcks in function:
+        #         self.sanitize_block(blcks)
         return functions
 
 

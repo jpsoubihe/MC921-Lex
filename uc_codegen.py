@@ -810,8 +810,9 @@ class GenerateCode(NodeVisitor):
         inst = ('jump', self.new_temp(self.fname.peek() + '_label'))
         self.code.append(inst)
         inst = (self.new_temp(self.fname.peek() + '_label')[1:],)
-        if self.code.__contains__(inst) is False:
-            self.code.append(inst)
+        self.code.append(inst)
+        # if self.code.__contains__(inst) is False:
+        #     self.code.append(inst)
         if node.expr is not None:
             self.visit_LoadLocation(node)
             if self.func_and_var_types[self.fname.peek()] == 'void':
