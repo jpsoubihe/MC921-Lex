@@ -11,3 +11,4 @@ parsetab.py
 *.gv
 *.pdf
 submission/
+*.llvm

@@ -163,6 +163,12 @@ class LLVM_builder():
         # self.values[i[2]] = self.values[i[1]]
         # self.stack[i[2]] = self.stack[i[1]]
 
+    def build_lt(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
+
     def build_mod(self, instruction):
         inst = instruction.split(' ')
         lhs = self.stack.get(inst[1])
@@ -181,11 +187,13 @@ class LLVM_builder():
         else:
             self.stack[inst[3]] = self.builder.fmul(lhs, rhs)
 
-    def build_lt(self, instruction):
-        inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
-        self.values[inst[3]] = self.builder.icmp_signed('<', lhs, rhs)
+    def build_print(self, instruction):
+        print('not defined')
+
+    def build_return(self, instruction):
+        i = instruction.split(' ')
+        position = self.stack.get(i[1])
+        self.builder.ret(position)
 
     def build_sitofp(self, instruction):
         i = instruction.split(' ')
@@ -206,11 +214,6 @@ class LLVM_builder():
         self.builder.store(value, ptr)
         self.stack[i[1]] = ptr
         self.values[i[2]] = value
-
-    def build_return(self, instruction):
-        i = instruction.split(' ')
-        position = self.stack.get(i[1])
-        self.builder.ret(position)
 
     #
     # End of method builders
@@ -234,46 +237,15 @@ class LLVM_builder():
                 self.builder = ir.IRBuilder(self.current_block)
             elif inst.startswith('\ndefine'):
                 self.builder = ir.IRBuilder(self.find_block(inst.split(' ')[1][1:]))
-            elif inst.startswith('alloc_'):
-                getattr(self, "build_"+inst[:5])(inst)
-            elif inst.startswith('global_string'):
-                getattr(self, "build_" + inst[:13])(inst)
-            elif inst.startswith('global_'):
-                getattr(self, "build_" + inst[:10])(inst)
-            elif inst.startswith('store_'):
-                getattr(self, "build_"+inst[:5])(inst)
-            elif inst.startswith('load_'):
-                getattr(self, "build_"+inst[:4])(inst)
-            elif inst.startswith('literal_'):
-                getattr(self, "build_" + inst[:7])(inst)
-            elif inst.startswith('return_'):
-                getattr(self, 'build_' + inst[:6])(inst)
-            elif inst.startswith('jump'):
-                getattr(self, 'build_' + inst[:4])(inst)
-            elif inst.startswith('gt_'):
-                getattr(self, 'build_' + inst[:2])(inst)
-            elif inst.startswith('ge_'):
-                getattr(self, 'build_' + inst[:2])(inst)
-            elif inst.startswith('lt_'):
-                getattr(self, 'build_' + inst[:2])(inst)
-            elif inst.startswith('cbranch'):
-                getattr(self, 'build_' + inst[:7])(inst)
-            elif inst.startswith('add_'):
-                getattr(self, 'build_' + inst[:3])(inst)
-            elif inst.startswith('mod_'):
-                getattr(self, 'build_' + inst[:3])(inst)
-            elif inst.startswith('mul_'):
-                getattr(self, 'build_' + inst[:3])(inst)
-            elif inst.startswith('sitofp'):
-                getattr(self, 'build_' + inst[:6])(inst)
-            elif inst.startswith('div_'):
-                getattr(self, 'build_' + inst[:3])(inst)
-            elif inst.startswith('eq_'):
-                getattr(self, 'build_' + inst[:2])(inst)
-            elif inst.startswith('fptosi'):
-                getattr(self, 'build_' + inst[:6])(inst)
+            elif len(inst.split('_')) == 1:
+                splitInst = inst.split(' ')
+                getattr(self, "build_" + splitInst[0])(inst)
             else:
-                print("DEU RUIM")
+                splitInst = inst.split('_')
+                if splitInst[0] == 'global' and splitInst[1].startswith('string'):
+                    self.build_global_string(inst)
+                else:
+                    getattr(self, "build_" + splitInst[0])(inst)
 
     def append_block(self, function, block):
         b = self.find_block(block.label)
