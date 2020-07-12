@@ -36,6 +36,7 @@ class LLVM_builder():
         self.current_block = None
         self.current_function = None
         self.builder = None
+        self.params = []
         self.functions = []
         self.values = {}
         self.stack = {}
@@ -67,14 +68,12 @@ class LLVM_builder():
         memory_space = instruction.split(' ')[1]
         type = to_type(instruction.split(' ')[0].split('_')[1])
         if isinstance(type, ir.VoidType) is False:
+            arraySeparator = instruction.split(' ')[0].split('_')
+            type = to_type(arraySeparator[1])
+            if len(arraySeparator) >= 3:
+                type = ir.ArrayType(type, int(arraySeparator[2]))
             val = self.builder.alloca(type, name=instruction.split(' ')[1][1:])
             self.stack[memory_space] = val
-        arraySeparator = instruction.split(' ')[0].split('_')
-        type = to_type(arraySeparator[1])
-        if len(arraySeparator) >= 3:
-            type = ir.ArrayType(type, int(arraySeparator[2]))
-        val = self.builder.alloca(type, name=instruction.split(' ')[1][1:])
-        self.stack[memory_space] = val
         # self.values[memory_space] = val
 
     def build_load(self, instruction):
@@ -137,9 +136,11 @@ class LLVM_builder():
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
         if lhs.type == float_type:
-            self.values[inst[3]] = self.builder.fadd(lhs, rhs)
+            self.stack[inst[3]] = self.builder.fadd(lhs, rhs)
+            self.values[inst[3]] = self.stack[inst[3]]
         else:
-            self.values[inst[3]] = self.builder.add(lhs, rhs)
+            self.stack[inst[3]] = self.builder.add(lhs, rhs)
+            self.values[inst[3]] = self.stack[inst[3]]
 
     def build_eq(self, instruction):
         inst = instruction.split(' ')
@@ -179,11 +180,14 @@ class LLVM_builder():
 
     def build_return(self, instruction):
         i = instruction.split(' ')
-        if instruction == '  return_void':
+        if instruction == 'return_void':
             self.builder.ret_void()
         else:
             position = self.stack.get(i[1])
-            self.builder.ret(position)
+            if self.current_block.is_terminated:
+                pass
+            else:
+                self.builder.ret(position)
 
     def build_jump(self, instruction):
         inst = instruction.split(' ')
@@ -239,7 +243,11 @@ class LLVM_builder():
             self.values[inst[3]] = self.stack[inst[3]]
 
     def build_call(self, instruction):
-        pass
+        inst = instruction.split(' ')
+        function_name = inst[1][1:]
+        target = inst[2]
+        self.stack[target] = self.builder.call(self.find_function(function_name), self.params)
+        self.params = []
 
     def build_mul(self, instruction):
         inst = instruction.split(' ')
@@ -280,6 +288,10 @@ class LLVM_builder():
         floatvar = self.builder.sitofp(value, ir.DoubleType())
         self.stack[i[2]] = floatvar
 
+    def build_param(self, instruction):
+        inst = instruction.split(' ')
+        parameter = self.stack[inst[1]]
+        self.params.append(parameter)
 
     def build_sub(self, instruction):
         inst = instruction.split(' ')
@@ -303,6 +315,7 @@ class LLVM_builder():
         data.linkage = linkage
         data.global_constant = True
         data.initializer = val
+        self.stack[inst[1]] = val
 
     def build_global_string(self, instruction):
         inst = instruction.split(' ')
@@ -350,6 +363,8 @@ class LLVM_builder():
     def append_instructions(self, instructions):
         for inst in instructions:
             if len(inst.split(' ')) == 1:
+                if inst == 'return_void':
+                    self.build_return(inst)
                 self.current_block = self.find_block(inst, self.current_function)
                 self.builder = ir.IRBuilder(self.current_block)
             elif inst.startswith('\ndefine'):
