@@ -29,7 +29,7 @@ def to_type(type):
         return bool_type
 
 
-class LLVM_builder():
+class LLVMBuilder:
 
     def __init__(self, module):
         self.module = module
@@ -67,13 +67,18 @@ class LLVM_builder():
         self.stack[memory_space] = val
         # self.values[memory_space] = val
 
+    def build_and(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.stack[inst[3]] = self.builder.and_(lhs, rhs)
+
     def build_cbranch(self, instruction):
         inst = instruction.split(' ')
-        func = self.functions[len(self.functions) - 1]
-        pred = self.values.get(inst[1])
-        iftrue = self.find_block(inst[3][1:])
-        iffalse = self.find_block(inst[5][1:])
-        self.builder.cbranch(pred, iftrue, iffalse)
+        cond = self.values.get(inst[1])
+        ifTrue = self.find_block(inst[3][1:])
+        ifFalse = self.find_block(inst[5][1:])
+        self.builder.cbranch(cond, ifTrue, ifFalse)
 
     def build_div(self, instruction):
         inst = instruction.split(' ')
@@ -137,6 +142,15 @@ class LLVM_builder():
         an = self.find_block(inst[len(inst) - 1][1:])
         self.builder.branch(an)
 
+    def build_le(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        if isinstance(lhs.type, ir.IntType):
+            self.values[inst[3]] = self.builder.icmp_signed('<=', lhs, rhs)
+        else:
+            self.values[inst[3]] = self.builder.fcmp_ordered('<=', lhs, rhs)
+
     def build_literal(self, instruction):
         inst = instruction.split(' ')
         type = to_type(inst[0].split('_')[1])
@@ -147,6 +161,7 @@ class LLVM_builder():
 
     def build_load(self, instruction):
         i = instruction.split(' ')
+        ptr = None
         if i[1].startswith('@'):
             g_values = self.module.global_values
             for variable in g_values:
@@ -156,12 +171,7 @@ class LLVM_builder():
                         self.values[i[2]] = variable
         else:
             ptr = self.stack.get(i[1])
-        # if isinstance(ptr, ir.Constant):
-        #     self.values[i[2]] = ptr
-        # else:
         self.stack[i[2]] = self.builder.load(ptr)
-        # self.values[i[2]] = self.values[i[1]]
-        # self.stack[i[2]] = self.stack[i[1]]
 
     def build_lt(self, instruction):
         inst = instruction.split(' ')
@@ -187,8 +197,29 @@ class LLVM_builder():
         else:
             self.stack[inst[3]] = self.builder.fmul(lhs, rhs)
 
+    def build_ne(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        if isinstance(lhs.type, ir.IntType):
+            self.values[inst[3]] = self.builder.icmp_signed('!=', lhs, rhs)
+        else:
+            self.values[inst[3]] = self.builder.fcmp_ordered('!=', lhs, rhs)
+
+    def build_not(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.stack[inst[3]] = self.builder.not_(lhs, rhs)
+
+    def build_or(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        self.stack[inst[3]] = self.builder.or_(lhs, rhs)
+
     def build_print(self, instruction):
-        print('not defined')
+        print('Not Defined', instruction, self.index)
 
     def build_return(self, instruction):
         i = instruction.split(' ')
@@ -214,6 +245,15 @@ class LLVM_builder():
         self.builder.store(value, ptr)
         self.stack[i[1]] = ptr
         self.values[i[2]] = value
+
+    def build_sub(self, instruction):
+        inst = instruction.split(' ')
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
+        if isinstance(lhs.type, ir.IntType):
+            self.stack[inst[3]] = self.builder.sub(lhs, rhs)
+        else:
+            self.stack[inst[3]] = self.builder.fsub(lhs, rhs)
 
     #
     # End of method builders
@@ -262,9 +302,9 @@ class LLVM_builder():
         elif self.find_block(block.label) is not None:
             return
         elif isinstance(block, uc_new_block.ConditionBlock):
-           b = function.append_basic_block(block.label)
-           self.resolve_block(function, block.taken)
-           self.resolve_block(function, block.fall_through)
+            b = function.append_basic_block(block.label)
+            self.resolve_block(function, block.taken)
+            self.resolve_block(function, block.fall_through)
         else:
             b = function.append_basic_block(block.label)
             self.resolve_block(function, block.next_block)
@@ -272,9 +312,9 @@ class LLVM_builder():
         self.builder = ir.IRBuilder(b)
 
     def preparation(self, function_blocks):
-        '''
+        """
         Receives the list of blocks from the same function, and initialize them regarding their LLVM function and IRBuilder
-        '''
+        """
 
         function_decl = function_blocks[0].instructions[0].split(' ')
         function = function_decl[1][1:]
@@ -301,12 +341,10 @@ class LLVM_builder():
             self.builder = ir.IRBuilder(b)
             self.append_instructions(block.instructions)
 
-
-
     def generate_code(self, function_blocks):
-        '''
+        """
         Receive all blocks on a list of lists and convert the respective instructions to LLVM IR
-        '''
+        """
 
         if function_blocks[0][0].label == 'global':
             self.resolve_global(function_blocks[0])
@@ -335,4 +373,3 @@ class LLVM_builder():
                     instructions.append(ins)
 
         self.append_instructions(instructions)
-
