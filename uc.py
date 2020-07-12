@@ -164,11 +164,6 @@ class Compiler:
 
         self.new_blocks = New_Block_Visitor(self.gencode)
         functions = self.new_blocks.divide()
-        # self.blocks = Block_Visitor(self.gencode)
-        # functions = self.blocks.divide()
-
-
-        # self.llvm_code = self.gen.visit(self.ast)
 
         # ToDo: check a better place for this instruction
         if not susy and llvm_file is not None:

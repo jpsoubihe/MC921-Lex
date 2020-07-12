@@ -202,6 +202,9 @@ class Interpreter(object):
             except IndexError:
                 break
 
+    def run_alloc_void(self, susa):
+        pass
+
     def _alloc_reg(self, target):
         # Alloc space in memory and save the offset in the dictionary
         # for new vars or temporaries, only.
