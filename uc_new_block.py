@@ -24,7 +24,7 @@ def format_instruction(t):
                     _str += f"{_el} "
             return _str
     elif op == 'print_void' or op == 'return_void':
-        return f"  {op}"
+        return f"{op}"
     else:
         return f"{op}"
 
@@ -196,7 +196,7 @@ class New_Block_Visitor(BlockVisitor):
                 i = block.instructions.pop()
                 while i != instruction:
                     i = block.instructions.pop()
-            elif instruction.startswith('jump'):
+            elif instruction.startswith('jump') or instruction.startswith('return'):
                 if block.instructions.index(instruction) < len(block.instructions) - 1:
                     alrt = True
 
@@ -239,9 +239,9 @@ class New_Block_Visitor(BlockVisitor):
         self.populate(self.find_block('global'))
         functions = self.segment_functions()
 
-        # for function in functions:
-        #     for blcks in function:
-        #         self.sanitize_block(blcks)
+        for function in functions:
+            for blcks in function:
+                self.sanitize_block(blcks)
         return functions
 
 
