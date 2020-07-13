@@ -133,14 +133,15 @@ class LLVM_builder():
         array = self.stack.get(inst[1])
         pos = self.values.get(inst[2])
         base = ir.Constant(pos.type, 0)
+        base = ir.Constant(pos.type, 0)
         dest = inst[3]
         gep = self.builder.gep(array, [base, pos])
         self.stack[inst[3]] = gep
 
     def build_eq(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.icmp_signed('==', lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
@@ -374,8 +375,8 @@ class LLVM_builder():
 
     def build_sub(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.sub(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
