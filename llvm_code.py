@@ -65,8 +65,8 @@ class LLVM_builder():
 
     def build_add(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.values.get(inst[1])
-        rhs = self.values.get(inst[2])
+        lhs = self.stack.get(inst[1])
+        rhs = self.stack.get(inst[2])
         if lhs.type == float_type:
             self.stack[inst[3]] = self.builder.fadd(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
@@ -236,17 +236,15 @@ class LLVM_builder():
         rhs = self.stack.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.icmp_signed('<=', lhs, rhs)
-            self.values[inst[3]] = self.stack[inst[3]]
         else:
             self.stack[inst[3]] = self.builder.fcmp_ordered('<=', lhs, rhs)
-            self.values[inst[3]] = self.stack[inst[3]]
 
     def build_literal(self, instruction):
         inst = instruction.split(' ')
         type = to_type(inst[0].split('_')[1])
         const = ir.Constant(type, inst[1])
         self.values[inst[2]] = const
-        # self.stack[inst[2]] = const
+        self.stack[inst[2]] = const
 
     def build_lt(self, instruction):
         inst = instruction.split(' ')
@@ -281,8 +279,10 @@ class LLVM_builder():
         lhs = self.stack.get(inst[1])
         rhs = self.stack.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
+            # if rhs is None:
+            #     rhs = self.values.get(inst[2])
             self.stack[inst[3]] = self.builder.srem(lhs, rhs)
-            self.values[inst[3]] = self.stack[inst[3]]
+            # self.values[inst[3]] = self.stack[inst[3]]
         else:
             self.stack[inst[3]] = self.builder.frem(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
@@ -300,10 +300,8 @@ class LLVM_builder():
         rhs = self.stack.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.mul(lhs, rhs)
-            self.values[inst[3]] = self.stack[inst[3]]
         else:
             self.stack[inst[3]] = self.builder.fmul(lhs, rhs)
-            self.values[inst[3]] = self.stack[inst[3]]
 
     def build_ne(self, instruction):
         inst = instruction.split(' ')
@@ -359,6 +357,8 @@ class LLVM_builder():
                 for arg in f.args:
                     if arg.name == i[1][1:]:
                         value = arg
+            if value is None:
+                value = self.stack[i[1]]
         candidate = self.builder.store(value, ptr)
         if candidate.type == void_type:
             self.stack[i[2]] = ptr
@@ -400,7 +400,7 @@ class LLVM_builder():
     def _build_print(self, val_type, target):
         if target:
             # get the object assigned to target
-            _value = self.stack[target]
+            _value = self.values[target]
             if val_type == 'int':
                 self._cio('printf', '%d', _value)
             elif val_type == 'float':
