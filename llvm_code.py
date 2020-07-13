@@ -132,14 +132,15 @@ class LLVM_builder():
         inst = instruction.split(' ')
         array = self.stack.get(inst[1])
         pos = self.values.get(inst[2])
+        base = ir.Constant(pos.type, 0)
         dest = inst[3]
-        gep = self.builder.gep(array, [pos], name=dest)
+        gep = self.builder.gep(array, [base, pos])
         self.stack[inst[3]] = gep
 
     def build_eq(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
+        lhs = self.values.get(inst[1])
+        rhs = self.values.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.icmp_signed('==', lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
@@ -265,8 +266,6 @@ class LLVM_builder():
             ptr = self.stack.get(i[1])
         if isinstance(ptr, ir.Constant):
             self.values[i[2]] = ptr
-        if isinstance(ptr, ir.GEPInstr):
-            print(1)
         self.stack[i[2]] = self.builder.load(ptr)
         if self.values.keys().__contains__(i[1]):
             self.values[i[2]] = self.values[i[1]]
@@ -375,8 +374,8 @@ class LLVM_builder():
 
     def build_sub(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
+        lhs = self.values.get(inst[1])
+        rhs = self.values.get(inst[2])
         if isinstance(lhs.type, ir.IntType):
             self.stack[inst[3]] = self.builder.sub(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
