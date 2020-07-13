@@ -214,9 +214,9 @@ class Compiler:
                     self.speedup = len(self.gencode) / len(self.gencode)
                     sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
                                      (len(self.gencode), len(self.gencode), self.speedup))
-                if run_ir:
-                    self.vm = Interpreter()
-                    self.vm.run(self.gencode)
+                # if run_ir:
+                #     self.vm = Interpreter()
+                #     # self.vm.run(self.gencode)
                 return 0
         return 0
 
