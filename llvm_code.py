@@ -65,8 +65,8 @@ class LLVM_builder():
 
     def build_add(self, instruction):
         inst = instruction.split(' ')
-        lhs = self.stack.get(inst[1])
-        rhs = self.stack.get(inst[2])
+        lhs = self.values.get(inst[1])
+        rhs = self.values.get(inst[2])
         if lhs.type == float_type:
             self.stack[inst[3]] = self.builder.fadd(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
@@ -80,8 +80,17 @@ class LLVM_builder():
         if isinstance(type, ir.VoidType) is False:
             arraySeparator = instruction.split(' ')[0].split('_')
             type = to_type(arraySeparator[1])
-            if len(arraySeparator) >= 3:
-                type = ir.ArrayType(type, int(arraySeparator[2]))
+            if len(arraySeparator) == 3:
+                if arraySeparator[1] == 'char':
+                    type = ir.ArrayType(type, int(arraySeparator[2]) + 1)
+                else:
+                    type = ir.ArrayType(type, int(arraySeparator[2]))
+            elif len(arraySeparator) > 3:
+                numberOfArrays = 1
+                for i in reversed(range(3, len(arraySeparator))):
+                    numberOfArrays *= int(arraySeparator[i])
+                    type = ir.ArrayType(type, int(arraySeparator[i]))
+                type = ir.ArrayType(type, int(arraySeparator[2])/numberOfArrays)
             val = self.builder.alloca(type, name=instruction.split(' ')[1][1:])
             self.stack[memory_space] = val
         # self.values[memory_space] = val
@@ -118,6 +127,14 @@ class LLVM_builder():
         else:
             self.stack[inst[3]] = self.builder.fdiv(lhs, rhs)
             self.values[inst[3]] = self.stack[inst[3]]
+
+    def build_elem(self, instruction):
+        inst = instruction.split(' ')
+        array = self.stack.get(inst[1])
+        pos = self.values.get(inst[2])
+        dest = inst[3]
+        gep = self.builder.gep(array, [pos], name=dest)
+        self.stack[inst[3]] = gep
 
     def build_eq(self, instruction):
         inst = instruction.split(' ')
@@ -160,7 +177,7 @@ class LLVM_builder():
             numberOfArrays = 1
             for i in range(3, len(arraySeparator)):
                 numberOfArrays *= int(arraySeparator[i])
-            arrayInitializator = list(filter(''.__ne__, instruction.split('[')[3:]))
+            arrayInitializator = list(filter(''.__ne__, instruction.split('[')[1:]))
             for i, array in enumerate(arrayInitializator):
                 arrayInitializator[i] = array.replace(']', '').split(' ')[:-1]
                 for j, subarray in enumerate(arrayInitializator[i]):
@@ -189,17 +206,18 @@ class LLVM_builder():
         data.linkage = linkage
         data.global_constant = True
         data.initializer = val
-        self.stack[inst[1]] = val
+        self.stack[inst[1]] = data
+        self.values[inst[1]] = val
 
     def build_global_string(self, instruction):
         inst = instruction.split(' ')
         name = inst[1][1:]
         st = inst[2]
-        char_array = make_bytearray((st + "\00").encode("utf-8"))
+        char_array = make_bytearray((st.replace("'", '') + "\00").encode("utf-8"))
         global_value = ir.GlobalVariable(self.module, char_array.type, name)
         global_value.initializer = char_array
         global_value.global_constant = True
-        self.stack[inst[1]] = char_array
+        self.values[inst[1]] = char_array
 
     def build_gt(self, instruction):
         inst = instruction.split(' ')
@@ -228,7 +246,7 @@ class LLVM_builder():
         type = to_type(inst[0].split('_')[1])
         const = ir.Constant(type, inst[1])
         self.values[inst[2]] = const
-        self.stack[inst[2]] = const
+        # self.stack[inst[2]] = const
 
     def build_lt(self, instruction):
         inst = instruction.split(' ')
@@ -249,10 +267,13 @@ class LLVM_builder():
             ptr = self.stack.get(i[1])
         if isinstance(ptr, ir.Constant):
             self.values[i[2]] = ptr
-        # else:
+        if isinstance(ptr, ir.GEPInstr):
+            print(1)
         self.stack[i[2]] = self.builder.load(ptr)
         if self.values.keys().__contains__(i[1]):
             self.values[i[2]] = self.values[i[1]]
+        elif isinstance(ptr, ir.GEPInstr):
+            self.values[i[2]] = self.stack[i[2]]
         # self.stack[i[2]] = self.stack[i[1]]
 
     def build_mod(self, instruction):
@@ -333,10 +354,11 @@ class LLVM_builder():
                         value = arg
         candidate = self.builder.store(value, ptr)
         if candidate.type == void_type:
-            self.stack[i[1]] = ptr
+            self.stack[i[2]] = ptr
         else:
             self.stack[i[1]] = candidate
         self.values[i[2]] = value
+        # self.stack[i[2]] = candidate
 
     def build_sitofp(self, instruction):
         i = instruction.split(' ')
