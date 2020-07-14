@@ -13,14 +13,10 @@ from contextlib import contextmanager
 
 import llvm_code
 from CodeGen import CodeGen
-from dataflow import DataFlow
 from parser import UCParser
-from uc_block import Block_Visitor
-from uc_new_block import New_Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
-
 from uc_new_block import New_Block_Visitor
 
 """
@@ -149,11 +145,12 @@ class Compiler:
 
 
     def _opt(self):
-        self.opt = DataFlow(self.args.cfg, self.args.debug)
-        self.opt.visit(self.ast)
-        self.optcode = self.opt.code
-        if not self.args.susy and self.opt_file is not None:
-            self.opt.show(buf=self.opt_file)
+        pass
+        # self.opt = DataFlow(self.args.cfg, self.args.debug)
+        # self.opt.visit(self.ast)
+        # self.optcode = self.opt.code
+        # if not self.args.susy and self.opt_file is not None:
+        #     self.opt.show(buf=self.opt_file)
 
     def _llvm(self):
         self.gen = CodeGen()
@@ -161,26 +158,10 @@ class Compiler:
         functions = self.new_blocks.divide()
         self.llvm_vis = llvm_code.LLVM_builder(self.gen.module)
         self.llvm_vis.generate_code(functions)
-        # for blocks in functions:
-        #     for block in blocks:
-        #         _str = ''
-        #         for _code in block.instructions:
-        #             _str += f"{_code}\n"
-        # self.gen.execute_ir(self.llvm_opt_file)
         if not self.args.susy and self.llvm_file is not None:
             self.gen.save_ir(self.llvm_file)
         if self.run:
             self.gen.execute_ir(self.args.llvm_opt, self.llvm_opt_file)
-
-
-
-        # for blocks in functions:
-        #     for block in blocks:
-        #         _str = ''
-        #         for _code in block.instructions:
-        #             _str += f"{_code}\n"
-        # self.gen.save_ir(self.llvm_file)
-        # self.gen.execute_ir()
 
     def _do_compile(self):
         """ Compiles the code to the given source file. """

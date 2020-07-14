@@ -1,6 +1,6 @@
 from llvmlite import ir
 
-from uc_block import BlockVisitor
+from uc_new_block import BlockVisitor
 
 
 def make_bytearray(buf):
