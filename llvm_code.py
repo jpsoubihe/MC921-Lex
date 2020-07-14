@@ -23,7 +23,7 @@ def to_type(type):
         return float_type
     elif type == 'void':
         return void_type
-    elif type == 'char':
+    elif type == 'char' or 'string':
         return char_type
     elif type == 'bool':
         return bool_type

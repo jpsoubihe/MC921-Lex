@@ -1,21 +1,15 @@
+
 from llvmlite import ir, binding
 from ctypes import CFUNCTYPE, c_int
 
-
 class CodeGen():
     def __init__(self):
-        # binding allows us to interact with LLVM functionalities, mirroring a small subset of these API
         self.binding = binding
         self.binding.initialize()
-        # Must be called once before doing any code generation.
         self.binding.initialize_native_target()
-        # Initialize the native assembly printer.
         self.binding.initialize_native_asmprinter()
 
-        # a compile unit for LLVM
         self.module = ir.Module(name=__file__)
-        # Return a string representing the default target triple that LLVM is configured to produce code for.
-        # This represents the host’s architecture and platform.
         self.module.triple = self.binding.get_default_triple()
 
         self._create_execution_engine()
@@ -67,8 +61,33 @@ class CodeGen():
     def save_ir(self, outputfile):
         outputfile.write(str(self.module))
 
-    def execute_ir(self):
+    def execute_ir(self, opt, opt_file):
         mod = self._compile_ir()
+
+        if opt:
+            # apply some optimization passes on module
+            pmb = self.binding.create_pass_manager_builder()
+            pm = self.binding.create_module_pass_manager()
+
+            pmb.opt_level = 0;
+            if opt == 'ctm' or opt == 'all':
+                # Sparse conditional constant propagation and merging
+                pm.add_sccp_pass()
+                # Merges duplicate global constants together
+                pm.add_constant_merge_pass()
+                # Combine inst to form fewer, simple inst
+                # This pass also does algebraic simplification
+                pm.add_instruction_combining_pass()
+            if opt == 'dce' or opt == 'all':
+                pm.add_dead_code_elimination_pass()
+            if opt == 'cfg' or opt  == 'all':
+                # Performs dead code elimination and basic block merging
+                pm.add_cfg_simplification_pass()
+
+            pmb.populate(pm)
+            pm.run(mod)
+            opt_file.write(str(mod))
+
         # Obtain a pointer to the compiled 'main' - it's the address of its JITed code in memory.
         main_ptr = self.engine.get_function_address('main')
         # To convert an address to an actual callable thing we have to use
@@ -77,3 +96,4 @@ class CodeGen():
         # Now 'main_function' is an actual callable we can invoke
         res = main_function()
         # print(res)
+
