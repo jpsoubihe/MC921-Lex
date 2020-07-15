@@ -159,6 +159,8 @@ class Interpreter(object):
                                 getattr(self, "run_" + opcode)(op[1])
                             elif opcode == 'and_bool':
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
+                            elif opcode == 'le_int':
+                                getattr(self, "run_" + opcode)(op[1], op[2], op[3])
                             elif opcode == 'mod_int':
                                 getattr(self, "run_" + opcode)(op[1], op[2], op[3])
                             elif opcode == 'div_int':
@@ -172,7 +174,7 @@ class Interpreter(object):
                             else:
                                 getattr(self, "run_" + opcode)(op[1], op[2])
                         else:
-                            if opcode == 'return_void':
+                            if opcode == 'return_void' or opcode == 'print_void':
                                 getattr(self, "run_" + opcode)
                             else:
                                 getattr(self, "run_" + opcode)(op[1:])
@@ -443,7 +445,7 @@ class Interpreter(object):
     run_print_bool = run_print_int
 
     def run_print_void(self):
-        print(end="\n", flush=True)
+        print()
 
     def _read_int(self):
         global inputline

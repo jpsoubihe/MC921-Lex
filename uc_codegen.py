@@ -110,7 +110,7 @@ class GenerateCode(NodeVisitor):
 
     def visit_ArrayDecl(self, node):
         if node.dim is not None:
-            str_info = self.func_and_var_types['array%d' % (self.const_count - 1)]
+            str_info = self.func_and_var_types['array%d' % (max(0, self.const_count - 1))]
         else:
             str_info = self.func_and_var_types['.str.%d' % (self.str_count - 1)]
         inst = ('alloc_' + str_info['type'] + str_info['size'], node.id)
@@ -251,7 +251,10 @@ class GenerateCode(NodeVisitor):
             elif isinstance(node.rvalue.left, ast.ID):
                 type = self.func_and_var_types[node.rvalue.left.name]
             elif isinstance(node.rvalue.left, ast.BinaryOp):
-                type = self.func_and_var_types[node.rvalue.left.left.name]
+                if isinstance(node.rvalue.left.left, ast.Constant):
+                    type = node.rvalue.left.left.type
+                else:
+                    type = self.func_and_var_types[node.rvalue.left.left.name]
             elif isinstance(node.rvalue.left, ast.ArrayRef):
                 type = self.func_and_var_types[node.rvalue.left.name.name.name]['type']
             if node.op in oper_ops:
@@ -583,12 +586,22 @@ class GenerateCode(NodeVisitor):
 
     def visit_GlobalDecl(self, node):
         for decl in node.decls:
+            vars = []
             if isinstance(decl.type, ast.FuncDecl):
                 type = decl.type.type.type.names[0]
                 self.func_and_var_types[decl.name.name] = type
                 value = decl.name.name
                 target = self.new_global(decl.name.name)
-                inst = ('global_' + type, target, value)
+                if decl.type.args is not None:
+                    args = decl.type.args
+                    if isinstance(args, ast.ParamList):
+                        for param in args.params:
+                            vars.append((param.name.name, param.type.type.names[0]))
+                            tes = 0
+                if len(vars) <= 1:
+                    inst = ('global_' + type, target, value)
+                else:
+                    inst = ('global_' + type, target, vars)
                 self.global_code.append(inst)
             elif isinstance(decl.type, ast.ArrayDecl):
                 if isinstance(decl.init, ast.Constant):

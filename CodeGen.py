@@ -69,7 +69,7 @@ class CodeGen():
             pmb = self.binding.create_pass_manager_builder()
             pm = self.binding.create_module_pass_manager()
 
-            pmb.opt_level = 0;
+            pmb.opt_level = 0
             if opt == 'ctm' or opt == 'all':
                 # Sparse conditional constant propagation and merging
                 pm.add_sccp_pass()
@@ -80,7 +80,7 @@ class CodeGen():
                 pm.add_instruction_combining_pass()
             if opt == 'dce' or opt == 'all':
                 pm.add_dead_code_elimination_pass()
-            if opt == 'cfg' or opt  == 'all':
+            if opt == 'cfg' or opt == 'all':
                 # Performs dead code elimination and basic block merging
                 pm.add_cfg_simplification_pass()
 
