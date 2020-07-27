@@ -129,6 +129,8 @@ class New_Block_Visitor(BlockVisitor):
                 if self.falls.keys().__contains__(inst[0]):
                     self.falls.pop(inst[0])
                     return block
+                else:
+                    block = self.find_block(inst[0])
 
             if inst[0].startswith('define'):
                 b = self.add_to_global(BasicBlock(inst[1][1:]))
@@ -138,7 +140,9 @@ class New_Block_Visitor(BlockVisitor):
                 block = self.resolve(b)
 
             elif inst[0].startswith('jump'):
-                b = self.add_to_global(BasicBlock(inst[1][1:]))
+                b = self.find_block(inst[1][1:])
+                if b is None:
+                    b = self.add_to_global(BasicBlock(inst[1][1:]))
                 b.function = self.current_function
                 block.next_block = b
                 self.index += 1
@@ -150,9 +154,13 @@ class New_Block_Visitor(BlockVisitor):
                 b.function = self.current_function
                 block.next_block = b
                 self.index += 1
-                b.taken = self.add_to_global(BasicBlock(inst[2][1:]))
+                b.taken = self.find_block(inst[2][1:])
+                if b.taken is None:
+                    b.taken = self.add_to_global(BasicBlock(inst[2][1:]))
                 b.taken.function = self.current_function
-                b.fall_through = self.add_to_global(BasicBlock(inst[3][1:]))
+                b.fall_through = self.find_block(inst[3][1:])
+                if b.fall_through is None:
+                    b.fall_through = self.add_to_global(BasicBlock(inst[3][1:]))
                 b.fall_through.function = self.current_function
                 self.falls[b.fall_through.label] = b.fall_through.label
                 self.resolve(b.taken)
@@ -162,6 +170,7 @@ class New_Block_Visitor(BlockVisitor):
                 self.index += 1
 
     def populate(self, block):
+        bs = []
         while self.index < len(self.instructions):
             inst = self.instructions[self.index]
 
@@ -169,6 +178,7 @@ class New_Block_Visitor(BlockVisitor):
                 if inst[0].startswith('return') is False:
                     block = self.find_block(inst[0])
                 block.instructions.append(inst)
+
                 self.index += 1
 
             elif inst[0].startswith('define'):
@@ -179,6 +189,7 @@ class New_Block_Visitor(BlockVisitor):
 
             elif inst[0].startswith('jump'):
                 block.instructions.append(inst)
+                b = self.find_block(inst[1][1:])
                 self.index += 1
 
             elif inst[0].startswith('cbranch'):
@@ -225,6 +236,45 @@ class New_Block_Visitor(BlockVisitor):
         return_blocks.append(function_blocks)
         return return_blocks
 
+    def find_nexts(self, blocks, label):
+        next = []
+        for block in blocks:
+            if isinstance(block, BasicBlock):
+                if block.next_block is not None:
+                    if block.next_block.label == label:
+                        next.append(block)
+            else:
+                if block.taken.label == label:
+                    next.append(block)
+                elif block.fall_through.label == label:
+                    next.append(block)
+        return next
+
+    def define_predecessors(self, functions):
+        other_functions = []
+        other_blocks = []
+        for function in functions:
+            for block in function:
+                if isinstance(block, BasicBlock):
+                    flag = False
+                    if block.next_block is not None:
+                        block_aux = block.next_block
+                        for i in block_aux.predecessors:
+                            if i.label == block.label:
+                                flag = True
+                        if not flag:
+                            block_aux.predecessors.append(block)
+                else:
+                    block.predecessors = self.find_nexts(function, block.label)
+                    block_aux1 = block.fall_through
+                    block_aux2 = block.taken
+                    block_aux1.predecessors.append(block)
+                    block_aux2.predecessors.append(block)
+                other_blocks.append(block)
+            other_functions.append(other_blocks)
+            other_blocks = []
+        return other_functions
+
     def divide(self):
         b = self.add_to_global(BasicBlock('global'))
         b.function = 'global'
@@ -237,11 +287,14 @@ class New_Block_Visitor(BlockVisitor):
         self.index = 0
         self.current_function = 'global'
         self.populate(self.find_block('global'))
+
         functions = self.segment_functions()
 
         for function in functions:
             for blcks in function:
                 self.sanitize_block(blcks)
+
+        functions = self.define_predecessors(functions)
         return functions
 
 

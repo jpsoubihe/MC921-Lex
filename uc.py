@@ -13,6 +13,7 @@ from contextlib import contextmanager
 
 import llvm_code
 from CodeGen import CodeGen
+from available_copies import Copy_Analysis
 from dataflow import DataFlow
 from parser import UCParser
 from uc_block import Block_Visitor
@@ -149,11 +150,21 @@ class Compiler:
 
 
     def _opt(self):
-        self.opt = DataFlow(self.args.cfg, self.args.debug)
-        self.opt.visit(self.ast)
-        self.optcode = self.opt.code
+        # self.opt = DataFlow(self.args.cfg, self.args.debug)
+        # self.opt.visit(self.ast)
+        # self.optcode = self.opt.code
+        self.gen = CodeGen()
+        self.new_blocks = New_Block_Visitor(self.gencode)
+        functions = self.new_blocks.divide()
+        self.opt = Copy_Analysis(functions)
+        self.opt.find_copies()
         if not self.args.susy and self.opt_file is not None:
-            self.opt.show(buf=self.opt_file)
+            _str = ''
+            for funcs in functions:
+                for block in funcs:
+                    for _code in block.instructions:
+                        _str += f"{_code}\n"
+            self.opt_file.write(_str)
 
     def _llvm(self):
         self.gen = CodeGen()
@@ -249,14 +260,14 @@ class Compiler:
             if errors_reported():
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
             elif not self.args.llvm:
-                if self.args.opt:
-                    speedup = len(self.gencode) / len(self.optcode)
-                    sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
-                                     (len(self.gencode), len(self.optcode), speedup))
+                # if self.args.opt:
+                #     speedup = len(self.gencode) / len(self.optcode)
+                #     sys.stderr.write("original = %d, otimizado = %d, speedup = %.2f\n" %
+                #                      (len(self.gencode), len(self.optcode), speedup))
                 if self.run and not self.args.cfg:
                     vm = Interpreter()
                     if self.args.opt:
-                        vm.run(self.optcode)
+                        vm.run(self.gencode)
                     else:
                         vm.run(self.gencode)
 
