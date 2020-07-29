@@ -1,8 +1,10 @@
 
-from llvmlite import ir, binding
 from ctypes import CFUNCTYPE, c_int
 
-class CodeGen():
+from llvmlite import ir, binding
+
+
+class code_gen():
     def __init__(self):
         self.binding = binding
         self.binding.initialize()

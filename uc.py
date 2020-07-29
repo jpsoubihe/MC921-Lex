@@ -12,12 +12,9 @@ import sys
 from contextlib import contextmanager
 
 import llvm_code
-from CodeGen import CodeGen
+from code_gen import code_gen
 from available_copies import Copy_Analysis
-from dataflow import DataFlow
 from parser import UCParser
-from uc_block import Block_Visitor
-from uc_new_block import New_Block_Visitor
 from uc_semantic import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
@@ -150,24 +147,22 @@ class Compiler:
 
 
     def _opt(self):
-        # self.opt = DataFlow(self.args.cfg, self.args.debug)
-        # self.opt.visit(self.ast)
-        # self.optcode = self.opt.code
-        self.gen = CodeGen()
+        self.gen = code_gen()
         self.new_blocks = New_Block_Visitor(self.gencode)
         functions = self.new_blocks.divide()
         self.opt = Copy_Analysis(functions)
         self.opt.find_copies()
+        self.optcode = self.opt.propagation(self.gencode)
         if not self.args.susy and self.opt_file is not None:
             _str = ''
-            for funcs in functions:
-                for block in funcs:
-                    for _code in block.instructions:
-                        _str += f"{_code}\n"
+            # for funcs in functions:
+            #     for block in funcs:
+            for _code in self.optcode:
+                _str += f"{_code}\n"
             self.opt_file.write(_str)
 
     def _llvm(self):
-        self.gen = CodeGen()
+        self.gen = code_gen()
         self.new_blocks = New_Block_Visitor(self.gencode)
         functions = self.new_blocks.divide()
         self.llvm_vis = llvm_code.LLVM_builder(self.gen.module)
@@ -267,7 +262,7 @@ class Compiler:
                 if self.run and not self.args.cfg:
                     vm = Interpreter()
                     if self.args.opt:
-                        vm.run(self.gencode)
+                        vm.run(self.optcode)
                     else:
                         vm.run(self.gencode)
 

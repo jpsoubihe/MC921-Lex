@@ -388,7 +388,7 @@ class Interpreter(object):
     run_get_char_ = run_get_int_
 
     def run_jump(self, target):
-        if isinstance(target,tuple):
+        if isinstance(target, tuple):
             target = target[0]
         self.pc = self.vars[target]
 

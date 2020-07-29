@@ -1,7 +1,9 @@
-from ply.yacc import yacc
-from lex import UCLexer
-import ast
 import sys
+
+from ply.yacc import yacc
+
+import ast
+from lex import UCLexer
 
 
 class UCParser:

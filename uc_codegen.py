@@ -614,7 +614,10 @@ class GenerateCode(NodeVisitor):
                 type = decl.type.type.names[0]
                 self.func_and_var_types[decl.name.name] = type
                 if type == 'int':
-                    value = int(decl.init.value)
+                    if decl.init is not None:
+                        value = int(decl.init.value)
+                    else:
+                        value = None
                 elif type == 'float':
                     value = float(decl.init.value)
                 else:

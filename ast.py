@@ -3,7 +3,6 @@ import sys
 from uc_codegen import GenerateCode
 from uc_semantic import Visitor
 
-
 visitor = Visitor()
 generateCode = GenerateCode()
 
